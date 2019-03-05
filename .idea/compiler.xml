@@ -2,8 +2,8 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel>
-      <module name="sdu.Integrations.main" target="1.8" />
-      <module name="sdu.Integrations.test" target="1.8" />
+      <module name="sdu.Speciale.main" target="1.8" />
+      <module name="sdu.Speciale.test" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

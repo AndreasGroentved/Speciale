@@ -1,2 +1,3 @@
 rootProject.name = 'Speciale'
+    include 'IoTAPI','Tangle','AuthManager','DeviceManager','Integrations','IoTDevices','WebApp'
 

@@ -8,6 +8,13 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/AuthManager" />
+            <option value="$PROJECT_DIR$/DeviceManager" />
+            <option value="$PROJECT_DIR$/Integrations" />
+            <option value="$PROJECT_DIR$/IoTAPI" />
+            <option value="$PROJECT_DIR$/IoTDevices" />
+            <option value="$PROJECT_DIR$/Tangle" />
+            <option value="$PROJECT_DIR$/WebApp" />
           </set>
         </option>
         <option name="useAutoImport" value="true" />
