@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+          </set>
+        </option>
+        <option name="useAutoImport" value="true" />
+        <option name="useQualifiedModuleNames" value="true" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/AuthManager" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/AuthManager" />
+          </set>
+        </option>
+        <option name="useAutoImport" value="true" />
+        <option name="useQualifiedModuleNames" value="true" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/DeviceManager" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/DeviceManager" />
+          </set>
+        </option>
+        <option name="useAutoImport" value="true" />
+        <option name="useQualifiedModuleNames" value="true" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/Integrations" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/Integrations" />
+          </set>
+        </option>
+        <option name="useAutoImport" value="true" />
+        <option name="useQualifiedModuleNames" value="true" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/IoTAPI" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/IoTAPI" />
+          </set>
+        </option>
+        <option name="useAutoImport" value="true" />
+        <option name="useQualifiedModuleNames" value="true" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/IoTDevices" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/IoTDevices" />
+          </set>
+        </option>
+        <option name="useAutoImport" value="true" />
+        <option name="useQualifiedModuleNames" value="true" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/Tangle" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/Tangle" />
+          </set>
+        </option>
+        <option name="useAutoImport" value="true" />
+        <option name="useQualifiedModuleNames" value="true" />
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/WebApp" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/WebApp" />
+          </set>
+        </option>
+        <option name="useAutoImport" value="true" />
+        <option name="useQualifiedModuleNames" value="true" />
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>
