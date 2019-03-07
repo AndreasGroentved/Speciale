@@ -1,32 +1,33 @@
 package IoTDevices.HeatPump
 
+import IoTDevices.DeviceSpecification
+import IoTDevices.IoTDevice
+import IoTDevices.PostMessage
 import com.google.gson.Gson
 import org.eclipse.californium.core.CoapResource
-import org.eclipse.californium.core.CoapServer
 import org.eclipse.californium.core.network.CoapEndpoint
 import org.eclipse.californium.core.network.EndpointManager
 import org.eclipse.californium.core.network.config.NetworkConfig
 import org.eclipse.californium.core.server.resources.CoapExchange
-import java.lang.Exception
-import java.lang.IndexOutOfBoundsException
-import java.lang.NumberFormatException
 import java.net.Inet4Address
 import java.net.InetSocketAddress
 
 val COAP_PORT = NetworkConfig.getStandard().getInt(NetworkConfig.Keys.COAP_PORT)
 
-fun main(args: Array<String>) {
+fun main() {
     var pump = HeatPump()
     pump.start()
 }
 
-class HeatPump : CoapServer() {
+class HeatPump : IoTDevice("HeatPump2020") {
+
     init {
         addEndpoints()
         add(HeatPumpResource())
     }
 
-    private fun addEndpoints() {
+
+    fun addEndpoints() {
         for (addr in EndpointManager.getEndpointManager().networkInterfaces) {
             // only binds to IPv4 addresses and localhost
             if (addr is Inet4Address || addr.isLoopbackAddress) {
@@ -58,9 +59,11 @@ class HeatPump : CoapServer() {
                     adjustTemperature(fromJson.params.get(0).toInt())
                     exchange.respond("temperature is now $temperature")
                 }
-            } catch (e : Exception) {
-                when(e) {is NumberFormatException -> exchange?.respond("Parameter is not a real number")
-                is IndexOutOfBoundsException -> exchange?.respond("Missing parameter diff")}
+            } catch (e: Exception) {
+                when (e) {
+                    is NumberFormatException -> exchange?.respond("Parameter is not a real number")
+                    is IndexOutOfBoundsException -> exchange?.respond("Missing parameter diff")
+                }
                 exchange?.respond("Parameter is not a real number")
                 e.printStackTrace()
             }

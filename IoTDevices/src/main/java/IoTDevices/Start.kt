@@ -1,7 +1,6 @@
 package IoTDevices
 
 
-import IoTDevices.HeatPump.PostMessage
 import com.google.gson.Gson
 import org.eclipse.californium.core.CoapClient
 import org.eclipse.californium.core.coap.MediaTypeRegistry
