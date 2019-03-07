@@ -2,8 +2,22 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel>
+      <module name="sdu.AuthManager.main" target="1.8" />
+      <module name="sdu.AuthManager.test" target="1.8" />
+      <module name="sdu.DeviceManager.main" target="1.8" />
+      <module name="sdu.DeviceManager.test" target="1.8" />
+      <module name="sdu.Integrations.main" target="1.8" />
+      <module name="sdu.Integrations.test" target="1.8" />
+      <module name="sdu.IoTAPI.main" target="1.8" />
+      <module name="sdu.IoTAPI.test" target="1.8" />
+      <module name="sdu.IoTDevices.main" target="1.8" />
+      <module name="sdu.IoTDevices.test" target="1.8" />
       <module name="sdu.Speciale.main" target="1.8" />
       <module name="sdu.Speciale.test" target="1.8" />
+      <module name="sdu.Tangle.main" target="1.8" />
+      <module name="sdu.Tangle.test" target="1.8" />
+      <module name="sdu.WebApp.main" target="1.8" />
+      <module name="sdu.WebApp.test" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>
