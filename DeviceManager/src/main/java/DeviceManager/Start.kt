@@ -1,6 +1,5 @@
 package DeviceManager
 
-import java.lang.Thread.sleep
 import java.net.InetAddress
 
 
@@ -14,8 +13,8 @@ fun main(args: Array<String>) {
     Thread {
         deviceManager.broadcast("yolo", InetAddress.getByName("255.255.255.255"))
     }.start()
-    sleep(300)
-    val a = deviceManager.listAllBroadcastAddresses()
-    println(a)
+    //sleep(300)
+    //val a = deviceManager.listAllBroadcastAddresses()
+    //println(a)
 
 }
