@@ -1,10 +1,16 @@
 package Tangle
 
-import Helpers.PropertiesLoader
-
 fun main() {
+    val tangle = TangleController()
 
-    val props = PropertiesLoader().loadProperties()
-    println(props.getProperty("hest"))
+    println(
+        tangle.attachDeviceToTangle(
+            "COOSEED99999999999999999999999999999999999999999999999999999999999999999999999999",
+            "asdasd"
+        )
+    )
+
+    println(tangle.getTransactions("COOSEED99999999999999999999999999999999999999999999999999999999999999999999999999"))
+
 }
 

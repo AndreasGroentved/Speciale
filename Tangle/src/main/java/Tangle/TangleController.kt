@@ -1,14 +1,15 @@
 package Tangle
 
+import Helpers.PropertiesLoader
 import jota.IotaAPI
-import jota.dto.response.GetTransferResponse
+import jota.dto.response.SendTransferResponse
 import jota.model.Transaction
+import jota.model.Transfer
 import jota.utils.TrytesConverter
-import java.util.*
-import kotlin.collections.HashMap
 
 class TangleController {
 
+    private var deviceSpecificationTag: String? = null
     private var nodeAddress: String? = null
     private var nodePort: String? = null
     private var nodeSecurity: Int = 2
@@ -22,7 +23,8 @@ class TangleController {
     }
 
     private fun loadProperties(): Boolean {
-        val properties = Properties()
+        val properties = PropertiesLoader().loadProperties()
+        deviceSpecificationTag = properties.getProperty("deviceSpecificationTag")
         nodeAddress = properties.getProperty("nodeAddress")
         nodePort = properties.getProperty("nodePort")
         nodeSecurity = properties.getProperty("nodeSecurity").toInt()
@@ -41,17 +43,53 @@ class TangleController {
 
     }
 
-    fun getTransactions(seed: String): GetTransferResponse? {
-        return iotaAPI!!.getTransfers(seed, nodeSecurity, 0, 5, false)
+    fun getTransactions(seed: String): MutableList<Transaction> {
+        val transferResponse = iotaAPI!!.getTransfers(seed, nodeSecurity, 0, 5, false)
+        val transactions: MutableList<Transaction> = mutableListOf()
+        transferResponse.transfers.forEach { bundle -> transactions.addAll(bundle.transactions) }
+        return transactions
+
     }
 
-    fun attachTransactionToTangle(vararg trytes: String): MutableList<Transaction>? {
-        return iotaAPI!!.sendTrytes(trytes, 3, nodeMinWeightMagnitude, null)
+    fun attachTransactionToTangle(seed: String, message: String): SendTransferResponse? {
+        val messageTrytes = TrytesConverter.asciiToTrytes(message)
+        val transfer =
+            Transfer(iotaAPI!!.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, "")
+        return iotaAPI!!.sendTransfer(
+            seed,
+            nodeSecurity,
+            9,
+            nodeMinWeightMagnitude,
+            arrayListOf(transfer),
+            null,
+            iotaAPI!!.getNextAvailableAddress(seed, nodeSecurity, false).first(),
+            false,
+            false,
+            null
+        )
     }
 
-    fun attachDeviceToTangle(deviceSpecificationJson: String): MutableList<Transaction>? {
-        val specificationTrytes = TrytesConverter.asciiToTrytes(deviceSpecificationJson)
-        return iotaAPI!!.sendTrytes(arrayOf(specificationTrytes), 3, nodeMinWeightMagnitude, null)
+    fun attachDeviceToTangle(seed: String, deviceSpecificationJson: String): SendTransferResponse? {
+        val messageTrytes = TrytesConverter.asciiToTrytes(deviceSpecificationJson)
+        val deviceSpecificationTagTrytes = TrytesConverter.asciiToTrytes(deviceSpecificationTag)
+        val transfer = Transfer(
+            iotaAPI!!.getNextAvailableAddress(seed, nodeSecurity, false).first(),
+            0,
+            messageTrytes,
+            deviceSpecificationTagTrytes
+        )
+        return iotaAPI!!.sendTransfer(
+            seed,
+            nodeSecurity,
+            9,
+            nodeMinWeightMagnitude,
+            arrayListOf(transfer),
+            null,
+            iotaAPI!!.getNextAvailableAddress(seed, nodeSecurity, false).first(),
+            false,
+            false,
+            null
+        )
     }
 
     fun getNewestBroadcast(entityName: String): Transaction? {
