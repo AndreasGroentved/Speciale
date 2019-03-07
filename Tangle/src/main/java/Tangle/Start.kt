@@ -1,6 +1,10 @@
 package Tangle
 
+import Helpers.PropertiesLoader
 
-fun main(args: Array<String>) {
-    println("Hello, world!")
+fun main() {
+
+    val props = PropertiesLoader().loadProperties()
+    println(props.getProperty("hest"))
 }
+

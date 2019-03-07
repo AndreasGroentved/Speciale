@@ -3,6 +3,7 @@ package Tangle
 import jota.IotaAPI
 import jota.dto.response.GetTransferResponse
 import jota.model.Transaction
+import jota.utils.TrytesConverter
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -22,23 +23,13 @@ class TangleController {
 
     private fun loadProperties(): Boolean {
         val properties = Properties()
-        try {
-            val resourceAsStream = TangleController::class.java.getResourceAsStream("properties.config")
-            properties.load(resourceAsStream)
-            nodeAddress = properties.getProperty("nodeAddress")
-            nodePort = properties.getProperty("nodePort")
-            nodeSecurity = properties.getProperty("nodeSecurity").toInt()
-            nodeMinWeightMagnitude = properties.getProperty("nodeMinWeightMagnitude").toInt()
-            nodeTrustedAddresses["Energinet"] = properties.getProperty("trustedAddressEnerginet")
-            nodeTrustedAddresses["NordPool"] = properties.getProperty("trustedAddressNordPool")
-            val isDefault = properties.getProperty("nodeDefault")!!.toBoolean()
-            resourceAsStream.close()
-            return isDefault
-        } catch (e: Exception) {
-            println("Could not read file config.properties")
-            e.printStackTrace()
-            throw e
-        }
+        nodeAddress = properties.getProperty("nodeAddress")
+        nodePort = properties.getProperty("nodePort")
+        nodeSecurity = properties.getProperty("nodeSecurity").toInt()
+        nodeMinWeightMagnitude = properties.getProperty("nodeMinWeightMagnitude").toInt()
+        nodeTrustedAddresses["Energinet"] = properties.getProperty("trustedAddressEnerginet")
+        nodeTrustedAddresses["NordPool"] = properties.getProperty("trustedAddressNordPool")
+        return properties.getProperty("nodeDefault")!!.toBoolean()
     }
 
     private fun initIotaAPI(isDefault: Boolean) {
@@ -58,8 +49,9 @@ class TangleController {
         return iotaAPI!!.sendTrytes(trytes, 3, nodeMinWeightMagnitude, null)
     }
 
-    fun attachDeviceToTangle() {
-
+    fun attachDeviceToTangle(deviceSpecificationJson: String): MutableList<Transaction>? {
+        val specificationTrytes = TrytesConverter.asciiToTrytes(deviceSpecificationJson)
+        return iotaAPI!!.sendTrytes(arrayOf(specificationTrytes), 3, nodeMinWeightMagnitude, null)
     }
 
     fun getNewestBroadcast(entityName: String): Transaction? {
