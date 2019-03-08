@@ -1,6 +1,5 @@
 package DeviceManager
 
-import IoTDevices.PostMessage
 import io.jsondb.JsonDBTemplate
 import org.eclipse.californium.core.CoapClient
 
@@ -29,7 +28,7 @@ class DeviceManager() {
         //jsonDBTemplate.insert<Device>(Device())
         //println(jsonDBTemplate.findAll(Device::class.java))
         Thread {
-            val clientDiscovery = ClientDiscovery().startListening {
+            ClientDiscovery().startListening {
                 println(it)
                 val client = CoapClient("$it:5683/temperature")
                 val response = client.get()

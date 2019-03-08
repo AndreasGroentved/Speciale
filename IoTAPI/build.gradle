@@ -10,17 +10,18 @@ sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile project(path: ':Tangle')
-    compile project(path: ':IoTDevices' )
-    compile project(path: ':AuthManager' )
-    compile project(path: ':DeviceManager' )
-    compile project(path: ':Integrations' )
-    compile project(path: ':WebApp' )
+    compile project(':Tangle')
+    compile project(':IoTDevices' )
+    compile project(':AuthManager' )
+    compile project(':DeviceManager' )
+    compile project(':Integrations' )
+    compile project(':WebApp' )
 
 }
 

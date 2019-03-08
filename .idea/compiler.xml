@@ -14,14 +14,10 @@
       <module name="sdu.IoTAPI.test" target="1.8" />
       <module name="sdu.IoTDevices.main" target="1.8" />
       <module name="sdu.IoTDevices.test" target="1.8" />
-      <module name="sdu.Speciale.main" target="1.8" />
-      <module name="sdu.Speciale.test" target="1.8" />
       <module name="sdu.Tangle.main" target="1.8" />
       <module name="sdu.Tangle.test" target="1.8" />
       <module name="sdu.WebApp.main" target="1.8" />
       <module name="sdu.WebApp.test" target="1.8" />
-      <module name="Speciale.Common.main" target="11" />
-      <module name="Speciale.Common.test" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>
