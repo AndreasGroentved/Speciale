@@ -10,5 +10,7 @@ dependencies {
     compile project(':DeviceManager' )
     compile project(':Integrations' )
     compile project(':WebApp' )
+    compile project(':Common' )
+    implementation "com.sparkjava:spark-core:2.8.0"
 
 }
