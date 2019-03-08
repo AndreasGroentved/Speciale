@@ -1,9 +1,10 @@
 package IoTDevices.HeatPump
 
+import IoTDevices.IoTDevice
 import IoTDevices.PostMessage
+import IoTDevices.ResourceMethod
 import com.google.gson.Gson
 import org.eclipse.californium.core.CoapResource
-import org.eclipse.californium.core.CoapServer
 import org.eclipse.californium.core.network.CoapEndpoint
 import org.eclipse.californium.core.network.EndpointManager
 import org.eclipse.californium.core.network.config.NetworkConfig
@@ -18,10 +19,15 @@ fun main() {
     pump.start()
 }
 
-class HeatPump : CoapServer() {
+class HeatPump : IoTDevice("hest") {
     init {
         addEndpoints()
-        add(HeatPumpResource())
+        add(
+            HeatPumpResource(), mutableListOf(
+                ResourceMethod("GET", mutableMapOf(), "Gets the target temperature of the heat pump"),
+                ResourceMethod("POST", mutableMapOf("diff" to "Integer"), "Adjusts target temperature of the heat pump by diff")
+            )
+        )
     }
 
     private fun addEndpoints() {
