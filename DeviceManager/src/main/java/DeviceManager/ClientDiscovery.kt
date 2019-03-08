@@ -9,14 +9,16 @@ import org.jgroups.util.MessageBatch
 class ClientDiscovery : ReceiverAdapter() {
 
 
-    private var channel: JChannel? = null
+    private var channel = JChannel().setReceiver(this)!!
     private var callback: ((String) -> (Unit))? = null
+
+    init {
+
+    }
 
     fun startListening(idCallBack: (String) -> (Unit)) {
         callback = idCallBack
-        channel = JChannel().setReceiver(this)
-        channel?.connect("DiscoveryCluster")
-
+        channel.connect("DiscoveryCluster")
     }
 
 
@@ -24,11 +26,9 @@ class ClientDiscovery : ReceiverAdapter() {
         for (msg in batch) {
             try {
                 receive(msg)
-
             } catch (t: Throwable) {
                 println(t)
             }
-
         }
     }
 

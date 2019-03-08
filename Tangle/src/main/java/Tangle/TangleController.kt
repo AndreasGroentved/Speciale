@@ -6,14 +6,15 @@ import jota.dto.response.SendTransferResponse
 import jota.model.Transaction
 import jota.model.Transfer
 import jota.utils.TrytesConverter
+import java.math.BigDecimal
 
 class TangleController {
 
     private lateinit var deviceSpecificationTag: String
     private lateinit var nodeAddress: String
     private lateinit var nodePort: String
-    private var nodeSecurity: Int = 2
-    private var nodeMinWeightMagnitude: Int = 14
+    private var nodeSecurity = 2
+    private var nodeMinWeightMagnitude = 14
     private val nodeTrustedAddresses = mutableMapOf<String, String>()
     private lateinit var iotaAPI: IotaAPI
 
@@ -70,10 +71,16 @@ class TangleController {
         )
         return iotaAPI.sendTransfer(
             seed, nodeSecurity, 9, nodeMinWeightMagnitude,
-            arrayListOf(transfer), null,
+            listOf(transfer), null,
             iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(),
             false, false, null
         )
+    }
+
+    fun getDevicePriceSavings(from: Long, to: Long, deviceId: String): BigDecimal {
+        //TODO registerer slukket tidsperiode, find pris i den periode
+        //TODO sammenlign pris med efterfølgende periode
+        return BigDecimal(12)
     }
 
     fun getNewestBroadcast(entityName: String): Transaction? {

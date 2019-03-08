@@ -8,4 +8,5 @@ dependencies {
     compile "io.jsondb:jsondb-core:1.0.85"
     implementation "org.eclipse.californium:californium-core:1.0.7"
     compile project(path: ':IoTDevices')
+    compile project(":Tangle")
 }
