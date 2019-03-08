@@ -1,6 +1,16 @@
 package Tangle
 
+fun main() {
+    val tangle = TangleController()
 
-fun main(args: Array<String>) {
-    println("Hello, world!")
+    println(
+        tangle.attachDeviceToTangle(
+            "COOSEED99999999999999999999999999999999999999999999999999999999999999999999999999",
+            "asdasd"
+        )
+    )
+
+    println(tangle.getTransactions("COOSEED99999999999999999999999999999999999999999999999999999999999999999999999999"))
+
 }
+

@@ -21,6 +21,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation "org.eclipse.californium:californium-core:1.0.7"
     implementation "com.google.code.gson:gson:2.8.5"
+    implementation project(path: ':Common')
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compile group: 'org.jgroups', name: 'jgroups', version: '4.0.18.Final'
 }
