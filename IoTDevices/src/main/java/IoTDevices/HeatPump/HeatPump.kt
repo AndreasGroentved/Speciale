@@ -13,7 +13,7 @@ import java.net.InetSocketAddress
 
 val COAP_PORT = NetworkConfig.getStandard().getInt(NetworkConfig.Keys.COAP_PORT)
 
-fun main(args: Array<String>) {
+fun main() {
     var pump = HeatPump()
     pump.start()
 }
@@ -27,7 +27,6 @@ class HeatPump : CoapServer() {
     private fun addEndpoints() {
         EndpointManager.getEndpointManager().networkInterfaces.filter { it is Inet4Address || it.isLoopbackAddress }
             .forEach {
-                println("")
                 val bindToAddress = InetSocketAddress(it, COAP_PORT)
                 addEndpoint(CoapEndpoint(bindToAddress))
             }
