@@ -1,5 +1,6 @@
 package IoTDevices.HeatPump
 
+import IoTDevices.PostMessage
 import com.google.gson.Gson
 import org.eclipse.californium.core.CoapResource
 import org.eclipse.californium.core.CoapServer

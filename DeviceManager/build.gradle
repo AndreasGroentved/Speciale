@@ -20,6 +20,7 @@ dependencies {
     compile "io.jsondb:jsondb-core:1.0.85"
     compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.8.0-beta4'
     implementation "org.eclipse.californium:californium-core:1.0.7"
+    compile project(path: ':IoTDevices')
 }
 
 compileKotlin {

@@ -9,13 +9,13 @@ import jota.utils.TrytesConverter
 
 class TangleController {
 
-    private var deviceSpecificationTag: String? = null
-    private var nodeAddress: String? = null
-    private var nodePort: String? = null
+    private lateinit var deviceSpecificationTag: String
+    private lateinit var nodeAddress: String
+    private lateinit var nodePort: String
     private var nodeSecurity: Int = 2
     private var nodeMinWeightMagnitude: Int = 14
-    private var nodeTrustedAddresses: HashMap<String, String> = HashMap()
-    private var iotaAPI: IotaAPI? = null
+    private val nodeTrustedAddresses = mutableMapOf<String, String>()
+    private lateinit var iotaAPI: IotaAPI
 
     init {
         val loadProperties = loadProperties()
@@ -23,7 +23,7 @@ class TangleController {
     }
 
     private fun loadProperties(): Boolean {
-        val properties = PropertiesLoader().loadProperties()
+        val properties = PropertiesLoader.loadProperties()
         deviceSpecificationTag = properties.getProperty("deviceSpecificationTag")
         nodeAddress = properties.getProperty("nodeAddress")
         nodePort = properties.getProperty("nodePort")
@@ -44,8 +44,8 @@ class TangleController {
     }
 
     fun getTransactions(seed: String): MutableList<Transaction> {
-        val transferResponse = iotaAPI!!.getTransfers(seed, nodeSecurity, 0, 5, false)
-        val transactions: MutableList<Transaction> = mutableListOf()
+        val transferResponse = iotaAPI.getTransfers(seed, nodeSecurity, 0, 5, false)
+        val transactions = mutableListOf<Transaction>()
         transferResponse.transfers.forEach { bundle -> transactions.addAll(bundle.transactions) }
         return transactions
 
@@ -54,18 +54,10 @@ class TangleController {
     fun attachTransactionToTangle(seed: String, message: String): SendTransferResponse? {
         val messageTrytes = TrytesConverter.asciiToTrytes(message)
         val transfer =
-            Transfer(iotaAPI!!.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, "")
-        return iotaAPI!!.sendTransfer(
-            seed,
-            nodeSecurity,
-            9,
-            nodeMinWeightMagnitude,
-            arrayListOf(transfer),
-            null,
-            iotaAPI!!.getNextAvailableAddress(seed, nodeSecurity, false).first(),
-            false,
-            false,
-            null
+            Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, "")
+        return iotaAPI.sendTransfer(
+            seed, nodeSecurity, 9, nodeMinWeightMagnitude, arrayListOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(),
+            false, false, null
         )
     }
 
@@ -73,37 +65,25 @@ class TangleController {
         val messageTrytes = TrytesConverter.asciiToTrytes(deviceSpecificationJson)
         val deviceSpecificationTagTrytes = TrytesConverter.asciiToTrytes(deviceSpecificationTag)
         val transfer = Transfer(
-            iotaAPI!!.getNextAvailableAddress(seed, nodeSecurity, false).first(),
-            0,
-            messageTrytes,
-            deviceSpecificationTagTrytes
+            iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(),
+            0, messageTrytes, deviceSpecificationTagTrytes
         )
-        return iotaAPI!!.sendTransfer(
-            seed,
-            nodeSecurity,
-            9,
-            nodeMinWeightMagnitude,
-            arrayListOf(transfer),
-            null,
-            iotaAPI!!.getNextAvailableAddress(seed, nodeSecurity, false).first(),
-            false,
-            false,
-            null
+        return iotaAPI.sendTransfer(
+            seed, nodeSecurity, 9, nodeMinWeightMagnitude,
+            arrayListOf(transfer), null,
+            iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(),
+            false, false, null
         )
     }
 
     fun getNewestBroadcast(entityName: String): Transaction? {
         val findTransactionsResponse =
-            iotaAPI!!.findTransactions(arrayOf(nodeTrustedAddresses[entityName]), null, null, null)
-        val getTrytesResponse = iotaAPI!!.getTrytes(*findTransactionsResponse.hashes)
+            iotaAPI.findTransactions(arrayOf(nodeTrustedAddresses[entityName]), null, null, null)
+        val getTrytesResponse = iotaAPI.getTrytes(*findTransactionsResponse.hashes)
         var transactions = getTrytesResponse.trytes.map { trytes -> Transaction(trytes) }
 
         transactions = transactions.sortedBy { tx -> tx.timestamp }
-
-        if (transactions.isNotEmpty()) {
-            return transactions[0]
-        }
-        return null
+        return transactions.getOrNull(0)
     }
 
 }

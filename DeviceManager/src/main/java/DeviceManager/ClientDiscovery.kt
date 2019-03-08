@@ -16,6 +16,7 @@ class ClientDiscovery : ReceiverAdapter() {
         callback = idCallBack
         channel = JChannel().setReceiver(this)
         channel?.connect("DiscoveryCluster")
+
     }
 
 

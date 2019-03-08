@@ -4,6 +4,8 @@
     <bytecodeTargetLevel>
       <module name="sdu.AuthManager.main" target="1.8" />
       <module name="sdu.AuthManager.test" target="1.8" />
+      <module name="sdu.Common.main" target="1.8" />
+      <module name="sdu.Common.test" target="1.8" />
       <module name="sdu.DeviceManager.main" target="1.8" />
       <module name="sdu.DeviceManager.test" target="1.8" />
       <module name="sdu.Integrations.main" target="1.8" />

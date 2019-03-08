@@ -1,5 +1,6 @@
 package DeviceManager
 
+import IoTDevices.PostMessage
 import io.jsondb.JsonDBTemplate
 import org.eclipse.californium.core.CoapClient
 
