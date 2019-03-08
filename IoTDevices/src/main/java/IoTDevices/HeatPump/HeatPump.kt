@@ -7,9 +7,6 @@ import org.eclipse.californium.core.network.CoapEndpoint
 import org.eclipse.californium.core.network.EndpointManager
 import org.eclipse.californium.core.network.config.NetworkConfig
 import org.eclipse.californium.core.server.resources.CoapExchange
-import java.lang.Exception
-import java.lang.IndexOutOfBoundsException
-import java.lang.NumberFormatException
 import java.net.Inet4Address
 import java.net.InetSocketAddress
 
@@ -27,13 +24,12 @@ class HeatPump : CoapServer() {
     }
 
     private fun addEndpoints() {
-        for (addr in EndpointManager.getEndpointManager().networkInterfaces) {
-            // only binds to IPv4 addresses and localhost
-            if (addr is Inet4Address || addr.isLoopbackAddress) {
-                val bindToAddress = InetSocketAddress(addr, COAP_PORT)
+        EndpointManager.getEndpointManager().networkInterfaces.filter { it is Inet4Address || it.isLoopbackAddress }
+            .forEach {
+                println("")
+                val bindToAddress = InetSocketAddress(it, COAP_PORT)
                 addEndpoint(CoapEndpoint(bindToAddress))
             }
-        }
     }
 
     class HeatPumpResource : CoapResource("temperature") {
@@ -55,12 +51,14 @@ class HeatPump : CoapServer() {
             try {
                 exchange?.let {
                     val fromJson = Gson().fromJson(exchange.requestText, PostMessage::class.java)
-                    adjustTemperature(fromJson.params.get(0).toInt())
+                    adjustTemperature(fromJson.params!![0].toInt())
                     exchange.respond("temperature is now $temperature")
                 }
-            } catch (e : Exception) {
-                when(e) {is NumberFormatException -> exchange?.respond("Parameter is not a real number")
-                is IndexOutOfBoundsException -> exchange?.respond("Missing parameter diff")}
+            } catch (e: Exception) {
+                when (e) {
+                    is NumberFormatException -> exchange?.respond("Parameter is not a real number")
+                    is IndexOutOfBoundsException -> exchange?.respond("Missing parameter diff")
+                }
                 exchange?.respond("Parameter is not a real number")
                 e.printStackTrace()
             }

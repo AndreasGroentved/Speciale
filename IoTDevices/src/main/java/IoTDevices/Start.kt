@@ -1,35 +1,36 @@
 package IoTDevices
 
 
-import IoTDevices.HeatPump.PostMessage
-import com.google.gson.Gson
-import org.eclipse.californium.core.CoapClient
-import org.eclipse.californium.core.coap.MediaTypeRegistry
+import IoTDevices.HeatPump.HeatPump
 
 fun main(args: Array<String>) {
 
-    val client = CoapClient("10.126.49.76:5683/temperature")
+    HeatPump().start()
+    Discovery().startDiscovery()
 
-    val discover = client.discover()
 
-    println(discover)
-    val response = client.get()
+    /* val client = CoapClient("10.126.49.76:5683/temperature")
+     val discover = client.discover()
 
-    if (response != null) {
-        println(response.responseText)
-    } else {
-        println("No response received.")
-    }
+     println(discover)
+     val response = client.get()
 
-    val params = listOf("2")
-    val message = PostMessage(params)
-    val json = Gson().toJson(message)
-    val post = client.post(json, MediaTypeRegistry.APPLICATION_JSON)
+     if (response != null) {
+         println(response.responseText)
+     } else {
+         println("No response received.")
+     }
 
-    if(post != null) {
-        println(post.responseText)
-    } else {
-        println("Post not work oh no")
-    }
+     val params = listOf("2")
+     val message = PostMessage(params)
+     val json = Gson().toJson(message)
+     val post = client.post(json, MediaTypeRegistry.APPLICATION_JSON)
+
+     if(post != null) {
+         println(post.responseText)
+     } else {
+         println("Post not work oh no")
+     }*/
+
 
 }

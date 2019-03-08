@@ -1,4 +1,4 @@
 package IoTDevices.HeatPump
 
-class PostMessage(val params : List<String>) {
+data class PostMessage(val params: List<String>? = null) {
 }
