@@ -9,6 +9,7 @@ import org.eclipse.californium.core.network.CoapEndpoint
 import org.eclipse.californium.core.network.EndpointManager
 import org.eclipse.californium.core.network.config.NetworkConfig
 import org.eclipse.californium.core.server.resources.CoapExchange
+import java.lang.NullPointerException
 import java.net.Inet4Address
 import java.net.InetSocketAddress
 
@@ -57,7 +58,7 @@ class HeatPump : IoTDevice("hest") {
             try {
                 exchange?.let {
                     val fromJson = Gson().fromJson(exchange.requestText, PostMessage::class.java)
-                    adjustTemperature(fromJson.params!![0].toInt())
+                    adjustTemperature(fromJson.params[0].toInt())
                     exchange.respond("temperature is now $temperature")
                 }
             } catch (e: Exception) {

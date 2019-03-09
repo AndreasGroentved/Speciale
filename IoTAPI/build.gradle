@@ -11,6 +11,6 @@ dependencies {
     compile project(':Integrations' )
     compile project(':WebApp' )
     compile project(':Common' )
-    implementation "com.sparkjava:spark-core:2.8.0"
+    implementation "com.sparkjava:spark-kotlin:1.0.0-alpha"
 
 }

@@ -6,7 +6,7 @@ import org.eclipse.californium.core.server.resources.Resource
 
 
 abstract class IoTDevice(val id: String = "") : CoapServer() {
-    var coapPort: Int? = -1
+    var coapPort: Int = -1
     val deviceSpecification = DeviceSpecification(id, mutableListOf())
 
     init {

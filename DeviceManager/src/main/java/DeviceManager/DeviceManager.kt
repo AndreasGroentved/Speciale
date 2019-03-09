@@ -26,7 +26,7 @@ class DeviceManager() {
 
 
     fun getAllDevices(): String = gson.toJson(devicesIdToIp.map { SimpleDevice(it.key, it.value) })
-    fun getDevice(id: String) = gson.toJson(Device(devicesIdToIp[id], id)) //TODO laves om når device ændres
+    fun getDevice(id: String): String = gson.toJson(Device(devicesIdToIp[id], id)) //TODO laves om når device ændres
 
     fun getAllSavings(from: Long, to: Long) =
         devicesIdToIp.keys.map { getSavingsForDevice(from, to, it) }.fold(BigDecimal(0)) { a: BigDecimal, b: BigDecimal -> a + b }.toString()
