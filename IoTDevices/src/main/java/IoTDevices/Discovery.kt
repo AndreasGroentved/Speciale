@@ -1,7 +1,7 @@
 package IoTDevices
 
-import Helpers.IpDevice
 import com.google.gson.Gson
+import helpers.IpDevice
 import org.jgroups.JChannel
 import org.jgroups.Message
 import org.jgroups.ReceiverAdapter
