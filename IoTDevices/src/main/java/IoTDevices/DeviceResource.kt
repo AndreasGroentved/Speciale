@@ -1,3 +1,3 @@
 package IoTDevices
 
-data class DeviceResource(val resourceMethods: MutableList<ResourceMethod>, val path: String, val title: String)
+data class DeviceResource(val resourceMethods: List<ResourceMethod>, val path: String, val title: String)

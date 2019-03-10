@@ -15,20 +15,27 @@ class Discovery : ReceiverAdapter() {
     private var running = false
     private var ip = ""
     private val gson = Gson()
+    private var thread: Thread? = null
 
     fun startDiscovery() {
         ip = InetAddress.getLocalHost().hostAddress
         channel.connect("DiscoveryCluster")
-        Thread {
+        thread = Thread {
             running = true
             announceLoop()
-        }.start()
+        }
+        thread?.start()
+    }
 
+
+    fun stopDiscovery() {
+        thread?.stop()
     }
 
     private fun announceLoop() {
-        while (running) { //TODO det er nok, nok at at gøre dette i viewAccepted een gang
+        while (thread?.isAlive == true) { //TODO det er nok, nok at at gøre dette i viewAccepted een gang
             Thread.sleep(2000)
+            if (!thread?.isAlive!!) break
             val simpleDeviceString = gson.toJson(SimpleDevice(ip, ip))
             channel.send(Message(null, simpleDeviceString.toByteArray()))
         }

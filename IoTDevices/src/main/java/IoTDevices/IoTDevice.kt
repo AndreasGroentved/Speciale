@@ -13,7 +13,7 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
         loadProperties()
     }
 
-    fun add(resource: Resource, resourceMethods: MutableList<ResourceMethod>): CoapServer {
+    fun add(resource: Resource, resourceMethods: List<ResourceMethod>): CoapServer {
         deviceSpecification.deviceResources.add(DeviceResource(resourceMethods, resource.uri, resource.attributes.title))
         return super.add(resource)
     }
