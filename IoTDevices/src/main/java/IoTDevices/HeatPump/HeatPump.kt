@@ -9,7 +9,6 @@ import org.eclipse.californium.core.network.CoapEndpoint
 import org.eclipse.californium.core.network.EndpointManager
 import org.eclipse.californium.core.network.config.NetworkConfig
 import org.eclipse.californium.core.server.resources.CoapExchange
-import java.lang.NullPointerException
 import java.net.Inet4Address
 import java.net.InetSocketAddress
 
@@ -24,9 +23,9 @@ class HeatPump : IoTDevice("hest") {
     init {
         addEndpoints()
         add(
-            HeatPumpResource(), mutableListOf(
-                ResourceMethod("GET", mutableMapOf(), "Gets the target temperature of the heat pump"),
-                ResourceMethod("POST", mutableMapOf("diff" to "Integer"), "Adjusts target temperature of the heat pump by diff")
+            HeatPumpResource(), listOf(
+                ResourceMethod("GET", mapOf(), "Gets the target temperature of the heat pump"),
+                ResourceMethod("POST", mapOf("diff" to "Integer"), "Adjusts target temperature of the heat pump by diff")
             )
         )
     }

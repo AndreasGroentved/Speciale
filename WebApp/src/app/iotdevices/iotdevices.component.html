@@ -1,0 +1,9 @@
+<p>
+  Devices
+</p>
+<ul>
+  <li *ngFor="let device of devices; let i = index">
+    <a routerLink="/device/{{device.id}}" routerLinkActive="active">{{device.id}}</a>
+  </li>
+</ul>
+

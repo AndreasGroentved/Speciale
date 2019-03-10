@@ -19,6 +19,7 @@ class DeviceManager() {
         Thread {
             ClientDiscovery().startListening {
                 val simpleDevice = gson.fromJson<SimpleDevice>(it, SimpleDevice::class.java)
+                println(simpleDevice)
                 devicesIdToIp[simpleDevice.id] = simpleDevice.ip
             }
         }.start()
