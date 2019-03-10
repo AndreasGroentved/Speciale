@@ -1,6 +1,6 @@
 package IoTDevices
 
-import Helpers.PropertiesLoader
+import helpers.PropertiesLoader
 import org.eclipse.californium.core.CoapServer
 import org.eclipse.californium.core.server.resources.Resource
 
@@ -19,7 +19,6 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
     }
 
     private fun loadProperties() {
-        val properties = PropertiesLoader.loadProperties()
-        coapPort = properties.getProperty("coapPort").toInt()
+        coapPort = PropertiesLoader.instance.getProperty("coapPort").toInt()
     }
 }

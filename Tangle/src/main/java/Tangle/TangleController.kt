@@ -1,6 +1,9 @@
 package Tangle
 
-import Helpers.PropertiesLoader
+import com.google.gson.Gson
+import datatypes.nordpool.PublicationTimeSeries
+import helpers.EncryptionHelper
+import helpers.PropertiesLoader
 import jota.IotaAPI
 import jota.dto.response.SendTransferResponse
 import jota.model.Transaction
@@ -15,7 +18,6 @@ class TangleController {
     private lateinit var nodePort: String
     private var nodeSecurity = 2
     private var nodeMinWeightMagnitude = 14
-    private val nodeTrustedAddresses = mutableMapOf<String, String>()
     private lateinit var iotaAPI: IotaAPI
 
     init {
@@ -24,14 +26,12 @@ class TangleController {
     }
 
     private fun loadProperties(): Boolean {
-        val properties = PropertiesLoader.loadProperties()
+        val properties = PropertiesLoader.instance
         deviceSpecificationTag = properties.getProperty("deviceSpecificationTag")
         nodeAddress = properties.getProperty("nodeAddress")
         nodePort = properties.getProperty("nodePort")
         nodeSecurity = properties.getProperty("nodeSecurity").toInt()
         nodeMinWeightMagnitude = properties.getProperty("nodeMinWeightMagnitude").toInt()
-        nodeTrustedAddresses["Energinet"] = properties.getProperty("trustedAddressEnerginet")
-        nodeTrustedAddresses["NordPool"] = properties.getProperty("trustedAddressNordPool")
         return properties.getProperty("nodeDefault")!!.toBoolean()
     }
 
@@ -49,10 +49,10 @@ class TangleController {
         return transferResponse.transfers.flatMap { it.transactions }
     }
 
-    fun attachTransactionToTangle(seed: String, message: String): SendTransferResponse? {
+    fun attachTransactionToTangle(seed: String, message: String, tag: String): SendTransferResponse? {
         val messageTrytes = TrytesConverter.asciiToTrytes(message)
         val transfer =
-            Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, "")
+            Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, tag)
         return iotaAPI.sendTransfer(
             seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(),
             false, false, null
@@ -76,11 +76,31 @@ class TangleController {
     }
 
     fun getNewestBroadcast(entityName: String): Transaction? {
-        val findTransactionsResponse =
-            iotaAPI.findTransactions(arrayOf(nodeTrustedAddresses[entityName]), null, null, null)
-        val getTrytesResponse = iotaAPI.getTrytes(*findTransactionsResponse.hashes)
-        val transactions = getTrytesResponse.trytes.asSequence().map { Transaction(it) }.sortedBy { it.timestamp }.toList()
-        return transactions.getOrNull(0)
+        val transactions =
+            iotaAPI.findTransactionObjectsByTag(arrayOf(entityName))
+        val sorted = transactions.sortedByDescending { it.timestamp }.toList()
+        return sorted.first { transaction -> parseAndVerifyNordPool(transaction) }
+    }
+
+    fun getNewestBroadcasts(entityName: String): List<Transaction>? {
+        val transactions =
+            iotaAPI.findTransactionObjectsByTag(arrayOf(entityName))
+        return transactions.sortedByDescending { it.timestamp }.toList().filter { transaction -> parseAndVerifyNordPool(transaction) }
+    }
+
+    private fun parseAndVerifyNordPool(transaction: Transaction): Boolean {
+        val message = TrytesConverter.trytesToAscii(transaction.signatureFragments + "9")
+        val messageTrimmed = message.trim((0).toChar())
+        val response = Gson().fromJson(messageTrimmed, PublicationTimeSeries::class.java)
+        val publicECKey = EncryptionHelper.loadPublicECKey("nordPoolPublicKey")
+        println(EncryptionHelper.verifySignatureBase64(publicECKey, "nordpool", response.signature!!))
+        return EncryptionHelper.verifySignatureBase64(publicECKey, "nordpool", response.signature!!)
+
+
+    }
+
+    private fun parse(transaction: Transaction) {
+
     }
 
 }

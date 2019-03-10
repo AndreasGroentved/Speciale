@@ -1,8 +1,8 @@
 package DeviceManager
 
-import Helpers.SimpleDevice
 import Tangle.TangleController
 import com.google.gson.Gson
+import datatypes.SimpleDevice
 import org.eclipse.californium.core.CoapClient
 import org.eclipse.californium.core.coap.MediaTypeRegistry
 import java.math.BigDecimal
