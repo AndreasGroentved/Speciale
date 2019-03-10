@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { IotdeviceComponent } from './iotdevice.component';
+import { HouseOverviewComponent } from './house-overview.component';
 
-describe('IotdeviceComponent', () => {
-  let component: IotdeviceComponent;
-  let fixture: ComponentFixture<IotdeviceComponent>;
+describe('HouseOverviewComponent', () => {
+  let component: HouseOverviewComponent;
+  let fixture: ComponentFixture<HouseOverviewComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ IotdeviceComponent ]
+      declarations: [ HouseOverviewComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(IotdeviceComponent);
+    fixture = TestBed.createComponent(HouseOverviewComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

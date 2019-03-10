@@ -1,0 +1,13 @@
+<p>
+  iot-device works!
+</p>
+
+<div>
+  {{id}}
+
+  <ul>
+    <li *ngFor="let module of modules; let i = index">
+      <app-iot-module [deviceResource]=module></app-iot-module>
+    </li>
+  </ul>
+</div>
