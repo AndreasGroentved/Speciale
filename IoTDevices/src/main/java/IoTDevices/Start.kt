@@ -5,8 +5,9 @@ import IoTDevices.HeatPump.HeatPump
 
 fun main(args: Array<String>) {
 
-    HeatPump().start()
-    Discovery().startDiscovery()
+    val heatPump = HeatPump()
+    heatPump.start()
+    Discovery(heatPump).startDiscovery()
 
 
     /* val client = CoapClient("10.126.49.76:5683/temperature")

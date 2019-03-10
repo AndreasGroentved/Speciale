@@ -1,6 +1,8 @@
 import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute, Router} from "@angular/router";
 import {WebService} from "../web.service";
+import {DeviceSpecification} from "../DeviceSpecification";
+import {DeviceResource} from "../DeviceResource";
 
 @Component({
   selector: 'app-iot-device',
@@ -13,13 +15,17 @@ export class IotDeviceComponent implements OnInit {
   }
 
   private id: string;
+  private device: DeviceSpecification;
+  private modules: Array<DeviceResource> = [];
 
   ngOnInit() {
     this.id = this.route.snapshot.paramMap.get('id');
     console.log(this.id);
     this.webService.getDevice(this.id, device => {
-
+      this.device = device;
+      this.modules = device.deviceResources
     })
   }
+
 
 }

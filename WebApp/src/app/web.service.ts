@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {Device} from "./Device";
+import {DeviceSpecification} from "./DeviceSpecification";
 
 @Injectable({
   providedIn: 'root'
@@ -27,9 +28,9 @@ export class WebService {
   }
 
 
-  getDevice(deviceID, callback: (device: Device) => (void)) {
+  getDevice(deviceID, callback: (device: DeviceSpecification) => (void)) {
     this.http.get("http://localhost:4567/device/" + deviceID).subscribe(results => {
-      let device: Device = results as Device;
+      let device: DeviceSpecification = results as DeviceSpecification;
       callback(device)
     });
   }

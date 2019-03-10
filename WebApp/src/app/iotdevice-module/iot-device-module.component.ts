@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
+import {DeviceResource} from "../DeviceResource";
 
 @Component({
   selector: 'app-iot-module',
@@ -6,10 +7,16 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./iot-device-module.component.css']
 })
 export class IotDeviceModuleComponent implements OnInit {
+  @Input() deviceResource: DeviceResource;
 
-  constructor() { }
+  private name = "loading...";
+
+  constructor() {
+  }
 
   ngOnInit() {
+    console.log(this.deviceResource);
+    this.name = this.deviceResource.path;
   }
 
 }
