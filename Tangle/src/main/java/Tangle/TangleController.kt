@@ -3,7 +3,7 @@ package Tangle
 import com.google.gson.Gson
 import datatypes.nordpool.PublicationTimeSeries
 import helpers.EncryptionHelper
-import Helpers.PropertiesLoader
+import helpers.PropertiesLoader
 import jota.IotaAPI
 import jota.dto.response.SendTransferResponse
 import jota.model.Transaction

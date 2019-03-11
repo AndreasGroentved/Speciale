@@ -2,12 +2,12 @@ package helpers
 
 import java.util.*
 
-class PropertiesLoader {
+class PropertiesLoader private constructor() {
 
     private val properties = loadProperties()
 
     companion object {
-        val instance = PropertiesLoader()
+        val instance by lazy { PropertiesLoader() }
     }
 
     fun loadProperties() = Properties().apply { this.load(ClassLoader.getSystemResourceAsStream("config.properties")) }
