@@ -1,9 +1,7 @@
 package Tangle
 
-import com.google.gson.Gson
-import datatypes.nordpool.PublicationTimeSeries
 import helpers.EncryptionHelper
-import Helpers.PropertiesLoader
+import helpers.PropertiesLoader
 import jota.IotaAPI
 import jota.dto.response.SendTransferResponse
 import jota.model.Transaction
@@ -89,12 +87,13 @@ class TangleController {
     }
 
     private fun parseAndVerifyNordPool(transaction: Transaction): Boolean {
-        val message = TrytesConverter.trytesToAscii(transaction.signatureFragments + "9")
-        val messageTrimmed = message.trim((0).toChar())
-        val response = Gson().fromJson(messageTrimmed, PublicationTimeSeries::class.java)
+        val messageASCII = TrytesConverter.trytesToAscii(transaction.signatureFragments + "9")
+        val messageTrimmed = messageASCII.trim((0).toChar())
+        val signature = messageTrimmed.substringAfter("__")
+        val message = messageTrimmed.substringBefore("__")
         val publicECKey = EncryptionHelper.loadPublicECKey("nordPoolPublicKey")
-        println(EncryptionHelper.verifySignatureBase64(publicECKey, "nordpool", response.signature!!))
-        return EncryptionHelper.verifySignatureBase64(publicECKey, "nordpool", response.signature!!)
+        println(EncryptionHelper.verifySignatureBase64(publicECKey, message, signature))
+        return EncryptionHelper.verifySignatureBase64(publicECKey, message, signature!!)
 
 
     }

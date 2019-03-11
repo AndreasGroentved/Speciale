@@ -6,8 +6,6 @@ import javax.annotation.processing.Generated
 @Generated("com.robohorse.robopojogenerator")
 data class PublicationTimeSeries(
 
-    var signature: String? = null,
-
     @field:SerializedName("Currency")
     val currency: Currency? = null,
 
