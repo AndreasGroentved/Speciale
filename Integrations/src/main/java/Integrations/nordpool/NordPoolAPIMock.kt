@@ -2,6 +2,7 @@ package Integrations.nordpool
 
 import Tangle.TangleController
 import com.google.gson.Gson
+import datatypes.nordpool.IntervalItem
 import datatypes.nordpool.NordPoolAPIMockResponse
 import datatypes.nordpool.PublicationTimeSeries
 import helpers.EncryptionHelper
@@ -15,11 +16,15 @@ class NordPoolAPIMock {
     private val gson = Gson()
 
     fun publishMockPrices() {
-        val chunks = nordPoolAPIMockResponse.publicationTimeSeries!!.period!!.interval!!.chunked(12)
+        val chunks = nordPoolAPIMockResponse.publicationTimeSeries?.period?.interval
+            ?.chunked(12)?.map { it as List<*> } as? List<List<IntervalItem>>
+            ?: throw RuntimeException("invalid server response")
+
         val timeSeries = nordPoolAPIMockResponse.publicationTimeSeries
-        val period = timeSeries!!.period!!
-        val copy = timeSeries.copy(timeSeries.signature, timeSeries.currency, timeSeries.measureUnitPrice, period.copy(period.timeInterval, period.resolution, chunks[0]))
-        val copy2 = timeSeries.copy(timeSeries.signature, timeSeries.currency, timeSeries.measureUnitPrice, period.copy(period.timeInterval, period.resolution, chunks[1]))
+        val period = timeSeries?.period ?: throw RuntimeException("invalid period")
+
+        val copy = timeSeries.copyWithPeriodChunks(chunks[0])
+        val copy2 = timeSeries.copyWithPeriodChunks(chunks[1])
         signMockResponse(copy)
         signMockResponse(copy2)
         println(tangleController.attachTransactionToTangle(seed, gson.toJson(copy), "NP"))
@@ -38,4 +43,6 @@ class NordPoolAPIMock {
         timeSeries.signature = EncryptionHelper.signBase64(privateECKey, "nordpool")
     }
 }
+
+fun PublicationTimeSeries.copyWithPeriodChunks(chunks: List<IntervalItem>) = PublicationTimeSeries(signature, currency, measureUnitPrice, period!!.copy(period!!.timeInterval, period!!.resolution, chunks))
 

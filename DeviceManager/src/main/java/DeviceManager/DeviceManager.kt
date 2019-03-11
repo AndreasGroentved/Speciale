@@ -30,7 +30,7 @@ class DeviceManager {
     fun getDevice(id: String): String = devicesIdToSpecification[id]!! //TODO laves om når device ændres
 
     fun getAllSavings(from: Long, to: Long) =
-        devicesIdToSpecification.keys.map { getSavingsForDevice(from, to, it) }.fold(BigDecimal(0)) { a: BigDecimal, b: BigDecimal -> a + b }.toString()
+        devicesIdToSpecification.keys.map { getSavingsForDevice(from, to, it) }.fold(BigDecimal(0)) { a, b -> a + b }.toString()
 
 
     fun getSavingsForDevice(from: Long, to: Long, deviceId: String): BigDecimal = tangle.getDevicePriceSavings(from, to, deviceId)

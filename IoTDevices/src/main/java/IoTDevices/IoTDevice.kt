@@ -1,6 +1,6 @@
 package IoTDevices
 
-import helpers.PropertiesLoader
+import Helpers.PropertiesLoader
 import org.eclipse.californium.core.CoapServer
 import org.eclipse.californium.core.server.resources.Resource
 
