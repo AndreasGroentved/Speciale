@@ -5,9 +5,13 @@
 <div>
   {{id}}
 
+
+  <app-power [deviceId]=id></app-power>
+  <app-price></app-price>
+
   <ul>
     <li *ngFor="let module of modules; let i = index">
-      <app-iot-module [deviceResource]=module></app-iot-module>
+      <app-iot-module [deviceResource]=module [deviceId]=id></app-iot-module>
     </li>
   </ul>
 </div>

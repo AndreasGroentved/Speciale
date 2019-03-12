@@ -7,8 +7,7 @@ import javax.annotation.processing.Generated
 data class IntervalItem(
 
     @field:SerializedName("Pos")
-    val pos: Pos? = null,
-
+    val pos: Pos = Pos(),
     @field:SerializedName("Price")
-    val price: Price? = null
+    val price: Price = Price()
 )

@@ -7,5 +7,5 @@ import javax.annotation.processing.Generated
 data class NordPoolAPIMockResponse(
 
     @field:SerializedName("PublicationTimeSeries")
-    val publicationTimeSeries: PublicationTimeSeries? = null
+    val publicationTimeSeries: PublicationTimeSeries = PublicationTimeSeries()
 )

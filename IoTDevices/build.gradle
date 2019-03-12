@@ -13,4 +13,5 @@ dependencies {
     api "org.eclipse.californium:californium-core:1.0.7"
     compile project(':Common')
     compile group: 'org.jgroups', name: 'jgroups', version: '4.0.18.Final'
+    compile group: 'joda-time', name: 'joda-time', version: '2.10.1'
 }

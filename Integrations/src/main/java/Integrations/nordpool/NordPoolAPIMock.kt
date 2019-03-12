@@ -16,13 +16,8 @@ class NordPoolAPIMock {
     private val gson = Gson()
 
     fun publishMockPrices() {
-        val chunks = nordPoolAPIMockResponse.publicationTimeSeries?.period?.interval
-            ?.chunked(12)?.map { it as List<*> } as? List<List<IntervalItem>>
-            ?: throw RuntimeException("invalid server response")
-
+        val chunks = nordPoolAPIMockResponse.publicationTimeSeries.period.interval.chunked(12)
         val timeSeries = nordPoolAPIMockResponse.publicationTimeSeries
-        val period = timeSeries?.period ?: throw RuntimeException("invalid period")
-
         val copy = timeSeries.copyWithPeriodChunks(chunks[0])
         val copy2 = timeSeries.copyWithPeriodChunks(chunks[1])
         signMockResponse(copy)
@@ -44,5 +39,5 @@ class NordPoolAPIMock {
     }
 }
 
-fun PublicationTimeSeries.copyWithPeriodChunks(chunks: List<IntervalItem>) = PublicationTimeSeries(signature, currency, measureUnitPrice, period!!.copy(period!!.timeInterval, period!!.resolution, chunks))
+fun PublicationTimeSeries.copyWithPeriodChunks(chunks: List<IntervalItem>) = PublicationTimeSeries(signature, currency, measureUnitPrice, period.copy(period.timeInterval, period.resolution, chunks))
 

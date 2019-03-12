@@ -15,7 +15,7 @@ import java.net.InetSocketAddress
 val COAP_PORT = NetworkConfig.getStandard().getInt(NetworkConfig.Keys.COAP_PORT)
 
 fun main() {
-    var pump = HeatPump()
+    val pump = HeatPump()
     pump.start()
 }
 

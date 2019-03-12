@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
+import {DeviceResource} from "../DeviceResource";
 
 @Component({
   selector: 'app-power',
@@ -6,8 +7,10 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./power.component.css']
 })
 export class PowerComponent implements OnInit {
+  @Input() deviceId: string;
 
-  constructor() { }
+  constructor() {
+  }
 
   ngOnInit() {
   }

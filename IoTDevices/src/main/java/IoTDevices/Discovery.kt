@@ -1,7 +1,8 @@
 package IoTDevices
 
 import com.google.gson.Gson
-import helpers.IpDevice
+import helpers.Device
+import helpers.IdIp
 import org.jgroups.JChannel
 import org.jgroups.Message
 import org.jgroups.ReceiverAdapter
@@ -37,7 +38,7 @@ class Discovery(val ioTDevice: IoTDevice) : ReceiverAdapter() {
         while (thread?.isAlive == true) { //TODO det er nok, nok at at gøre dette i viewAccepted een gang
             Thread.sleep(2000)
             if (!thread?.isAlive!!) break
-            val simpleDeviceString = gson.toJson(IpDevice(ip, gson.toJson(ioTDevice.deviceSpecification))) //TODO hax hax hax
+            val simpleDeviceString = gson.toJson(Device(IdIp(ioTDevice.id, ip), gson.toJson(ioTDevice.deviceSpecification))) //TODO hax hax hax
             channel.send(Message(null, simpleDeviceString.toByteArray()))
         }
     }

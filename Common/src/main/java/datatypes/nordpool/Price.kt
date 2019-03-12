@@ -7,5 +7,5 @@ import javax.annotation.processing.Generated
 data class Price(
 
     @field:SerializedName("_v")
-    val V: String? = null
+    val V: String=""
 )

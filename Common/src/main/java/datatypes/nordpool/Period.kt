@@ -7,11 +7,11 @@ import javax.annotation.processing.Generated
 data class Period(
 
     @field:SerializedName("TimeInterval")
-    val timeInterval: TimeInterval? = null,
+    val timeInterval: TimeInterval=TimeInterval(),
 
     @field:SerializedName("Resolution")
-    val resolution: Resolution? = null,
+    val resolution: Resolution = Resolution(),
 
     @field:SerializedName("Interval")
-    val interval: List<IntervalItem?>? = null
+    val interval: List<IntervalItem> = emptyList()
 )

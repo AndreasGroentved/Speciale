@@ -6,15 +6,15 @@ import javax.annotation.processing.Generated
 @Generated("com.robohorse.robopojogenerator")
 data class PublicationTimeSeries(
 
-    var signature: String? = null,
+    var signature: String="",
 
     @field:SerializedName("Currency")
-    val currency: Currency? = null,
+    val currency: Currency= Currency(),
 
     @field:SerializedName("MeasureUnitPrice")
-    val measureUnitPrice: MeasureUnitPrice? = null,
+    val measureUnitPrice: MeasureUnitPrice= MeasureUnitPrice(),
 
     @field:SerializedName("Period")
-    val period: Period? = null
+    val period: Period= Period()
 
 )

@@ -7,7 +7,7 @@ import {DeviceSpecification} from "./DeviceSpecification";
   providedIn: 'root'
 })
 export class WebService {
-  serverUrl = "10.126.87.11"; //TODO
+  serverUrl = "http://localhost:4567"; //TODO
   constructor(private http: HttpClient) {
 
   }
@@ -19,14 +19,19 @@ export class WebService {
   };
 
   getDevices(callback: (device: [Device]) => (void)) {
-    this.http.get("http://localhost:4567/devices").subscribe(results => {
+    console.log("get");
+    this.http.get(this.serverUrl + "/devices").subscribe(results => {
       console.log(results);
       let devices: [Device] = results as [Device];
-
       callback(devices)
     });
   }
 
+  getDeviceValueFromPath(deviceId: string, path: string, callback: (val: string) => (void)) {
+    this.http.get(this.serverUrl + "/device/" + deviceId + "/" + path).subscribe(results => {
+      callback(results.toString());
+    });
+  }
 
   getDevice(deviceID, callback: (device: DeviceSpecification) => (void)) {
     this.http.get("http://localhost:4567/device/" + deviceID).subscribe(results => {

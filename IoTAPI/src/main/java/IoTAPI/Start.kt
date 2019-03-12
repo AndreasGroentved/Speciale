@@ -17,8 +17,7 @@ fun main(args: Array<String>) {
         "/*"
     ) { request, response ->
 
-        val accessControlRequestHeaders = request
-            .headers("Access-Control-Request-Headers")
+        val accessControlRequestHeaders = request.headers("Access-Control-Request-Headers")
         if (accessControlRequestHeaders != null) {
             response.header(
                 "Access-Control-Allow-Headers",
@@ -26,15 +25,13 @@ fun main(args: Array<String>) {
             )
         }
 
-        val accessControlRequestMethod = request
-            .headers("Access-Control-Request-Method")
+        val accessControlRequestMethod = request.headers("Access-Control-Request-Method")
         if (accessControlRequestMethod != null) {
             response.header(
                 "Access-Control-Allow-Methods",
                 accessControlRequestMethod
             )
         }
-
         "OK"
     }
 
@@ -42,7 +39,6 @@ fun main(args: Array<String>) {
 
 
     get("/devices") { request, response ->
-        println("yolo")
         response.type("application/json")
         deviceManger.getAllDevices()
     }
@@ -72,9 +68,6 @@ fun main(args: Array<String>) {
         val to = request.params(":to").toLong()
         deviceManger.getAllSavings(from, to)
     }
-
-
-    // }
 
 
 }
