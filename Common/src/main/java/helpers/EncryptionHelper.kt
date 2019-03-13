@@ -23,9 +23,14 @@ object EncryptionHelper {
         return privateKey
     }
 
-    fun loadPublicECKey(key: String): PublicKey {
+    fun loadPublicECKeyFromProperties(key: String): PublicKey {
         val keyString = PropertiesLoader.instance.getProperty(key)
         val hest = BigInteger(keyString).toByteArray()
+        return KeyFactory.getInstance("EC", "SunEC").generatePublic(X509EncodedKeySpec(hest))
+    }
+
+    fun loadPublicECKeyFromBigInteger(key: BigInteger): PublicKey {
+        val hest = key.toByteArray()
         return KeyFactory.getInstance("EC", "SunEC").generatePublic(X509EncodedKeySpec(hest))
     }
 

@@ -91,7 +91,7 @@ class TangleController {
         val messageTrimmed = messageASCII.trim((0).toChar())
         val signature = messageTrimmed.substringAfter("__")
         val message = messageTrimmed.substringBefore("__")
-        val publicECKey = EncryptionHelper.loadPublicECKey(publicKey)
+        val publicECKey = EncryptionHelper.loadPublicECKeyFromProperties(publicKey)
         return EncryptionHelper.verifySignatureBase64(publicECKey, message, signature)
 
 

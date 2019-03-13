@@ -11,6 +11,7 @@ import spark.Spark
 import spark.Spark.*
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.math.BigInteger
 import java.util.*
 
 
@@ -44,7 +45,6 @@ class AuthService {
                     accessControlRequestHeaders
                 )
             }
-
             val accessControlRequestMethod = request
                 .headers("Access-Control-Request-Method")
             if (accessControlRequestMethod != null) {
@@ -58,22 +58,23 @@ class AuthService {
         }
 
         before(Filter
-        { request: Request, response: Response -> response.header("Access-Control-Allow-Origin", "*") })
+        { _: Request, response: Response -> response.header("Access-Control-Allow-Origin", "*") })
 
 
         post("/register/user")
         { request, response ->
             val body = getParameterMap(request.body())
-            users.add(User(body["username"]!!, body["password"]!!, mutableListOf()))
+            users.add(User(body.getValue("username"), body.getValue("password"), BigInteger(body["key"]), mutableListOf()))
             response.status(200)
             "success"
         }
         post("/login")
         { request, response ->
             val body = getParameterMap(request.body())
-            val user = users.find { user -> user.username == body["username"] && user.password == body["password"] }
+            val user = users.find { (username, password) -> username == body["username"] && password == body["password"] }
             val token = UUID.randomUUID().toString()
             tokensToUsers[token] = user!!
+            response.status(200)
             token
 
         }
@@ -82,7 +83,7 @@ class AuthService {
             val token = getParameterMap(request.body())["token"]
             val deviceSpecificationJson = getParameterMap(request.body())["deviceSpecification"]
             tokensToUsers[token]!!.devices.add(gson.fromJson(deviceSpecificationJson, DeviceSpecification::class.java))
-            tokensToUsers.remove(token)
+            response.status(200)
             deviceSpecificationJson
         }
         post("/deregister/device")
@@ -90,12 +91,12 @@ class AuthService {
             val token = getParameterMap(request.body())["token"]
             val deviceSpecificationJson = getParameterMap(request.body())["deviceSpecification"]
             tokensToUsers[token]!!.devices.remove(gson.fromJson(deviceSpecificationJson, DeviceSpecification::class.java))
-            tokensToUsers.remove(token)
+            response.status(200)
             deviceSpecificationJson
         }
     }
 
-    fun getParameterMap(body: String): Map<String, String> {
+    private fun getParameterMap(body: String): Map<String, String> {
         val mapType = object : TypeToken<Map<String, String>>() {}.type
         return Gson().fromJson(body, mapType)
     }
