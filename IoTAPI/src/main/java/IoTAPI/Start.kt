@@ -10,7 +10,7 @@ import spark.Response
 import spark.Spark.*
 
 
-fun main(args: Array<String>) {
+fun main() {
     val deviceManger = DeviceManager()
     deviceManger.startDiscovery()
     val gson = Gson()

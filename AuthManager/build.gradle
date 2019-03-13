@@ -4,4 +4,7 @@ version '1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 
 dependencies {
+    implementation "com.sparkjava:spark-core:2.5.4"
+    compile project(':Common')
+    compile project(':IoTDevices')
 }

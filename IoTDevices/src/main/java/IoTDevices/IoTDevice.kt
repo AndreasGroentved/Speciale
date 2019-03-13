@@ -1,6 +1,9 @@
 package IoTDevices
 
 import com.google.gson.Gson
+import datatypes.iotdevices.DeviceResource
+import datatypes.iotdevices.DeviceSpecification
+import datatypes.iotdevices.ResourceMethod
 import helpers.PostMessage
 import helpers.PropertiesLoader
 import helpers.TimeUsage

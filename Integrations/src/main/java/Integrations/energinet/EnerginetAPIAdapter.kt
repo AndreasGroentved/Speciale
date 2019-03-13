@@ -25,16 +25,11 @@ class EnerginetAPIAdapter {
         val httpResponse = HttpClient.newHttpClient().send(
             httpRequest, HttpResponse.BodyHandlers.ofString()
         )
-        println(httpResponse)
         val fromJson = gson.fromJson(httpResponse.body(), EnerginetAPIResponse::class.java)
-        println(fromJson)
         val toJson = gson.toJson(fromJson)
-        println(toJson)
         val privateECKey = EncryptionHelper.loadPrivateECKey("energinetPrivateKey")
-        println(privateECKey)
         val signed = toJson + "__" + EncryptionHelper.signBase64(privateECKey, toJson)
-        println(signed)
-        println(tangleController.attachTransactionToTangle(seed, signed, "EN"))
+        tangleController.attachTransactionToTangle(seed, signed, "EN")
     }
 
 }

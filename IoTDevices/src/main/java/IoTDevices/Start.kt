@@ -3,7 +3,7 @@ package IoTDevices
 
 import IoTDevices.HeatPump.HeatPump
 
-fun main(args: Array<String>) {
+fun main() {
 
     val heatPump = HeatPump()
     heatPump.start()
