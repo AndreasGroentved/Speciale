@@ -11,11 +11,11 @@ export class ModuleService {
   }
 
   getModuleInputTypes(d: DeviceResource, methodType: string): Array<ParameterNameToType> {//Methodtype = GET or POST
-    let parameters:Array<ParameterNameToType> = [];
-    d.resourceMethods.filter(value => value.methodType == methodType)
-      .forEach(value =>
-        value.parameters.forEach((value, key) => parameters.push(new ParameterNameToType(value, key)))
-      );
+    let parameters: Array<ParameterNameToType> = [];
+    d.resourceMethods.filter(value1 =>
+      value1.methodType == methodType).forEach(value2 =>
+      Object.keys(value2.parameters).forEach((key: string) =>
+        parameters.push(new ParameterNameToType(value2.parameters[key], key))));
     return parameters;
   }
 

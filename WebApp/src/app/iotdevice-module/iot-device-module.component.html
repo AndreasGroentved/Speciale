@@ -1,5 +1,18 @@
 <p>
   {{name}}
+
 </p>
 
 
+<div *ngFor="let keyValue of getValues | keyvalue">
+  {{ keyValue.value }} {{keyValue.key}}
+</div>
+
+
+<div *ngFor="let keyValue of postValues| keyvalue"> <!--path-->
+
+  <div *ngIf="keyValue.key=='Boolean'">
+    {{ keyValue.value }}  <input type="checkbox" name="{{keyValue.value}}" value="Bike"> <br>
+  </div>
+  <button (click)="onClickMe()">Update</button>
+</div>

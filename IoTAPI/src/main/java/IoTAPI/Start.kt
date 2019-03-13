@@ -1,6 +1,9 @@
 package IoTAPI
 
 import DeviceManager.DeviceManager
+import com.google.common.reflect.TypeToken
+import com.google.gson.Gson
+import helpers.PostMessage
 import spark.Filter
 import spark.Request
 import spark.Response
@@ -10,13 +13,11 @@ import spark.Spark.*
 fun main(args: Array<String>) {
     val deviceManger = DeviceManager()
     deviceManger.startDiscovery()
+    val gson = Gson()
 
     println("after discovery")
 
-    options(
-        "/*"
-    ) { request, response ->
-
+    options("/*") { request, response ->
         val accessControlRequestHeaders = request.headers("Access-Control-Request-Headers")
         if (accessControlRequestHeaders != null) {
             response.header(
@@ -52,15 +53,26 @@ fun main(args: Array<String>) {
     post("/device/:id/:path") { request, response ->
         val id = request.params(":id")
         val path = request.params(":path")
-        val parameter = request.params(":parameter")
+        val parameter = request.queryParams("parameter")
+
+
+        println(getParameterMap(request.body()))
         deviceManger.post(id, path, parameter)
     }
 
-    get("/price/device/:id") { request, response ->
+    get("/device/:id/price") { request, response ->
         val from = request.params(":from").toLong()
         val to = request.params(":to").toLong()
-        val id = request.params(":id")
+        val id = request.params(":id").toString()
         deviceManger.getSavingsForDevice(from, to, id)
+    }
+
+    get("/device/:id/time") { request, response ->
+        val from = request.queryParams(":from") as String
+        val toTime = request.queryParams(":to") as String
+        val postMessage = PostMessage(mapOf("from" to from, "to" to toTime))
+        val id = request.params(":id") as String
+        deviceManger.post(id, "time", gson.toJson(postMessage))
     }
 
     get("/price") { request, response ->
@@ -70,5 +82,10 @@ fun main(args: Array<String>) {
     }
 
 
+}
+
+fun getParameterMap(body: String): Map<String, String> {
+    val mapType = object : TypeToken<Map<String, String>>() {}.type
+    return Gson().fromJson(body, mapType)
 }
 

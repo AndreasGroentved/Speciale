@@ -8,6 +8,7 @@ import {DeviceSpecification} from "./DeviceSpecification";
 })
 export class WebService {
   serverUrl = "http://localhost:4567"; //TODO
+
   constructor(private http: HttpClient) {
 
   }
@@ -27,15 +28,28 @@ export class WebService {
     });
   }
 
-  getDeviceValueFromPath(deviceId: string, path: string, callback: (val: string) => (void)) {
+  getOnTime(from: string = "0", to: string = Date.now() + "", id: string, callback: (val: string) => (void)) {
+    this.http.get(this.serverUrl + "/device/" + id + "/time ? from=" + from + "&to" + to).subscribe(results => {
+      return results as Map<string, string>;
+    });
+  }
+
+  postDeviceValue(deviceId: string, path: string, postValue: string, callback: (val: string) => (void)) {
     this.http.get(this.serverUrl + "/device/" + deviceId + "/" + path).subscribe(results => {
-      callback(results.toString());
+      return results.toString();
+    });
+  }
+
+  getDeviceValueFromPath(deviceId: string, path: string, callback: (val) => (void)) {
+    this.http.get(this.serverUrl + "/device/" + deviceId + "/" + path).subscribe(results => {
+      callback(results);
     });
   }
 
   getDevice(deviceID, callback: (device: DeviceSpecification) => (void)) {
-    this.http.get("http://localhost:4567/device/" + deviceID).subscribe(results => {
+    this.http.get(this.serverUrl + "/device/" + deviceID).subscribe(results => {
       let device: DeviceSpecification = results as DeviceSpecification;
+      device.deviceResources = device.deviceResources.filter(a => a.path != "time");
       callback(device)
     });
   }

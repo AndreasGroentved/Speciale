@@ -1,9 +1,8 @@
 package IoTDevices.HeatPump
 
 import IoTDevices.IoTDevice
-import IoTDevices.PostMessage
 import IoTDevices.ResourceMethod
-import com.google.gson.Gson
+import helpers.PostMessage
 import org.eclipse.californium.core.CoapResource
 import org.eclipse.californium.core.network.CoapEndpoint
 import org.eclipse.californium.core.network.EndpointManager
@@ -24,7 +23,7 @@ class HeatPump : IoTDevice("hest") {
         addEndpoints()
         add(
             HeatPumpResource(), listOf(
-                ResourceMethod("GET", mapOf(), "Gets the target temperature of the heat pump"),
+                ResourceMethod("GET", mapOf("temperature" to "Integer"), "Gets the target temperature of the heat pump"),
                 ResourceMethod("POST", mapOf("diff" to "Integer"), "Adjusts target temperature of the heat pump by diff")
             )
         )
@@ -38,7 +37,7 @@ class HeatPump : IoTDevice("hest") {
             }
     }
 
-    class HeatPumpResource : CoapResource("temperature") {
+    inner class HeatPumpResource : CoapResource("temperature") {
         private var temperature: Int = 20
 
         private fun adjustTemperature(diff: Int) {
@@ -56,9 +55,11 @@ class HeatPump : IoTDevice("hest") {
         override fun handlePOST(exchange: CoapExchange?) {
             try {
                 exchange?.let {
-                    val fromJson = Gson().fromJson(exchange.requestText, PostMessage::class.java)
-                    adjustTemperature(fromJson.params[0].toInt())
+                    val fromJson = this@HeatPump.gson.fromJson(exchange.requestText, PostMessage::class.java)
+                    val temp = fromJson.params["temperature"]
+                    temperature = temp?.toInt() ?: temperature
                     exchange.respond("temperature is now $temperature")
+
                 }
             } catch (e: Exception) {
                 when (e) {

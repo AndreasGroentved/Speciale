@@ -2,8 +2,8 @@ package DeviceManager
 
 import Tangle.TangleController
 import com.google.gson.Gson
-import helpers.IdIp
 import helpers.Device
+import helpers.IdIp
 import org.eclipse.californium.core.CoapClient
 import org.eclipse.californium.core.coap.MediaTypeRegistry
 import java.math.BigDecimal
@@ -35,20 +35,15 @@ class DeviceManager {
 
     private fun getDeviceKeyFromId(id: String) = devicesIdIpToSpecification.filter { it.key.id == id }.map { it.key }.firstOrNull()
 
-
     fun getAllSavings(from: Long, to: Long) =
         devicesIdIpToSpecification.keys.map { getSavingsForDevice(from, to, it.id) }.fold(BigDecimal(0)) { a, b -> a + b }.toString()
 
-
     fun getSavingsForDevice(from: Long, to: Long, deviceId: String): BigDecimal = tangle.getDevicePriceSavings(from, to, deviceId)
 
-
     fun get(deviceId: String, path: String): String {
-        val mapKey = getDeviceKeyFromId(deviceId) ?: return "invalid device id "
-        val client = CoapClient("${mapKey.ip}:5683/$path")
-
+        val mapKey = getDeviceKeyFromId(deviceId) ?: return "invalid device id"
+        val client = CoapClient("${mapKey.ip}:5683/$path?yolo='yolo'")
         val response = client.get()
-        println(response.responseText)
         return response?.let { response.responseText } ?: "No response received"
     }
 

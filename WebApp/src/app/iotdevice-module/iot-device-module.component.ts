@@ -14,9 +14,10 @@ export class IotDeviceModuleComponent implements OnInit {
   @Input() deviceId: string;
   private name = "loading...";
   private getModules: Array<ParameterNameToType> = [];
-  private postModules = [];
+  private postModules: Array<ParameterNameToType> = [];
 
   private getValues: Map<string, string> = new Map();
+  private postValues: Map<string, string> = new Map();
 
   constructor(private webService: WebService, private moduleService: ModuleService) {
   }
@@ -28,22 +29,41 @@ export class IotDeviceModuleComponent implements OnInit {
     this.name = this.deviceResource.path;
     this.getModules = ms.getModuleInputTypes(this.deviceResource, "GET");
     this.postModules = ms.getModuleInputTypes(this.deviceResource, "POST");
-    this.getModules.forEach(value => this.getValue(value.name))
+    this.getModules.forEach(value => this.addGetValue(value.name));
+    this.postModules.forEach(value => this.addPostValue(value))
   }
 
-  getValue(getMethod: string) {
-    this.webService.getDeviceValueFromPath(this.deviceId, this.deviceResource.path, val => {
-      this.getValues[getMethod] = val;
+  isBoolean(value: string) {
+    return value == "Boolean"
+  }
+
+  isString(value: string) {
+    return value == "String";
+  }
+
+  isInteger(value: string) {
+    return value == "Integer";
+  }
+
+  isFloat(value: string) {
+    return value == "Float";
+  }
+
+  postUpdate(key: string, value: string) {
+    let ws = this.webService;
+    ws.postDeviceValue(this.deviceId, this.deviceResource.path, value, val => {
+      console.log(val);
     })
   }
 
-  postValue(postMethod
-              :
-              string, value
-              :
-              string
-  ) {
+  addGetValue(getMethod: string) {
+    this.webService.getDeviceValueFromPath(this.deviceId, this.deviceResource.path, val => {
+      this.getValues.set(val, this.deviceResource.path);
+    })
+  }
 
+  addPostValue(parameterNameToType: ParameterNameToType) {
+    this.postValues.set(parameterNameToType.name, parameterNameToType.type);
   }
 
 }
