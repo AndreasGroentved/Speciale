@@ -2,8 +2,11 @@ package Tangle
 
 fun main() {
 
+    //todo: ordentlig logging rundt omkring
     val tangle = TangleController()
-    println(tangle.getNewestBroadcast("NP"))
+    println(tangle.getNewestBroadcast("EN", "energinetPublicKey"))
+    println(tangle.getNewestBroadcast("NP", "nordPoolPublicKey"))
+
 /*
     println(
         tangle.attachDeviceToTangle(

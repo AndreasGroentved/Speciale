@@ -1,7 +1,5 @@
 package Tangle
 
-import com.google.gson.Gson
-import datatypes.nordpool.PublicationTimeSeries
 import helpers.EncryptionHelper
 import helpers.PropertiesLoader
 import jota.IotaAPI
@@ -37,7 +35,7 @@ class TangleController {
 
     private fun initIotaAPI(isDefault: Boolean) {
         if (!isDefault) {
-            iotaAPI = IotaAPI.Builder().host(nodeAddress).port(nodePort).build() //whatever is in the config
+            iotaAPI = IotaAPI.Builder().host(nodeAddress).port(nodePort).protocol("http").build() //whatever is in the config
         } else {
             IotaAPI.Builder().build() //https://nodes.devnet.iota.org:443
         }
@@ -75,26 +73,26 @@ class TangleController {
         return BigDecimal(12)
     }
 
-    fun getNewestBroadcast(entityName: String): Transaction? {
+    fun getNewestBroadcast(entityName: String, publicKey: String): Transaction? {
         val transactions =
             iotaAPI.findTransactionObjectsByTag(arrayOf(entityName))
         val sorted = transactions.sortedByDescending { it.timestamp }.toList()
-        return sorted.first { transaction -> parseAndVerifyNordPool(transaction) }
+        return sorted.first { transaction -> parseAndVerifyTransaction(transaction, publicKey) }
     }
 
-    fun getNewestBroadcasts(entityName: String): List<Transaction>? {
+    fun getNewestBroadcasts(entityName: String, publicKey: String): List<Transaction>? {
         val transactions =
             iotaAPI.findTransactionObjectsByTag(arrayOf(entityName))
-        return transactions.sortedByDescending { it.timestamp }.toList().filter { transaction -> parseAndVerifyNordPool(transaction) }
+        return transactions.sortedByDescending { it.timestamp }.toList().filter { transaction -> parseAndVerifyTransaction(transaction, publicKey) }
     }
 
-    private fun parseAndVerifyNordPool(transaction: Transaction): Boolean {
-        val message = TrytesConverter.trytesToAscii(transaction.signatureFragments + "9")
-        val messageTrimmed = message.trim((0).toChar())
-        val response = Gson().fromJson(messageTrimmed, PublicationTimeSeries::class.java)
-        val publicECKey = EncryptionHelper.loadPublicECKey("nordPoolPublicKey")
-        println(EncryptionHelper.verifySignatureBase64(publicECKey, "nordpool", response.signature!!))
-        return EncryptionHelper.verifySignatureBase64(publicECKey, "nordpool", response.signature!!)
+    private fun parseAndVerifyTransaction(transaction: Transaction, publicKey: String): Boolean {
+        val messageASCII = TrytesConverter.trytesToAscii(transaction.signatureFragments + "9")
+        val messageTrimmed = messageASCII.trim((0).toChar())
+        val signature = messageTrimmed.substringAfter("__")
+        val message = messageTrimmed.substringBefore("__")
+        val publicECKey = EncryptionHelper.loadPublicECKey(publicKey)
+        return EncryptionHelper.verifySignatureBase64(publicECKey, message, signature)
 
 
     }

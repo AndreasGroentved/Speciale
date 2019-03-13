@@ -16,14 +16,18 @@ class NordPoolAPIMock {
     private val gson = Gson()
 
     fun publishMockPrices() {
-        val chunks = nordPoolAPIMockResponse.publicationTimeSeries.period.interval.chunked(12)
-        val timeSeries = nordPoolAPIMockResponse.publicationTimeSeries
-        val copy = timeSeries.copyWithPeriodChunks(chunks[0])
-        val copy2 = timeSeries.copyWithPeriodChunks(chunks[1])
-        signMockResponse(copy)
-        signMockResponse(copy2)
-        println(tangleController.attachTransactionToTangle(seed, gson.toJson(copy), "NP"))
-        println(tangleController.attachTransactionToTangle(seed, gson.toJson(copy2), "NP"))
+        val chunks = nordPoolAPIMockResponse.publicationTimeSeries?.period?.interval
+            ?.chunked(12)?.map { it as List<*> } as? List<List<IntervalItem>>
+            ?: throw RuntimeException("invalid server response")
+
+        val timeSeries = nordPoolAPIMockResponse.publicationTimeSeries!!
+
+        var copy = timeSeries.copyWithPeriodChunks(chunks[0])
+        var copy2 = timeSeries.copyWithPeriodChunks(chunks[1])
+        val signedResponse1 = signMockResponse(gson.toJson(copy))
+        val signedResponse2 = signMockResponse(gson.toJson(copy2))
+        println(tangleController.attachTransactionToTangle(seed, signedResponse1, "NP"))
+        println(tangleController.attachTransactionToTangle(seed, signedResponse2, "NP"))
     }
 
     private fun loadMockResponse(): NordPoolAPIMockResponse {
@@ -33,11 +37,11 @@ class NordPoolAPIMock {
         return Gson().fromJson(readText, NordPoolAPIMockResponse::class.java)
     }
 
-    private fun signMockResponse(timeSeries: PublicationTimeSeries) {
+    private fun signMockResponse(json: String): String {
         val privateECKey = EncryptionHelper.loadPrivateECKey("nordPoolPrivateKey")
-        timeSeries.signature = EncryptionHelper.signBase64(privateECKey, "nordpool")
+        return json + "__" + EncryptionHelper.signBase64(privateECKey, json)
     }
 }
 
-fun PublicationTimeSeries.copyWithPeriodChunks(chunks: List<IntervalItem>) = PublicationTimeSeries(signature, currency, measureUnitPrice, period.copy(period.timeInterval, period.resolution, chunks))
+fun PublicationTimeSeries.copyWithPeriodChunks(chunks: List<IntervalItem>) = PublicationTimeSeries(currency, measureUnitPrice, period!!.copy(period!!.timeInterval, period!!.resolution, chunks))
 
