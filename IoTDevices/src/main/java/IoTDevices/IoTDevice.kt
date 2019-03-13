@@ -1,12 +1,8 @@
 package IoTDevices
 
 import com.google.gson.Gson
-import datatypes.iotdevices.DeviceResource
-import datatypes.iotdevices.DeviceSpecification
-import datatypes.iotdevices.ResourceMethod
-import helpers.PostMessage
+import datatypes.iotdevices.*
 import helpers.PropertiesLoader
-import helpers.TimeUsage
 import org.eclipse.californium.core.CoapResource
 import org.eclipse.californium.core.CoapServer
 import org.eclipse.californium.core.coap.MediaTypeRegistry

@@ -2,10 +2,11 @@ package DeviceManager
 
 import Tangle.TangleController
 import com.google.gson.Gson
-import helpers.Device
-import helpers.IdIp
+import datatypes.iotdevices.Device
+import datatypes.iotdevices.IdIp
 import org.eclipse.californium.core.CoapClient
 import org.eclipse.californium.core.coap.MediaTypeRegistry
+import org.slf4j.simple.SimpleLoggerFactory
 import java.math.BigDecimal
 
 
@@ -15,6 +16,7 @@ class DeviceManager {
     val devicesIdIpToSpecification = mutableMapOf<IdIp, String>() //TODO pair
     private val gson = Gson()
     private val tangle = TangleController()
+    private val logger = SimpleLoggerFactory().getLogger("DeviceManager")
 
     fun startDiscovery() {
         Thread {

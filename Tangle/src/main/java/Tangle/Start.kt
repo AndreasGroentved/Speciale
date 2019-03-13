@@ -1,9 +1,6 @@
 package Tangle
 
 fun main() {
-
-    //todo: ordentlig logging rundt omkring
-    //todo: fix nogle af alle de skide warnings...
     val tangle = TangleController()
     println(tangle.getNewestBroadcast("EN", "energinetPublicKey"))
     println(tangle.getNewestBroadcast("NP", "nordPoolPublicKey"))

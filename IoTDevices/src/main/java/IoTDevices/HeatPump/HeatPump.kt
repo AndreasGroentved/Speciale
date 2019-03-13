@@ -1,8 +1,8 @@
 package IoTDevices.HeatPump
 
 import IoTDevices.IoTDevice
+import datatypes.iotdevices.PostMessage
 import datatypes.iotdevices.ResourceMethod
-import helpers.PostMessage
 import org.eclipse.californium.core.CoapResource
 import org.eclipse.californium.core.network.CoapEndpoint
 import org.eclipse.californium.core.network.EndpointManager

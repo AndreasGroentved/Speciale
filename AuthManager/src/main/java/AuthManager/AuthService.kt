@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import datatypes.authmanager.User
 import datatypes.iotdevices.DeviceSpecification
+import org.slf4j.simple.SimpleLoggerFactory
 import spark.Filter
 import spark.Request
 import spark.Response
@@ -20,6 +21,7 @@ class AuthService {
     private val tokensToUsers = mutableMapOf<String, User>()
     private val users = mutableListOf<User>()
     private val gson = Gson()
+    private val logger = SimpleLoggerFactory().getLogger("AuthService")
 
     fun startService() {
         Spark.exception(
@@ -28,9 +30,9 @@ class AuthService {
             val sw = StringWriter()
             val pw = PrintWriter(sw, true)
             e.printStackTrace(pw)
-            System.err.println(sw.buffer.toString())
+            logger.error(sw.buffer.toString())
         }
-        Spark.after("/*") { request, _ -> println(request.pathInfo());println(request.body()); println(tokensToUsers); println(users) }
+        Spark.after("/*") { request, _ -> logger.info(request.pathInfo());logger.info(request.body()); logger.debug(tokensToUsers.toString()); logger.debug(users.toString()) }
 
         options(
             "/*"
@@ -64,7 +66,7 @@ class AuthService {
         post("/register/user")
         { request, response ->
             val body = getParameterMap(request.body())
-            users.add(User(body.getValue("username"), body.getValue("password"), BigInteger(body["key"]), mutableListOf()))
+            users.add(User(body.getValue("username"), body.getValue("password"), BigInteger(body["publicKey"]), mutableListOf()))
             response.status(200)
             "success"
         }

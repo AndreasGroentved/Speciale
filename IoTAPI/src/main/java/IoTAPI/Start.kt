@@ -3,19 +3,26 @@ package IoTAPI
 import DeviceManager.DeviceManager
 import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
-import helpers.PostMessage
+import datatypes.iotdevices.PostMessage
+import org.slf4j.simple.SimpleLoggerFactory
 import spark.Filter
 import spark.Request
 import spark.Response
+import spark.Spark
 import spark.Spark.*
 
 
 fun main() {
+    val logger = SimpleLoggerFactory().getLogger("IoTAPI")
     val deviceManger = DeviceManager()
     deviceManger.startDiscovery()
     val gson = Gson()
-
-    println("after discovery")
+    Spark.exception(
+        Exception::class.java
+    ) { e, _, _ ->
+        logger.error(e.toString())
+    }
+    Spark.after("/*") { request, _ -> logger.info(request.pathInfo());logger.info(request.body()); logger.info(request.params().toString()) }
 
     options("/*") { request, response ->
         val accessControlRequestHeaders = request.headers("Access-Control-Request-Headers")

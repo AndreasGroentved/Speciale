@@ -14,7 +14,7 @@ class AuthServiceClient {
     fun registerUser(username: String, password: String): String {
         val url = URL(address + "/register/user")
         val connection = url.openConnection() as HttpURLConnection
-        val params = mapOf(Pair("username", username), Pair("password", password))
+        val params = mapOf(Pair("username", username), Pair("password", password), Pair("publicKey", "123"))
         connection.setRequestMethod("POST")
         connection.setRequestProperty("Content-Type", "application/json")
         connection.setDoOutput(true)

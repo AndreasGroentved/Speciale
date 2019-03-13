@@ -4,6 +4,7 @@ import Tangle.TangleController
 import com.google.gson.Gson
 import datatypes.energinet.EnerginetAPIResponse
 import helpers.EncryptionHelper
+import org.slf4j.simple.SimpleLoggerFactory
 import java.net.URI
 import java.net.URLEncoder
 import java.net.http.HttpClient
@@ -16,8 +17,10 @@ class EnerginetAPIAdapter {
     private val gson = Gson()
     private val seed = "TESTA9999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val tangleController = TangleController()
+    private val logger = SimpleLoggerFactory().getLogger("EnergiNetAPIAdapter")
 
     fun publishCO2Signal() {
+        logger.info("Publishing CO2 Signal")
         val encoded = URLEncoder.encode("select * from \"co2emis\" as emis where emis.\"Minutes5UTC\" >= now() - INTERVAL '10 min' limit 2", Charset.defaultCharset())
         val httpRequest = HttpRequest.newBuilder().uri(URI("https://api.energidataservice.dk//datastore_search_sql?sql=" + encoded))
             .GET()
@@ -25,10 +28,12 @@ class EnerginetAPIAdapter {
         val httpResponse = HttpClient.newHttpClient().send(
             httpRequest, HttpResponse.BodyHandlers.ofString()
         )
+        logger.info("Recieved Energinet response: " + httpResponse.body())
         val fromJson = gson.fromJson(httpResponse.body(), EnerginetAPIResponse::class.java)
         val toJson = gson.toJson(fromJson)
         val privateECKey = EncryptionHelper.loadPrivateECKey("energinetPrivateKey")
         val signed = toJson + "__" + EncryptionHelper.signBase64(privateECKey, toJson)
+        logger.info("Attaching to tangle: " + signed)
         tangleController.attachTransactionToTangle(seed, signed, "EN")
     }
 
