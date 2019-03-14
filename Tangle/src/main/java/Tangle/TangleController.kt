@@ -63,7 +63,7 @@ class TangleController(
 
     fun attachTransactionToTangle(seed: String, message: String, tag: String): SendTransferResponse? {
         logger.info("Attaching transaction to tangle, seed: $seed\nmessage: $message\ntag:$tag")
-        val messageTrytes = getASCIIFromTrytes(message)
+        val messageTrytes = TrytesConverter.asciiToTrytes(message)
         val transfer =
             Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, tag)
         return try {
@@ -86,7 +86,7 @@ class TangleController(
 
     fun attachDeviceToTangle(seed: String, deviceSpecificationJson: String): SendTransferResponse? {
         logger.info("Attaching device to tangle, seed: $seed\ndeviceSpecification: $deviceSpecificationJson")
-        val messageTrytes = getASCIIFromTrytes(deviceSpecificationJson)
+        val messageTrytes = TrytesConverter.asciiToTrytes(deviceSpecificationJson)
         val deviceSpecificationTagTrytes = TrytesConverter.asciiToTrytes(deviceSpecificationTag)
         val transfer = Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, deviceSpecificationTagTrytes)
         return try {

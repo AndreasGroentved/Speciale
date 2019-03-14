@@ -12,45 +12,45 @@ class AuthServiceClient {
     private val address = PropertiesLoader.instance.getProperty("authServiceAddress")
 
     fun registerUser(username: String, password: String): String {
-        val url = URL(address + "/register/user")
+        val url = URL("$address/register/user")
         val connection = url.openConnection() as HttpURLConnection
         val params = mapOf(Pair("username", username), Pair("password", password), Pair("publicKey", "123"))
-        connection.setRequestMethod("POST")
+        connection.requestMethod = "POST"
         connection.setRequestProperty("Content-Type", "application/json")
-        connection.setDoOutput(true)
+        connection.doOutput = true
         connection.outputStream.write(gson.toJson(params).toByteArray())
         return connection.inputStream.bufferedReader().readText()
     }
 
     fun login(username: String, password: String): String {
-        val url = URL(address + "/login")
+        val url = URL("$address/login")
         val connection = url.openConnection() as HttpURLConnection
         val params = mapOf(Pair("username", username), Pair("password", password))
-        connection.setRequestMethod("POST")
+        connection.requestMethod = "POST"
         connection.setRequestProperty("Content-Type", "application/json")
-        connection.setDoOutput(true)
+        connection.doOutput = true
         connection.outputStream.write(gson.toJson(params).toByteArray())
         return connection.inputStream.bufferedReader().readText()
     }
 
     fun registerDevice(token: String, deviceSpecification: DeviceSpecification): String {
-        val url = URL(address + "/register/device")
+        val url = URL("$address/register/device")
         val connection = url.openConnection() as HttpURLConnection
         val params = mapOf(Pair("token", token), Pair("deviceSpecification", gson.toJson(deviceSpecification)))
-        connection.setRequestMethod("POST")
+        connection.requestMethod = "POST"
         connection.setRequestProperty("Content-Type", "application/json")
-        connection.setDoOutput(true)
+        connection.doOutput = true
         connection.outputStream.write(gson.toJson(params).toByteArray())
         return connection.inputStream.bufferedReader().readText()
     }
 
     fun deRegisterDevice(token: String, deviceSpecification: DeviceSpecification): String {
-        val url = URL(address + "/deregister/device")
+        val url = URL("$address/deregister/device")
         val connection = url.openConnection() as HttpURLConnection
         val params = mapOf(Pair("token", token), Pair("deviceSpecification", gson.toJson(deviceSpecification)))
-        connection.setRequestMethod("POST")
+        connection.requestMethod = "POST"
         connection.setRequestProperty("Content-Type", "application/json")
-        connection.setDoOutput(true)
+        connection.doOutput = true
         connection.outputStream.write(gson.toJson(params).toByteArray())
         return connection.inputStream.bufferedReader().readText()
     }

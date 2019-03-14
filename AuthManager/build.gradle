@@ -3,6 +3,10 @@ version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
+jar {
+    manifest { attributes('Main-class': 'AuthManager.StartKt') }
+}
+
 dependencies {
     implementation "com.sparkjava:spark-core:2.5.4"
     compile project(':Common')

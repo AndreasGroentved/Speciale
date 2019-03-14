@@ -8,8 +8,6 @@ import datatypes.nordpool.PublicationTimeSeries
 import helpers.EncryptionHelper
 import org.slf4j.Logger
 import org.slf4j.simple.SimpleLoggerFactory
-import java.io.File
-import java.io.FileReader
 
 class NordPoolAPIMock(
     private val logger: Logger = SimpleLoggerFactory().getLogger("NordPoolAPIMock")
@@ -38,9 +36,8 @@ class NordPoolAPIMock(
 
     private fun loadMockResponse(): NordPoolAPIMockResponse {
         logger.info("Loading mock response NordPool.json")
-        val mockFile = ClassLoader.getSystemResource("NordPool.json")
-        val fileReader = FileReader(File(mockFile.toURI()))
-        val readText = fileReader.readText()
+        val mockFile = ClassLoader.getSystemResourceAsStream("NordPool.json")
+        val readText = mockFile.bufferedReader().readText()
         return Gson().fromJson(readText, NordPoolAPIMockResponse::class.java)
     }
 

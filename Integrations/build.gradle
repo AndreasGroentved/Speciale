@@ -3,6 +3,10 @@ version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
+jar {
+    manifest { attributes('Main-class': 'Integrations.StartKt') }
+}
+
 dependencies {
     compile project (':Common')
     compile project (':Tangle')
