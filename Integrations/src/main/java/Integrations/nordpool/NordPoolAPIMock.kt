@@ -6,21 +6,23 @@ import datatypes.nordpool.IntervalItem
 import datatypes.nordpool.NordPoolAPIMockResponse
 import datatypes.nordpool.PublicationTimeSeries
 import helpers.EncryptionHelper
+import org.slf4j.Logger
 import org.slf4j.simple.SimpleLoggerFactory
 import java.io.File
 import java.io.FileReader
 
-class NordPoolAPIMock {
+class NordPoolAPIMock(
+    private val logger: Logger = SimpleLoggerFactory().getLogger("NordPoolAPIMock")
+) {
+
     private val seed = "TEST99999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val tangleController = TangleController()
     private val nordPoolAPIMockResponse = loadMockResponse()
     private val gson = Gson()
-    private val logger = SimpleLoggerFactory().getLogger("NordPoolAPIMock")
 
     fun publishMockPrices() {
         val chunks = nordPoolAPIMockResponse.publicationTimeSeries.period.interval
-            .chunked(12).map { it as List<*> } as? List<List<IntervalItem>>
-            ?: throw RuntimeException("invalid server response")
+            .chunked(12)
 
         val timeSeries = nordPoolAPIMockResponse.publicationTimeSeries
 

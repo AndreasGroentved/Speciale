@@ -4,15 +4,18 @@ import helpers.EncryptionHelper
 import helpers.PropertiesLoader
 import jota.IotaAPI
 import jota.dto.response.SendTransferResponse
+import jota.error.ArgumentException
 import jota.model.Transaction
 import jota.model.Transfer
 import jota.utils.TrytesConverter
+import org.slf4j.Logger
 import org.slf4j.simple.SimpleLoggerFactory
 import java.math.BigDecimal
 
-class TangleController {
+class TangleController(
+    private val logger: Logger = SimpleLoggerFactory().getLogger("TangleController")
+) {
 
-    private val logger = SimpleLoggerFactory().getLogger("TangleController")
     private lateinit var deviceSpecificationTag: String
     private lateinit var nodeAddress: String
     private lateinit var nodePort: String
@@ -49,34 +52,63 @@ class TangleController {
 
     fun getTransactions(seed: String): List<Transaction> {
         logger.info("getTransactions for seed: $seed")
-        val transferResponse = iotaAPI.getTransfers(seed, nodeSecurity, 0, 5, false)
-        return transferResponse.transfers.flatMap { it.transactions }
+        val transferResponse = try {
+            iotaAPI.getTransfers(seed, nodeSecurity, 0, 5, false)
+        } catch (e: ArgumentException) {
+            logger.error("Invalid parameters supplied for getTransactions, likely invalid seed", e)
+            null
+        }
+        return transferResponse?.transfers?.flatMap { it.transactions } ?: listOf()
     }
 
     fun attachTransactionToTangle(seed: String, message: String, tag: String): SendTransferResponse? {
         logger.info("Attaching transaction to tangle, seed: $seed\nmessage: $message\ntag:$tag")
-        val messageTrytes = TrytesConverter.asciiToTrytes(message)
+        val messageTrytes = getASCIIFromTrytes(message)
         val transfer =
             Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, tag)
-        return iotaAPI.sendTransfer(
-            seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(),
-            false, false, null
-        )
+        return try {
+            iotaAPI.sendTransfer(
+                seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(),
+                false, false, null
+            )
+        } catch (e: Exception) {
+            when (e) {
+                is ArgumentException -> {
+                    logger.error("Invalid parameters supplied for sendTransfer");null
+                }
+                is IllegalStateException -> {
+                    logger.error("Cannot attach message to Tangle"); null
+                }
+                else -> throw e
+            }
+        }
     }
 
     fun attachDeviceToTangle(seed: String, deviceSpecificationJson: String): SendTransferResponse? {
         logger.info("Attaching device to tangle, seed: $seed\ndeviceSpecification: $deviceSpecificationJson")
-        val messageTrytes = TrytesConverter.asciiToTrytes(deviceSpecificationJson)
+        val messageTrytes = getASCIIFromTrytes(deviceSpecificationJson)
         val deviceSpecificationTagTrytes = TrytesConverter.asciiToTrytes(deviceSpecificationTag)
         val transfer = Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, deviceSpecificationTagTrytes)
-        return iotaAPI.sendTransfer(
-            seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null,
-            iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), false, false, null
-        )
+        return try {
+            iotaAPI.sendTransfer(
+                seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null,
+                iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), false, false, null
+            )
+        } catch (e: Exception) {
+            when (e) {
+                is ArgumentException -> {
+                    logger.error("Invalid parameters supplied for sendTransfer");null
+                }
+                is IllegalStateException -> {
+                    logger.error("Cannot attach message to Tangle"); null
+                }
+                else -> throw e
+            }
+        }
     }
 
     fun getDevicePriceSavings(from: Long, to: Long, deviceId: String): BigDecimal {
-        logger.info("getDevicePriceSavings, from: " + from + " to: " + to + " deviceId: " + deviceId)
+        logger.info("getDevicePriceSavings, from: $from to: $to deviceId: $deviceId")
         //TODO registerer slukket tidsperiode, find pris i den periode
         //TODO sammenlign pris med efterfølgende periode
         return BigDecimal(12)
@@ -87,7 +119,7 @@ class TangleController {
         val transactions =
             iotaAPI.findTransactionObjectsByTag(arrayOf(entityName))
         val sorted = transactions.sortedByDescending { it.timestamp }.toList()
-        return sorted.first { transaction -> parseAndVerifyTransaction(transaction, publicKey) }
+        return sorted.firstOrNull { transaction -> parseAndVerifyTransaction(transaction, publicKey) }
     }
 
     fun getNewestBroadcasts(entityName: String, publicKey: String): List<Transaction>? {
@@ -98,11 +130,21 @@ class TangleController {
     }
 
     private fun parseAndVerifyTransaction(transaction: Transaction, publicKey: String): Boolean {
-        val messageASCII = TrytesConverter.trytesToAscii(transaction.signatureFragments + "9")
+        val messageASCII = getASCIIFromTrytes(transaction.signatureFragments) ?: return false
         val messageTrimmed = messageASCII.trim((0).toChar())
         val signature = messageTrimmed.substringAfter("__")
         val message = messageTrimmed.substringBefore("__")
         val publicECKey = EncryptionHelper.loadPublicECKeyFromProperties(publicKey)
         return EncryptionHelper.verifySignatureBase64(publicECKey, message, signature)
+    }
+
+    private fun getASCIIFromTrytes(trytes: String): String? {
+        val paddedTrytes = (trytes.length % 2).let { if (it == 1) trytes + "9" else trytes }
+        return try {
+            TrytesConverter.trytesToAscii(paddedTrytes)
+        } catch (e: ArgumentException) {
+            logger.error("Unable to convert invalid trytes")
+            null
+        }
     }
 }

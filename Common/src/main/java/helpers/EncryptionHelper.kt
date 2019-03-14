@@ -1,5 +1,7 @@
 package helpers
 
+import org.slf4j.Logger
+import org.slf4j.simple.SimpleLoggerFactory
 import java.math.BigInteger
 import java.security.*
 import java.security.spec.ECGenParameterSpec
@@ -8,10 +10,11 @@ import java.security.spec.X509EncodedKeySpec
 import java.util.*
 
 object EncryptionHelper {
+    private val logger: Logger = SimpleLoggerFactory().getLogger("EncryptionHelper")
 
     fun generateKeys(): KeyPair {
         val generator = KeyPairGenerator.getInstance("EC", "SunEC")
-        val ecsp = ECGenParameterSpec("sect163k1");
+        val ecsp = ECGenParameterSpec("sect163k1")
         generator.initialize(ecsp)
         return generator.genKeyPair()
     }
@@ -19,8 +22,7 @@ object EncryptionHelper {
     fun loadPrivateECKey(key: String): PrivateKey {
         val keyString = PropertiesLoader.instance.getProperty(key)
         val hest = BigInteger(keyString).toByteArray()
-        val privateKey = KeyFactory.getInstance("EC", "SunEC").generatePrivate(PKCS8EncodedKeySpec(hest))
-        return privateKey
+        return KeyFactory.getInstance("EC", "SunEC").generatePrivate(PKCS8EncodedKeySpec(hest))
     }
 
     fun loadPublicECKeyFromProperties(key: String): PublicKey {
@@ -43,10 +45,18 @@ object EncryptionHelper {
     }
 
     fun verifySignatureBase64(publicKey: PublicKey, text: String, signatureBase64: String): Boolean {
-        val sig = Signature.getInstance("SHA1withECDSA", "SunEC")
-        sig.initVerify(publicKey)
-        sig.update(text.toByteArray())
         val signature = Base64.getDecoder().decode(signatureBase64)
-        return sig.verify(signature)
+        val sig = Signature.getInstance("SHA1withECDSA", "SunEC")
+        return try {
+            sig.initVerify(publicKey)
+            sig.update(text.toByteArray())
+            sig.verify(signature)
+        } catch (e: Exception) {
+            when (e) {
+                is SignatureException -> logger.warn("Invalid signature")
+                is InvalidKeyException -> logger.warn("Invalid key")
+            }
+            false
+        }
     }
 }
