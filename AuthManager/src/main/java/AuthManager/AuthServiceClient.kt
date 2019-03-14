@@ -11,10 +11,10 @@ class AuthServiceClient {
     private val gson = Gson()
     private val address = PropertiesLoader.instance.getProperty("authServiceAddress")
 
-    fun registerUser(username: String, password: String): String {
+    fun registerUser(username: String, password: String, publicKey: String): String {
         val url = URL("$address/register/user")
         val connection = url.openConnection() as HttpURLConnection
-        val params = mapOf(Pair("username", username), Pair("password", password), Pair("publicKey", "123"))
+        val params = mapOf(Pair("username", username), Pair("password", password), Pair("publicKey", publicKey))
         connection.requestMethod = "POST"
         connection.setRequestProperty("Content-Type", "application/json")
         connection.doOutput = true
@@ -58,7 +58,7 @@ class AuthServiceClient {
 
 fun main() {
     val client = AuthServiceClient()
-    println(client.registerUser("hest", "hest"))
+    println(client.registerUser("hest", "hest", "123"))
     var token = client.login("hest", "hest")
     println(token)
     println(client.registerDevice(token, HeatPump().deviceSpecification))

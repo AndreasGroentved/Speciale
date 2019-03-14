@@ -11,6 +11,9 @@ import spark.Response
 import spark.Spark
 import spark.Spark.*
 
+//todo: give fuldmagt
+//todo: modtage fuldmagt
+//todo: gem fuldmagter
 
 fun main() {
     val logger = SimpleLoggerFactory().getLogger("IoTAPI")
