@@ -18,6 +18,8 @@ export class IotDeviceModuleComponent implements OnInit {
 
   private getValues: Map<string, string> = new Map();
   private postValues: Map<string, string> = new Map();
+  formdata = {};
+
 
   constructor(private webService: WebService, private moduleService: ModuleService) {
   }
@@ -33,32 +35,45 @@ export class IotDeviceModuleComponent implements OnInit {
     this.postModules.forEach(value => this.addPostValue(value))
   }
 
-  isBoolean(value: string) {
-    return value == "Boolean"
-  }
-
-  isString(value: string) {
-    return value == "String";
-  }
-
-  isInteger(value: string) {
-    return value == "Integer";
-  }
-
-  isFloat(value: string) {
-    return value == "Float";
-  }
-
-  postUpdate(key: string, value: string) {
+  postUpdate() {
+    console.log(this.formdata);
+    this.postModules.forEach(value => {
+      if (!this.formdata.hasOwnProperty(value.name)) {
+        try {
+          console.log("ahh yeah");
+          console.log(value.name);
+          this.formdata[value.name] = this.getValues.get(value.name);
+        } catch (e) {
+          console.log("can't assign value");
+          //NOOOOOOOOOOOOOO!!!!!!!!!!
+        }
+      }
+    });
     let ws = this.webService;
-    ws.postDeviceValue(this.deviceId, this.deviceResource.path, value, val => {
+    console.log(this.formdata);
+    let outer = this;
+    ws.postDeviceValue(this.deviceId, this.deviceResource.path, this.formdata, val => {
       console.log(val);
+      Object.keys(val).forEach(function (key) {
+        outer.getValues.set(key, val[key]);
+        console.log(key, val[key]);
+      });
+
+      console.log(this.getValues);
     })
   }
 
   addGetValue(getMethod: string) {
     this.webService.getDeviceValueFromPath(this.deviceId, this.deviceResource.path, val => {
-      this.getValues.set(val, this.deviceResource.path);
+      this.deviceResource.resourceMethods.filter(value => value.methodType == "GET").map(value => {
+        try {
+          console.log(value.parameters);
+          let a = value.parameters[getMethod];
+          console.log(a);
+          this.getValues.set(getMethod, val[getMethod]);
+        } catch (e) {
+        }
+      });
     })
   }
 

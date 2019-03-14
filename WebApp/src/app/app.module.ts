@@ -1,5 +1,6 @@
 import {BrowserModule} from '@angular/platform-browser';
 import {NgModule} from '@angular/core';
+import {FormsModule} from '@angular/forms'
 
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
@@ -13,8 +14,8 @@ import {IotDeviceComponent} from './iot-device/iot-device.component';
 import {HouseOverviewComponent} from './house-overview/house-overview.component';
 import {PageNotFoundComponent} from './page-not-found/page-not-found.component';
 import {HttpClientModule} from "@angular/common/http";
-import { ModuleGetComponent } from './module-get/module-get.component';
-import { ModulePostComponent } from './module-post/module-post.component';
+import {ModuleGetComponent} from './module-get/module-get.component';
+import {ModulePostComponent} from './module-post/module-post.component';
 
 const appRoutes: Routes = [
   {path: 'device/:id', component: IotDeviceComponent},
@@ -45,6 +46,7 @@ const appRoutes: Routes = [
   imports: [
     BrowserModule,
     HttpClientModule,
+    FormsModule,
     RouterModule.forRoot(
       appRoutes,
       {enableTracing: true} // <-- debugging purposes only

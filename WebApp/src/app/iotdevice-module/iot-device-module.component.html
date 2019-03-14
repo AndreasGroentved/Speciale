@@ -1,18 +1,32 @@
 <p>
   {{name}}
-
 </p>
 
 
 <div *ngFor="let keyValue of getValues | keyvalue">
-  {{ keyValue.value }} {{keyValue.key}}
+  {{ keyValue.key }} {{keyValue.value}}
 </div>
+<br>
 
 
-<div *ngFor="let keyValue of postValues| keyvalue"> <!--path-->
-
-  <div *ngIf="keyValue.key=='Boolean'">
-    {{ keyValue.value }}  <input type="checkbox" name="{{keyValue.value}}" value="Bike"> <br>
+<div *ngFor="let keyValue of postValues| keyvalue">
+  <div *ngIf="keyValue.value=='Boolean'">
+    {{ keyValue.key }}  <input type="checkbox" [(ngModel)]="formdata[keyValue.key]"
+                               name="{{keyValue.value}}"/>
   </div>
-  <button (click)="onClickMe()">Update</button>
+  <div *ngIf="keyValue.value=='Integer'">
+    {{ keyValue.key }} <input type="number" [(ngModel)]="formdata[keyValue.key]"
+                              name="{{keyValue.key}}"/>
+  </div>
+  <div *ngIf="keyValue.value=='Float'">
+    {{ keyValue.key }} <input type="number" [(ngModel)]="formdata[keyValue.key]"
+                              name="{{keyValue.value}}"/>
+  </div>
+  <div *ngIf="keyValue.value=='String'">
+    {{ keyValue.key }} <input type="text" [(ngModel)]="formdata[keyValue.key]"
+                              name="{{keyValue.value}}"/>
+  </div>
 </div>
+<br>
+<button class="btn btn-success" (click)="postUpdate()">Update</button>
+

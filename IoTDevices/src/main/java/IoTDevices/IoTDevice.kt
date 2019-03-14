@@ -30,6 +30,7 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
         )
         add(
             TimeResource(), listOf(ResourceMethod("GET", mapOf("time" to "List<String, String>"), "Gets time in map of hour to on time"))
+            //TODO
         )
     }
 
@@ -86,7 +87,6 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
 
     fun add(resource: Resource, resourceMethods: List<ResourceMethod>): CoapServer {
         deviceSpecification.deviceResources.add(DeviceResource(resourceMethods, resource.uri, resource.attributes.title))
-
         return super.add(resource)
     }
 
@@ -120,22 +120,22 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
 
     inner class OnOffResource : CoapResource("onOff") {
         init {
-            attributes.title = "On/off"
+            attributes.title = "onOff"
         }
 
         override fun handleGET(exchange: CoapExchange?) {
-            exchange?.respond(isOn.toString())
+            exchange?.respond("{\"status\":$isOn}")
         }
 
         override fun handlePOST(exchange: CoapExchange?) {
-            exchange?.let {
-                if (exchange.isValidJson(exchange.requestText)) {
+            exchange?.apply {
+                if (!exchange.isValidJson(exchange.requestText)) {
                     exchange.respond("invalid json"); return@handlePOST
                 }
-
                 val postMessage = gson.fromJson(exchange.requestText, PostMessage::class.java).params
-                val turnOn = postMessage["status"]?.toBoolean() ?: return@let
+                val turnOn = postMessage["status"]?.toBoolean() ?: return@apply
                 if (turnOn) turnOn() else turnOff()
+                respond("{\"status\":$turnOn }")
             }
         }
     }

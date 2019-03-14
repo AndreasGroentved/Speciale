@@ -15,7 +15,7 @@ export class ModuleService {
     d.resourceMethods.filter(value1 =>
       value1.methodType == methodType).forEach(value2 =>
       Object.keys(value2.parameters).forEach((key: string) =>
-        parameters.push(new ParameterNameToType(value2.parameters[key], key))));
+        parameters.push(new ParameterNameToType(key,value2.parameters[key]))));
     return parameters;
   }
 

@@ -57,17 +57,17 @@ fun main() {
     get("/device/:id/:path") { request, response ->
         val id = request.params(":id")
         val path = request.params(":path")
-        deviceManger.get(id, path)
+        val params = if (request.queryParams().isNotEmpty()) "?" + request.queryParams().map { request.params(it) } else ""
+        response.type("application/json")
+        val ret = deviceManger.get(id, path, params)
+        println(ret)
+        ret
     }
 
     post("/device/:id/:path") { request, response ->
         val id = request.params(":id")
         val path = request.params(":path")
-        val parameter = request.queryParams("parameter")
-
-
-        println(getParameterMap(request.body()))
-        deviceManger.post(id, path, parameter)
+        deviceManger.post(id, path, request.body())
     }
 
     get("/device/:id/price") { request, response ->

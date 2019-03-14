@@ -24,7 +24,7 @@ class HeatPump : IoTDevice("hest") {
         add(
             HeatPumpResource(), listOf(
                 ResourceMethod("GET", mapOf("temperature" to "Integer"), "Gets the target temperature of the heat pump"),
-                ResourceMethod("POST", mapOf("diff" to "Integer"), "Adjusts target temperature of the heat pump by diff")
+                ResourceMethod("POST", mapOf("temperature" to "Integer"), "Adjusts target temperature of the heat pump by diff")
             )
         )
     }
@@ -49,17 +49,19 @@ class HeatPump : IoTDevice("hest") {
         }
 
         override fun handleGET(exchange: CoapExchange?) {
-            exchange?.respond(temperature.toString())
+            exchange?.respond("{\"temperature\": $temperature}")
         }
 
         override fun handlePOST(exchange: CoapExchange?) {
             try {
                 exchange?.let {
+                    println(exchange.requestText)
                     val fromJson = this@HeatPump.gson.fromJson(exchange.requestText, PostMessage::class.java)
+                    println(fromJson)
                     val temp = fromJson.params["temperature"]
+                    println(temp)
                     temperature = temp?.toInt() ?: temperature
-                    exchange.respond("temperature is now $temperature")
-
+                    exchange.respond("{\"temperature\": $temperature}")
                 }
             } catch (e: Exception) {
                 when (e) {

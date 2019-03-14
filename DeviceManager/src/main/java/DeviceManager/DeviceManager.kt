@@ -42,16 +42,20 @@ class DeviceManager {
 
     fun getSavingsForDevice(from: Long, to: Long, deviceId: String): BigDecimal = tangle.getDevicePriceSavings(from, to, deviceId)
 
-    fun get(deviceId: String, path: String): String {
+    fun get(deviceId: String, path: String, queryString: String): String {
         val mapKey = getDeviceKeyFromId(deviceId) ?: return "invalid device id"
-        val client = CoapClient("${mapKey.ip}:5683/$path?yolo='yolo'")
+        val client = CoapClient("${mapKey.ip}:5683/$path$queryString")
         val response = client.get()
+        println(response.responseText)
         return response?.let { response.responseText } ?: "No response received"
     }
 
     fun post(deviceId: String, path: String, parameter: String): String {
         val mapKey = getDeviceKeyFromId(deviceId) ?: return "invalid device id"
         val client = CoapClient("${mapKey.ip}:5683/$path")
+        println(client.uri)
+        println(parameter)
+        println(path)
         val response = client.post(parameter, MediaTypeRegistry.APPLICATION_JSON)
         return response?.let { response.responseText } ?: "No response received"
     }
