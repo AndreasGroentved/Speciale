@@ -1,5 +1,6 @@
 package helpers
 
+import java.io.FileReader
 import java.util.*
 
 class PropertiesLoader private constructor() {
@@ -10,10 +11,9 @@ class PropertiesLoader private constructor() {
         val instance by lazy { PropertiesLoader() }
     }
 
-    fun loadProperties() = Properties().apply { this.load(ClassLoader.getSystemResourceAsStream("config.properties")) }
+    private fun loadProperties() = Properties().apply { this.load(FileReader("config.properties")) }
 
     fun getProperty(key: String): String {
-        properties.load(ClassLoader.getSystemResourceAsStream("config.properties"))
         return properties.getProperty(key)
     }
 
