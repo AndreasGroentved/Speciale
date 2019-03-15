@@ -2,12 +2,14 @@ plugins {
     id 'java'
     id 'org.jetbrains.kotlin.jvm' version '1.3.21'
     id "com.github.johnrengelman.shadow" version "4.0.0"
+    id 'antlr'
 }
 allprojects {
     apply plugin: "idea"
     apply plugin: "java"
     apply plugin: "org.jetbrains.kotlin.jvm"
     apply plugin:"com.github.johnrengelman.shadow"
+    apply plugin: "antlr"
 
     repositories {
         mavenCentral()
