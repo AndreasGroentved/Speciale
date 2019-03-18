@@ -12,13 +12,13 @@ import {ParameterNameToType} from "../ParameterNameToType";
 export class IotDeviceModuleComponent implements OnInit {
   @Input() deviceResource: DeviceResource;
   @Input() deviceId: string;
-  private name = "loading...";
+  name = "loading...";
   private getModules: Array<ParameterNameToType> = [];
   private postModules: Array<ParameterNameToType> = [];
 
-  private getValues: Map<string, string> = new Map();
-  private postValues: Map<string, string> = new Map();
-  formdata = {};
+  getValues: Map<string, string> = new Map();
+  postValues: Map<string, string> = new Map();
+  formData = {};
 
 
   constructor(private webService: WebService, private moduleService: ModuleService) {
@@ -36,13 +36,13 @@ export class IotDeviceModuleComponent implements OnInit {
   }
 
   postUpdate() {
-    console.log(this.formdata);
+    console.log(this.formData);
     this.postModules.forEach(value => {
-      if (!this.formdata.hasOwnProperty(value.name)) {
+      if (!this.formData.hasOwnProperty(value.name)) {
         try {
           console.log("ahh yeah");
           console.log(value.name);
-          this.formdata[value.name] = this.getValues.get(value.name);
+          this.formData[value.name] = this.getValues.get(value.name);
         } catch (e) {
           console.log("can't assign value");
           //NOOOOOOOOOOOOOO!!!!!!!!!!
@@ -50,9 +50,9 @@ export class IotDeviceModuleComponent implements OnInit {
       }
     });
     let ws = this.webService;
-    console.log(this.formdata);
+    console.log(this.formData);
     let outer = this;
-    ws.postDeviceValue(this.deviceId, this.deviceResource.path, this.formdata, val => {
+    ws.postDeviceValue(this.deviceId, this.deviceResource.path, this.formData, val => {
       console.log(val);
       Object.keys(val).forEach(function (key) {
         outer.getValues.set(key, val[key]);

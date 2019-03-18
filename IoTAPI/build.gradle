@@ -5,15 +5,16 @@ sourceCompatibility = 1.8
 
 dependencies {
     compile project(':Tangle')
-    compile project(':IoTDevices' )
-    compile project(':AuthManager' )
-    compile project(':DeviceManager' )
-    compile project(':Integrations' )
-    compile project(':WebApp' )
-    compile project(':Common' )
+    compile project(':IoTDevices')
+    compile project(':AuthManager')
+    compile project(':DeviceManager')
+    compile project(':Integrations')
+    compile project(':WebApp')
+    compile project(':Common')
     implementation "com.sparkjava:spark-core:2.5.4"
     antlr "org.antlr:antlr4:4.7.2"
     compile "org.antlr:antlr4-runtime:4.7.2"
+    compile 'org.dizitart:nitrite:3.1.0'
 }
 sourceSets {
     main {

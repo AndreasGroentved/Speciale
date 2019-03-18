@@ -16,6 +16,7 @@ import {PageNotFoundComponent} from './page-not-found/page-not-found.component';
 import {HttpClientModule} from "@angular/common/http";
 import {ModuleGetComponent} from './module-get/module-get.component';
 import {ModulePostComponent} from './module-post/module-post.component';
+import { RuleComponent } from './rule/rule.component';
 
 const appRoutes: Routes = [
   {path: 'device/:id', component: IotDeviceComponent},
@@ -41,7 +42,8 @@ const appRoutes: Routes = [
     HouseOverviewComponent,
     PageNotFoundComponent,
     ModuleGetComponent,
-    ModulePostComponent
+    ModulePostComponent,
+    RuleComponent
   ],
   imports: [
     BrowserModule,

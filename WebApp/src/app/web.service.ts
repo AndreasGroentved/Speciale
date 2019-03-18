@@ -20,9 +20,28 @@ export class WebService {
     })
   };
 
-  getDevices(callback: (device: [Device]) => (void)) {
-    console.log("get");
-    this.http.get(this.serverUrl + "/devices").subscribe(results => {
+  getDevices(registered: boolean, callback: (device: [Device]) => (void)) {
+    this.http.get(this.serverUrl + "/device?registered=" + registered).subscribe(results => {
+      console.log(results);
+      let devices: [Device] = results as [Device];
+      callback(devices)
+    });
+  }
+
+  addRemoveDevice(deviceId: string, add: boolean, callback: (val) => (void)) {
+    if (add) {
+      this.http.put(this.serverUrl + "/device/" + deviceId, "").subscribe(results => {
+        callback(results)
+      });
+    } else {
+      this.http.delete(this.serverUrl + "/device/" + deviceId).subscribe(results => {
+        callback(results)
+      });
+    }
+  }
+
+  getAllDevices(callback: (device: [Device]) => (void)) {
+    this.http.get(this.serverUrl + "/device").subscribe(results => {
       console.log(results);
       let devices: [Device] = results as [Device];
       callback(devices)
@@ -36,10 +55,7 @@ export class WebService {
   }
 
   postDeviceValue(deviceId: string, path: string, postValue, callback: (val) => (void)) {
-    console.log(postValue);
     let postMessage = new PostMessage(postValue);
-    console.log(postMessage);
-    console.log(JSON.stringify(postMessage));
     this.http.post(this.serverUrl + "/device/" + deviceId + "/" + path, JSON.stringify(postMessage)).subscribe(results => {
       callback(results);
     });
@@ -48,7 +64,6 @@ export class WebService {
   getDeviceValueFromPath(deviceId: string, path: string, callback: (val) => (void)) {
     console.log(this.serverUrl + "/device/" + deviceId + "/" + path);
     this.http.get(this.serverUrl + "/device/" + deviceId + "/" + path).subscribe(results => {
-      console.log(results);
       callback(results);
     });
   }
@@ -61,5 +76,16 @@ export class WebService {
     });
   }
 
+  updateRules(rules: string, callback: (string) => (void)) {
+    this.http.post(this.serverUrl + "/rule", JSON.stringify({rules: rules})).subscribe(results => {
+      callback(results);
+    });
+  }
+
+  getRules(callback: (string) => (void)) {
+    this.http.get(this.serverUrl + "/rule").subscribe(value => {
+      callback(value);
+    });
+  }
 
 }
