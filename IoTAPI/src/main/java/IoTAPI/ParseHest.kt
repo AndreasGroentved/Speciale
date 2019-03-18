@@ -2,26 +2,31 @@ package IoTAPI
 
 import hest.HestParser
 import hest.HestParserBaseListener
-import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.ErrorNode
-import org.antlr.v4.runtime.tree.TerminalNode
 
 
 sealed class Step
 
 
-data class Rule(val steps: List<Step>, val config: String)
+data class Rule(val steps: MutableList<Step> = mutableListOf(), var config: String = "")
 data class Assignment(val toBeAssigned: String, val valueToAssign: String) : Step()
 data class MethodCall(val getPost: String, val parameters: List<Pair<String, String>>, val path: String, val deviceID: String) : Step()
-data class Exp(val value: String, val op: String?, val exp: Exp?) : Step()
-data class DataSet(val tag: String, val header: String, val format: String, val vars: MutableMap<String, String>)
+data class Exp(var value: String = "", var op: String? = null, var exp: Exp? = null) : Step()
+data class DataSet(var name: String = "", var tag: String = "", var header: String = "", var format: String = "", val vars: MutableMap<String, String> = mutableMapOf())
+
+//class VarRes(val name: String, val type: String, val value: String)
 
 class ParseHest : HestParserBaseListener() {
 
 
-    val varMap = mutableMapOf<String, String>()
+    val varMap = mutableMapOf<String, Any>() //todo map med rigtige typer
+    val currentDataSetVarMap = mutableMapOf<String, Any>()
+    var currentExp: Exp? = null
     val conditions = mutableListOf<Step>()
+    var currentDataSet = DataSet()
+    var currentRule = Rule()
     val dataSetMap = mutableMapOf<String, DataSet>()
+    val rules = mutableListOf<Rule>()
 
     init {
 
@@ -36,11 +41,11 @@ class ParseHest : HestParserBaseListener() {
     }
 
     override fun enterRulee(ctx: HestParser.RuleeContext?) {
-        super.enterRulee(ctx)
+        currentRule = Rule()
     }
 
     override fun exitRulee(ctx: HestParser.RuleeContext?) {
-        super.exitRulee(ctx)
+        rules.add(currentRule)
     }
 
 
@@ -84,12 +89,29 @@ class ParseHest : HestParserBaseListener() {
         super.exitRun(ctx)
     }
 
-    override fun enterCondition(ctx: HestParser.ConditionContext?) {
-        super.enterCondition(ctx)
+
+    private fun updateExpression(exp: Exp?, ctx: HestParser.ConditionContext): Exp {
+        return if (exp != null) {
+            exp.exp = updateExpression(exp.exp, ctx)
+            exp
+        } else {
+            val expression = Exp()
+            expression.value = ctx.cName.text
+            if (ctx.eqOperator() != null) {
+                expression.op = ctx.eqOperator().text
+            }
+            expression
+        }
     }
 
-    override fun exitCondition(ctx: HestParser.ConditionContext?) {
-        super.exitCondition(ctx)
+
+    override fun enterCondition(ctx: HestParser.ConditionContext) {
+        currentExp = updateExpression(currentExp, ctx)
+    }
+
+    override fun exitCondition(ctx: HestParser.ConditionContext) {
+        if (currentExp != null) currentRule.steps.add(currentExp!!)
+        currentExp = null
     }
 
     override fun enterEqOperator(ctx: HestParser.EqOperatorContext?) {
@@ -141,104 +163,54 @@ class ParseHest : HestParserBaseListener() {
     }
 
 
-    override fun enterDataset(ctx: HestParser.DatasetContext?) {
-        requireNotNull(ctx)
-
-
-        super.enterDataset(ctx)
+    override fun enterDataset(ctx: HestParser.DatasetContext) {
+        currentDataSet = DataSet()
     }
 
-    override fun exitDataset(ctx: HestParser.DatasetContext?) {
-        super.exitDataset(ctx)
+    override fun exitDataset(ctx: HestParser.DatasetContext) {
+        currentDataSetVarMap[currentDataSet.name] = currentDataSet
     }
 
-    override fun enterTag(ctx: HestParser.TagContext?) {
-        super.enterTag(ctx)
+    override fun enterTag(ctx: HestParser.TagContext) {
+        currentDataSet.tag = ctx.TAG().text
     }
 
-    override fun exitTag(ctx: HestParser.TagContext?) {
-        super.exitTag(ctx)
+
+    override fun enterHeader(ctx: HestParser.HeaderContext) {
+        currentDataSet.header = ctx.HEADER().text
     }
 
-    override fun enterHeader(ctx: HestParser.HeaderContext?) {
-        super.enterHeader(ctx)
+    override fun enterName(ctx: HestParser.NameContext) {
+        currentDataSet.name = ctx.NAME().text
     }
 
-    override fun exitHeader(ctx: HestParser.HeaderContext?) {
-        super.exitHeader(ctx)
+    override fun enterFormat(ctx: HestParser.FormatContext) {
+        currentDataSet.format = when {
+            ctx.JSON() != null -> ctx.JSON().text
+            ctx.XML() != null -> ctx.XML().text
+            else -> throw NotImplementedError("Format not supported")
+        }
     }
 
-    override fun enterName(ctx: HestParser.NameContext?) {
-        super.enterName(ctx)
-    }
-
-    override fun exitName(ctx: HestParser.NameContext?) {
-        super.exitName(ctx)
-    }
-
-    override fun enterFormat(ctx: HestParser.FormatContext?) {
-        super.enterFormat(ctx)
-    }
-
-    override fun exitFormat(ctx: HestParser.FormatContext?) {
-        super.exitFormat(ctx)
-    }
-
-    override fun enterFormatType(ctx: HestParser.FormatTypeContext?) {
-        super.enterFormatType(ctx)
-    }
-
-    override fun exitFormatType(ctx: HestParser.FormatTypeContext?) {
-        super.exitFormatType(ctx)
-    }
 
     override fun enterVariable(ctx: HestParser.VariableContext?) {
-        requireNotNull(ctx)
+        if (ctx?.ID() == null) return
+
         val isDataSet = ctx.parent is HestParser.DatasetContext
-        println(ctx.ID())
+        val value: Any = when {
+            ctx.varTypes().BOOL()?.text != null -> ctx.varTypes().BOOL().text!!.toBoolean()
+            ctx.varTypes().INTLIT()?.text != null -> ctx.varTypes().INTLIT().text!!.toInt()
+            ctx.varTypes().STRINGLIT()?.text != null -> ctx.varTypes().STRINGLIT().text!!
+            ctx.varTypes().DECLIT()?.text != null -> ctx.varTypes().DECLIT().text!!.toFloat()
+            else -> throw RuntimeException("Yo ikke gyldig type")
+        }
+        if (isDataSet) currentDataSetVarMap[ctx.ID().text] = value
+        else varMap[ctx.ID().text] = value
 
-
-        super.enterVariable(ctx)
     }
 
-    override fun exitVariable(ctx: HestParser.VariableContext?) {
-        super.exitVariable(ctx)
+    override fun visitErrorNode(node: ErrorNode) {
+        println("error $node")
     }
 
-    override fun enterVarTypes(ctx: HestParser.VarTypesContext?) {
-        super.enterVarTypes(ctx)
-    }
-
-    override fun exitVarTypes(ctx: HestParser.VarTypesContext?) {
-        super.exitVarTypes(ctx)
-    }
-
-
-    override fun enterEveryRule(ctx: ParserRuleContext?) {
-        super.enterEveryRule(ctx)
-    }
-
-    override fun exitEveryRule(ctx: ParserRuleContext?) {
-        super.exitEveryRule(ctx)
-    }
-
-    override fun visitTerminal(node: TerminalNode?) {
-        super.visitTerminal(node)
-    }
-
-    override fun visitErrorNode(node: ErrorNode?) {
-        super.visitErrorNode(node)
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return super.equals(other)
-    }
-
-    override fun hashCode(): Int {
-        return super.hashCode()
-    }
-
-    override fun toString(): String {
-        return super.toString()
-    }
 }

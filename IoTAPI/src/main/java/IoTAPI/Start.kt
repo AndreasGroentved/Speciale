@@ -19,19 +19,24 @@ fun main() {
             "    format = JSON\n" +
             "    var currency = \"\$.price[:1].currency\"\n" +
             "}\n" +
+            "dataset{\n" +
+            "    tag = \"NP\"\n" +
+            "    header = \"spotpriser\"\n" +
+            "    name = \"nordpool\"\n" +
+            "    format = JSON\n" +
+            "    var currency = \"\$.price[:1].currency\"\n" +
+            "}\n" +
             "rule{\n" +
             "    config every 5 min\n" +
             "    var a = 27\n" +
             "    var b = 29\n" +
             "    run { \n" +
-            "        a < b\n" +
+            "        a < b > c\n" +
             "        device a123 path hest post \"temp\" \"2\" \"hest\" \"3\"\n" +
             "        var c = device a456 path hest2 get \"Pony\" \"b\" \"Kanye\" \"West\"\n" +
             "    }\n" +
             "}\n"
     val hParse = HestParser(CommonTokenStream(HestLexer(CharStreams.fromStream(dslProg.byteInputStream()))))
-    hParse.content().dataset().forEach { println(it.variable().map { it.ID() }) }
-    hParse.addParseListener(ParseHest())
     val pWalker = ParseTreeWalker()
     val pHest = ParseHest()
     pWalker.walk(pHest, hParse.content())
