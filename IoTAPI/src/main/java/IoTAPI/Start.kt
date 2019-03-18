@@ -1,15 +1,10 @@
 package IoTAPI
 
-import DeviceManager.DeviceManager
-import com.google.common.reflect.TypeToken
-import com.google.gson.Gson
-import datatypes.iotdevices.PostMessage
-import org.slf4j.simple.SimpleLoggerFactory
-import spark.Filter
-import spark.Request
-import spark.Response
-import spark.Spark
-import spark.Spark.*
+import hest.HestLexer
+import hest.HestParser
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.tree.ParseTreeWalker
 
 
 //todo: give fuldmagt
@@ -17,6 +12,33 @@ import spark.Spark.*
 //todo: gem fuldmagter
 
 fun main() {
+    val dslProg = "dataset{\n" +
+            "    tag = \"NP\"\n" +
+            "    header = \"spotpriser\"\n" +
+            "    name = \"nordpool\"\n" +
+            "    format = JSON\n" +
+            "    var currency = \"\$.price[:1].currency\"\n" +
+            "}\n" +
+            "rule{\n" +
+            "    config every 5 min\n" +
+            "    var a = 27\n" +
+            "    var b = 29\n" +
+            "    run { \n" +
+            "        a < b\n" +
+            "        device a123 path hest post \"temp\" \"2\" \"hest\" \"3\"\n" +
+            "        var c = device a456 path hest2 get \"Pony\" \"b\" \"Kanye\" \"West\"\n" +
+            "    }\n" +
+            "}\n"
+    val hParse = HestParser(CommonTokenStream(HestLexer(CharStreams.fromStream(dslProg.byteInputStream()))))
+    hParse.content().dataset().forEach { println(it.variable().map { it.ID() }) }
+    hParse.addParseListener(ParseHest())
+    val pWalker = ParseTreeWalker()
+    val pHest = ParseHest()
+    pWalker.walk(pHest, hParse.content())
+}
+
+/*
+
     val hs = HouseRules()
 
     val logger = SimpleLoggerFactory().getLogger("IoTAPI")
@@ -123,7 +145,8 @@ fun main() {
     }
 
 
+
 }
 
 
-
+*/

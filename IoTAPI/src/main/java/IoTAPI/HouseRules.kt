@@ -7,23 +7,23 @@ import java.util.*
 
 class HouseRules {
 
-    private val ruleRep: ObjectRepository<Rule>
+    private val ruleRep: ObjectRepository<Rulee>
 
     init {
         val db = Nitrite.builder()
             .filePath("rule.db")
             .openOrCreate()
-        ruleRep = db.getRepository(Rule::class.java)
+        ruleRep = db.getRepository(Rulee::class.java)
     }
 
-    fun getRules() = ruleRep.find().firstOrNull<Rule>() ?: Rule(UUID.randomUUID().toString(), "")
+    fun getRules() = ruleRep.find().firstOrNull<Rulee>() ?: Rulee(UUID.randomUUID().toString(), "")
 
     fun saveRules(ruleString: String) {
         val rule = ruleRep.find()
         if (rule.size() > 0) {
-            ruleRep.update(rule.first<Rule>().run { Rule(this.id, ruleString) })
+            ruleRep.update(rule.first<Rulee>().run { Rulee(this.id, ruleString) })
         } else {
-            ruleRep.insert(Rule(UUID.randomUUID().toString(), ruleString))
+            ruleRep.insert(Rulee(UUID.randomUUID().toString(), ruleString))
         }
     }
 
