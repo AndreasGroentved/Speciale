@@ -17,4 +17,8 @@ class PropertiesLoader private constructor() {
         return properties.getProperty(key)
     }
 
+    fun writeProperty(key: String, value: String) {
+        properties.setProperty(key, value)
+    }
+
 }

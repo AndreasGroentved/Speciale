@@ -2,12 +2,13 @@ package DeviceManager
 
 import Tangle.TangleController
 import com.google.gson.Gson
-import datatypes.iotdevices.Device
-import datatypes.iotdevices.IdIp
+import datatypes.iotdevices.*
+import helpers.EncryptionHelper
 import org.eclipse.californium.core.CoapClient
 import org.eclipse.californium.core.coap.MediaTypeRegistry
 import org.slf4j.simple.SimpleLoggerFactory
 import java.math.BigDecimal
+import java.util.*
 
 
 class DeviceManager {
@@ -34,8 +35,8 @@ class DeviceManager {
     }
 
 
-    fun registerDevice(deviceId: String): String {
-        val idIp = devicesIdIpToSpecification.keys.firstOrNull { it.id == deviceId }
+    fun registerDevice(tangleDeviceSpecification: TangleDeviceSpecification): String {
+        val idIp = devicesIdIpToSpecification.keys.firstOrNull { it.id == tangleDeviceSpecification.deviceSpecification.id }
         idIp?.let {
             tangle.attachDeviceToTangle(seed, devicesIdIpToSpecification[idIp]!!)?.let { registeredDevices.add(idIp) }
         }
@@ -85,6 +86,55 @@ class DeviceManager {
         val client = CoapClient("${mapKey.ip}:5683/$path") //todo resource på port
         return client.post(parameter, MediaTypeRegistry.APPLICATION_JSON)?.responseText
             ?: "{\"error\":\"No response received\"}"
+    }
+
+    fun getActivePendingProcurations(): List<Procuration> {
+        val messages = tangle.getMessages(seed, "PRO")
+        val procurations = messages.mapNotNull { m ->
+            try {
+                gson.fromJson(m, Procuration::class.java)
+            } catch (e: Exception) {
+                null
+            }
+        }
+        val accepts = messages.mapNotNull { m ->
+            try {
+                gson.fromJson(m, Procuration::class.java)
+            } catch (e: Exception) {
+                null
+            }
+        }
+        return procurations.filter { p -> accepts.firstOrNull { a -> p.messageChainID == a.messageChainID } == null }.filter { p -> p.dateTo >= Date() }
+    }
+
+    fun getActiveAcceptedProcurations(): List<Procuration> {
+        val messages = tangle.getMessages(seed, "PROACK")
+        return messages.mapNotNull { m ->
+            try {
+                gson.fromJson(m, Procuration::class.java)
+            } catch (e: Exception) {
+                null
+            }
+        }.filter { p -> p.dateTo >= Date() }
+    }
+
+    fun getExpiredProcurations(): List<Procuration> {
+        val messages = tangle.getMessages(seed, "PROACK")
+        return messages.mapNotNull { m ->
+            try {
+                gson.fromJson(m, Procuration::class.java)
+            } catch (e: Exception) {
+                null
+            }
+        }.filter { p -> p.dateTo <= Date() }
+    }
+
+    fun RespondToProcuration(procuration: Procuration, accepted: Boolean) {
+        val procurationAck = ProcurationAck(procuration.messageChainID, accepted)
+        val privateKey = EncryptionHelper.loadPrivateECKeyFromProperties("houseHoldPrivateKey")
+        val json = gson.toJson(procurationAck)
+        val signBase64 = EncryptionHelper.signBase64(privateKey, json)
+        tangle.attachTransactionToTangle(seed, "$json||$signBase64", "PROACK")
     }
 
 }

@@ -1,10 +1,20 @@
 package IoTAPI
 
-import hest.HestLexer
-import hest.HestParser
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.tree.ParseTreeWalker
+import DeviceManager.DeviceManager
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import datatypes.iotdevices.PostMessage
+import helpers.EncryptionHelper
+import helpers.PropertiesLoader
+import org.slf4j.simple.SimpleLoggerFactory
+import spark.Filter
+import spark.Request
+import spark.Response
+import spark.Spark
+import spark.Spark.*
+import java.math.BigInteger
+import java.security.PrivateKey
+import java.security.PublicKey
 
 
 //todo: give fuldmagt
@@ -12,45 +22,24 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker
 //todo: gem fuldmagter
 
 fun main() {
-    val dslProg = "dataset{\n" +
-            "    tag = \"NP\"\n" +
-            "    header = \"spotpriser\"\n" +
-            "    name = \"nordpool\"\n" +
-            "    format = JSON\n" +
-            "    var currency = \"\$.price[:1].currency\"\n" +
-            "}\n" +
-            "dataset{\n" +
-            "    tag = \"NP\"\n" +
-            "    header = \"spotpriser\"\n" +
-            "    name = \"nordpool\"\n" +
-            "    format = JSON\n" +
-            "    var currency = \"\$.price[:1].currency\"\n" +
-            "}\n" +
-            "rule{\n" +
-            "    config every 5 min\n" +
-            "    var a = 27\n" +
-            "    var b = 29\n" +
-            "    run { \n" +
-            "        a < b > c\n" +
-            "        device a123 path hest post \"temp\" \"2\" \"hest\" \"3\"\n" +
-            "        var c = device a456 path hest2 get \"Pony\" \"b\" \"Kanye\" \"West\"\n" +
-            "    }\n" +
-            "}\n"
-    val hParse = HestParser(CommonTokenStream(HestLexer(CharStreams.fromStream(dslProg.byteInputStream()))))
-    val pWalker = ParseTreeWalker()
-    val pHest = ParseHest()
-    pWalker.walk(pHest, hParse.content())
-}
-
-/*
-
     val hs = HouseRules()
 
     val logger = SimpleLoggerFactory().getLogger("IoTAPI")
     val deviceManger = DeviceManager()
     deviceManger.startDiscovery()
     val gson = Gson()
-
+    val privateKey: PrivateKey
+    val publicKey: PublicKey
+    if (PropertiesLoader.instance.getProperty("householdPrivateKey") == null || PropertiesLoader.instance.getProperty("householdPublicKey") == null) {
+        val keyPair = EncryptionHelper.generateKeys()
+        privateKey = keyPair.private
+        publicKey = keyPair.public
+        PropertiesLoader.instance.writeProperty("householdPrivateKey", BigInteger(privateKey.encoded).toString())
+        PropertiesLoader.instance.writeProperty("householdPublicKey", BigInteger(publicKey.encoded).toString())
+    } else {
+        privateKey = EncryptionHelper.loadPrivateECKeyFromProperties("householdPrivateKey")
+        publicKey = EncryptionHelper.loadPublicECKeyFromProperties("householdPublicKey")
+    }
 
     fun getParameterMap(body: String): Map<String, String> {
         val mapType = object : TypeToken<Map<String, String>>() {}.type
@@ -99,6 +88,22 @@ fun main() {
         val params = request.queryString()
         deviceManger.getDevices(params)
     }
+
+    get("/device/procurations/pending") { request, response ->
+        response.type("application/json")
+        deviceManger.getActivePendingProcurations()
+    }
+
+    get("/device/procurations/accepted") { request, response ->
+        response.type("application/json")
+        deviceManger.getActiveAcceptedProcurations()
+    }
+
+    get("/device/procurations/expired") { request, response ->
+        response.type("application/json")
+        deviceManger.getExpiredProcurations()
+    }
+
     get("/device/:id") { request, response -> deviceManger.getDevice(request.params(":id")) }
     get("/device/:id/:path") { request, response ->
         val id = request.params(":id")
@@ -148,10 +153,4 @@ fun main() {
         val id = request.params(":id")
         deviceManger.registerDevice(id)
     }
-
-
-
 }
-
-
-*/

@@ -19,16 +19,16 @@ object EncryptionHelper {
         return generator.genKeyPair()
     }
 
-    fun loadPrivateECKey(key: String): PrivateKey {
+    fun loadPrivateECKeyFromProperties(key: String): PrivateKey {
         val keyString = PropertiesLoader.instance.getProperty(key)
-        val hest = BigInteger(keyString).toByteArray()
-        return KeyFactory.getInstance("EC", "SunEC").generatePrivate(PKCS8EncodedKeySpec(hest))
+        val keyBytes = BigInteger(keyString).toByteArray()
+        return KeyFactory.getInstance("EC", "SunEC").generatePrivate(PKCS8EncodedKeySpec(keyBytes))
     }
 
     fun loadPublicECKeyFromProperties(key: String): PublicKey {
         val keyString = PropertiesLoader.instance.getProperty(key)
-        val hest = BigInteger(keyString).toByteArray()
-        return KeyFactory.getInstance("EC", "SunEC").generatePublic(X509EncodedKeySpec(hest))
+        val keyBytes = BigInteger(keyString).toByteArray()
+        return KeyFactory.getInstance("EC", "SunEC").generatePublic(X509EncodedKeySpec(keyBytes))
     }
 
     fun loadPublicECKeyFromBigInteger(key: BigInteger): PublicKey {

@@ -34,7 +34,7 @@ class EnerginetAPIAdapter {
             logger.info("Recieved Energinet response: " + httpResponse.body())
             val fromJson = gson.fromJson(httpResponse.body(), EnerginetAPIResponse::class.java)
             val toJson = gson.toJson(fromJson)
-            val privateECKey = EncryptionHelper.loadPrivateECKey("energinetPrivateKey")
+            val privateECKey = EncryptionHelper.loadPrivateECKeyFromProperties("energinetPrivateKey")
             val signed = toJson + "__" + EncryptionHelper.signBase64(privateECKey, toJson)
             logger.info("Attaching to tangle: $signed")
             tangleController.attachTransactionToTangle(seed, signed, "EN")

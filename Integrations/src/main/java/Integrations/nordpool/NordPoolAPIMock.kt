@@ -43,7 +43,7 @@ class NordPoolAPIMock(
 
     private fun signMockResponse(json: String): String {
         logger.info("Signing mock response")
-        val privateECKey = EncryptionHelper.loadPrivateECKey("nordPoolPrivateKey")
+        val privateECKey = EncryptionHelper.loadPrivateECKeyFromProperties("nordPoolPrivateKey")
         return json + "__" + EncryptionHelper.signBase64(privateECKey, json)
     }
 }
