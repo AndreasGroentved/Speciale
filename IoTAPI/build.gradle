@@ -20,6 +20,7 @@ sourceSets {
     main {
         java {
             srcDir 'src/main/gen'
+            srcDir 'src/main/antlr'
         }
     }
 }

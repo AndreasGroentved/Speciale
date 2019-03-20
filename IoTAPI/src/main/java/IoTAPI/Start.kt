@@ -30,13 +30,14 @@ fun main() {
     val gson = Gson()
     val privateKey: PrivateKey
     val publicKey: PublicKey
-    if (PropertiesLoader.instance.getProperty("householdPrivateKey") == null || PropertiesLoader.instance.getProperty("householdPublicKey") == null) {
+    if (PropertiesLoader.instance.getOptionalProperty("householdPrivateKey") == null || PropertiesLoader.instance.getOptionalProperty("householdPublicKey") == null) {
         val keyPair = EncryptionHelper.generateKeys()
         privateKey = keyPair.private
         publicKey = keyPair.public
         PropertiesLoader.instance.writeProperty("householdPrivateKey", BigInteger(privateKey.encoded).toString())
         PropertiesLoader.instance.writeProperty("householdPublicKey", BigInteger(publicKey.encoded).toString())
     } else {
+        logger.info("aaaa")
         privateKey = EncryptionHelper.loadPrivateECKeyFromProperties("householdPrivateKey")
         publicKey = EncryptionHelper.loadPublicECKeyFromProperties("householdPublicKey")
     }
@@ -151,6 +152,6 @@ fun main() {
 
     put("/device/:id") { request, response ->
         val id = request.params(":id")
-        deviceManger.registerDevice(id)
+        deviceManger.registerDevice(BigInteger(publicKey.encoded).toString(), id)
     }
 }

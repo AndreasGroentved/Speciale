@@ -2,7 +2,10 @@ package DeviceManager
 
 import Tangle.TangleController
 import com.google.gson.Gson
-import datatypes.iotdevices.*
+import datatypes.iotdevices.Device
+import datatypes.iotdevices.IdIp
+import datatypes.iotdevices.Procuration
+import datatypes.iotdevices.ProcurationAck
 import helpers.EncryptionHelper
 import org.eclipse.californium.core.CoapClient
 import org.eclipse.californium.core.coap.MediaTypeRegistry
@@ -35,10 +38,10 @@ class DeviceManager {
     }
 
 
-    fun registerDevice(tangleDeviceSpecification: TangleDeviceSpecification): String {
-        val idIp = devicesIdIpToSpecification.keys.firstOrNull { it.id == tangleDeviceSpecification.deviceSpecification.id }
+    fun registerDevice(publicKey: String, deviceID: String): String {
+        val idIp = devicesIdIpToSpecification.keys.firstOrNull { it.id == deviceID }
         idIp?.let {
-            tangle.attachDeviceToTangle(seed, devicesIdIpToSpecification[idIp]!!)?.let { registeredDevices.add(idIp) }
+            tangle.attachDeviceToTangle(seed, getDeviceSpecificationFromId(idIp.id))?.let { registeredDevices.add(idIp) }
         }
 
         return "{\"register\" :" +

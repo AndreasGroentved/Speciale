@@ -1,6 +1,7 @@
 package helpers
 
 import java.io.FileReader
+import java.io.FileWriter
 import java.util.*
 
 class PropertiesLoader private constructor() {
@@ -17,8 +18,13 @@ class PropertiesLoader private constructor() {
         return properties.getProperty(key)
     }
 
+    fun getOptionalProperty(key: String): String? {
+        return properties.getProperty(key)
+    }
+
     fun writeProperty(key: String, value: String) {
         properties.setProperty(key, value)
+        properties.store(FileWriter("config.properties"), null)
     }
 
 }
