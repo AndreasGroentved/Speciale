@@ -4,9 +4,11 @@ import DeviceManager.DeviceManager
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import datatypes.iotdevices.PostMessage
+import datatypes.iotdevices.Procuration
 import helpers.EncryptionHelper
 import helpers.PropertiesLoader
 import org.slf4j.simple.SimpleLoggerFactory
+import repositories.AcceptedProcurations
 import spark.Filter
 import spark.Request
 import spark.Response
@@ -16,18 +18,14 @@ import java.math.BigInteger
 import java.security.PrivateKey
 import java.security.PublicKey
 
-
-//todo: give fuldmagt
-//todo: modtage fuldmagt
-//todo: gem fuldmagter
-
 fun main() {
     val hs = HouseRules()
 
     val logger = SimpleLoggerFactory().getLogger("IoTAPI")
     val deviceManger = DeviceManager()
+    val procurations = AcceptedProcurations()
+    val pendingProcurations: MutableList<Procuration> = mutableListOf()
     deviceManger.startDiscovery()
-    val gson = Gson()
     val privateKey: PrivateKey
     val publicKey: PublicKey
     if (PropertiesLoader.instance.getOptionalProperty("householdPrivateKey") == null || PropertiesLoader.instance.getOptionalProperty("householdPublicKey") == null) {
@@ -37,7 +35,6 @@ fun main() {
         PropertiesLoader.instance.writeProperty("householdPrivateKey", BigInteger(privateKey.encoded).toString())
         PropertiesLoader.instance.writeProperty("householdPublicKey", BigInteger(publicKey.encoded).toString())
     } else {
-        logger.info("aaaa")
         privateKey = EncryptionHelper.loadPrivateECKeyFromProperties("householdPrivateKey")
         publicKey = EncryptionHelper.loadPublicECKeyFromProperties("householdPublicKey")
     }
@@ -69,16 +66,16 @@ fun main() {
         "OK"
     }
 
-    before(Filter { request: Request, response: Response ->
+    before(Filter { _: Request, response: Response ->
         response.header("Access-Control-Allow-Origin", "*")
     })
 
 
-    get("rule") { request, response ->
+    get("rule") { _, _ ->
         "{\"result\": \"" + hs.getRules().rule + "\"}"
     }
 
-    post("rule") { request, response ->
+    post("rule") { request, _ ->
         val rule = getParameterMap(request.body())["rules"] ?: return@post "{\"error\":\"invalid json\"}"
         hs.saveRules(rule)
         "{\"Post\":\"Successful\"}"
@@ -90,22 +87,33 @@ fun main() {
         deviceManger.getDevices(params)
     }
 
-    get("/device/procurations/pending") { request, response ->
+    get("/device/procurations/pending") { _, response ->
         response.type("application/json")
-        deviceManger.getActivePendingProcurations()
+        deviceManger.getActivePendingProcurations(procurations.getAllProcurations())
     }
 
-    get("/device/procurations/accepted") { request, response ->
+    put("/device/procuration/:id/accept") { request, response ->
         response.type("application/json")
-        deviceManger.getActiveAcceptedProcurations()
+        val id = request.params().get(":id")
+        id?.let { pendingProcurations.find { it.messageChainID == id }?.let { deviceManger.respondToProcuration(it, true) } }
+    }
+    put("/device/procuration/:id/reject") { request, response ->
+        response.type("application/json")
+        val id = request.params().get(":id")
+        id?.let { pendingProcurations.find { it.messageChainID == id }?.let { deviceManger.respondToProcuration(it, true) } }
     }
 
-    get("/device/procurations/expired") { request, response ->
+    get("/device/procurations/accepted") { _, response ->
+        response.type("application/json")
+        procurations.getAllProcurations()
+    }
+
+    get("/device/procurations/expired") { _, response ->
         response.type("application/json")
         deviceManger.getExpiredProcurations()
     }
 
-    get("/device/:id") { request, response -> deviceManger.getDevice(request.params(":id")) }
+    get("/device/:id") { request, _ -> deviceManger.getDevice(request.params(":id")) }
     get("/device/:id/:path") { request, response ->
         val id = request.params(":id")
         val path = request.params(":path")
@@ -115,13 +123,13 @@ fun main() {
         ret
     }
 
-    post("/device/:id/:path") { request, response ->
+    post("/device/:id/:path") { request, _ ->
         val id = request.params(":id")
         val path = request.params(":path")
         deviceManger.post(id, path, request.body())
     }
 
-    get("/device/:id/price") { request, response ->
+    get("/device/:id/price") { request, _ ->
         //TODO
         val from = request.params(":from").toLong()
         val to = request.params(":to").toLong()
@@ -129,29 +137,29 @@ fun main() {
         deviceManger.getSavingsForDevice(from, to, id)
     }
 
-    get("/device/:id/time") { request, response ->
+    get("/device/:id/time") { request, _ ->
         //TODO
         val from = request.queryParams(":from") as String
         val toTime = request.queryParams(":to") as String
-        val postMessage = PostMessage(mapOf("from" to from, "to" to toTime))
         val id = request.params(":id") as String
-        deviceManger.post(id, "time", gson.toJson(postMessage))
+        val postMessage = PostMessage("this", id, "get", "time", mapOf("from" to from, "to" to toTime))
+        deviceManger.post(postMessage)
     }
 
-    get("/price") { request, response ->
+    get("/price") { request, _ ->
         //todo
         val from = request.params(":from").toLong()
         val to = request.params(":to").toLong()
         deviceManger.getAllSavings(from, to)
     }
 
-    delete("/device/:id") { request, response ->
+    delete("/device/:id") { request, _ ->
         val id = request.params(":id")
         deviceManger.unregisterDevice(id)
     }
 
-    put("/device/:id") { request, response ->
+    put("/device/:id") { request, _ ->
         val id = request.params(":id")
-        deviceManger.registerDevice(BigInteger(publicKey.encoded).toString(), id)
+        deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), id)
     }
 }

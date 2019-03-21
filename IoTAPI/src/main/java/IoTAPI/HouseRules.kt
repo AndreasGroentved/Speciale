@@ -2,6 +2,7 @@ package IoTAPI
 
 import org.dizitart.no2.Nitrite
 import org.dizitart.no2.objects.ObjectRepository
+import repositories.Rulee
 import java.util.*
 
 

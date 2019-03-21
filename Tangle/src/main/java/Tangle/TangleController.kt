@@ -1,5 +1,9 @@
 package Tangle
 
+import com.google.gson.Gson
+import datatypes.iotdevices.PostMessage
+import datatypes.iotdevices.PostMessageHack
+import datatypes.iotdevices.Procuration
 import helpers.EncryptionHelper
 import helpers.PropertiesLoader
 import jota.IotaAPI
@@ -10,6 +14,7 @@ import jota.model.Transfer
 import jota.utils.TrytesConverter
 import org.slf4j.Logger
 import org.slf4j.simple.SimpleLoggerFactory
+import repositories.ProcessedTransactions
 import java.math.BigDecimal
 
 class TangleController(
@@ -22,6 +27,8 @@ class TangleController(
     private var nodeSecurity = 2
     private var nodeMinWeightMagnitude = 14
     private lateinit var iotaAPI: IotaAPI
+    private val gson = Gson()
+    private val pt = ProcessedTransactions()
 
     init {
         val loadProperties = loadProperties()
@@ -50,7 +57,7 @@ class TangleController(
 
     }
 
-    fun getTransactions(seed: String): List<Transaction> {
+    fun getTransactions(seed: String, tag: String?): List<Transaction> {
         logger.info("getTransactions for seed: $seed")
         val transferResponse = try {
             iotaAPI.getTransfers(seed, nodeSecurity, 0, 5, false)
@@ -58,12 +65,13 @@ class TangleController(
             logger.error("Invalid parameters supplied for getTransactions, likely invalid seed", e)
             null
         }
+        var list = transferResponse?.transfers?.flatMap { it.transactions } ?: listOf()
+        tag.let { list = list.filter { it.tag == tag } }
         return transferResponse?.transfers?.flatMap { it.transactions } ?: listOf()
     }
 
-    fun getMessages(seed: String, tag: String?): List<String> {
-        var transactions = getTransactions(seed)
-        tag.let { transactions = transactions.filter { it.tag == tag } }
+    fun getMessagesUnchecked(seed: String, tag: String?): List<String> { //does not compare signatures
+        val transactions = getTransactions(seed, tag)
         return transactions.mapNotNull { getASCIIFromTrytes(it.signatureFragments) }
     }
 
@@ -73,6 +81,7 @@ class TangleController(
         val transfer =
             Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, tag)
         return try {
+            pt.saveHash(transfer.hash)
             iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(),
                 false, false, null
@@ -96,9 +105,11 @@ class TangleController(
         val deviceSpecificationTagTrytes = TrytesConverter.asciiToTrytes(deviceSpecificationTag)
         val transfer = Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, deviceSpecificationTagTrytes)
         return try {
+            pt.saveHash(transfer.hash)
             iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null,
                 iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), false, false, null
+
             )
         } catch (e: Exception) {
             when (e) {
@@ -125,21 +136,19 @@ class TangleController(
         val transactions =
             iotaAPI.findTransactionObjectsByTag(arrayOf(entityName))
         val sorted = transactions.sortedByDescending { it.timestamp }.toList()
-        return sorted.firstOrNull { transaction -> parseAndVerifyTransaction(transaction, publicKey) }
+        return sorted.firstOrNull { transaction -> parseAndVerifyMessage(getASCIIFromTrytes(transaction.signatureFragments)!!, publicKey) }
     }
 
     fun getNewestBroadcasts(entityName: String, publicKey: String): List<Transaction>? {
         logger.info("getNewestBroadcasts entityName: $entityName publicKey: $publicKey")
         val transactions =
             iotaAPI.findTransactionObjectsByTag(arrayOf(entityName))
-        return transactions.sortedByDescending { it.timestamp }.toList().filter { transaction -> parseAndVerifyTransaction(transaction, publicKey) }
+        return transactions.sortedByDescending { it.timestamp }.toList().filter { transaction -> parseAndVerifyMessage(getASCIIFromTrytes(transaction.signatureFragments)!!, publicKey) }
     }
 
-    private fun parseAndVerifyTransaction(transaction: Transaction, publicKey: String): Boolean {
-        val messageASCII = getASCIIFromTrytes(transaction.signatureFragments) ?: return false
-        val messageTrimmed = messageASCII.trim((0).toChar())
-        val signature = messageTrimmed.substringAfter("__")
-        val message = messageTrimmed.substringBefore("__")
+    private fun parseAndVerifyMessage(messageASCII: String, publicKey: String): Boolean {
+        val signature = messageASCII.substringAfter("__")
+        val message = messageASCII.substringBefore("__")
         val publicECKey = EncryptionHelper.loadPublicECKeyFromProperties(publicKey)
         return EncryptionHelper.verifySignatureBase64(publicECKey, message, signature)
     }
@@ -147,10 +156,27 @@ class TangleController(
     private fun getASCIIFromTrytes(trytes: String): String? {
         val paddedTrytes = (trytes.length % 2).let { if (it == 1) trytes + "9" else trytes }
         return try {
-            TrytesConverter.trytesToAscii(paddedTrytes)
+            TrytesConverter.trytesToAscii(paddedTrytes).trim((0).toChar())
         } catch (e: ArgumentException) {
             logger.error("Unable to convert invalid trytes")
             null
         }
+    }
+
+    fun getPendingMethodCalls(seed: String, procurations: List<Procuration>): List<PostMessage> {
+        val transactions = getTransactions(seed, "MC")
+        val postMessages = transactions.mapNotNull { transaction ->
+            getASCIIFromTrytes(transaction.signatureFragments)?.let { ascii ->
+                val signature = ascii.substringAfter("__")
+                val message = ascii.substringBefore("__")
+                Pair(PostMessageHack(gson.fromJson(message, PostMessage::class.java), message), signature)
+            }
+        }
+        val verifiedMessages = postMessages.filter { m ->
+            procurations.find { p -> p.messageChainID == m.first.postMessage.messageChainID }?.recipientPublicKey.toString().let {
+                parseAndVerifyMessage(m.first.json, it)
+            }
+        }
+        return verifiedMessages.map { it.first.postMessage }
     }
 }

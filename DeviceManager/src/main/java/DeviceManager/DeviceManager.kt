@@ -2,50 +2,51 @@ package DeviceManager
 
 import Tangle.TangleController
 import com.google.gson.Gson
-import datatypes.iotdevices.Device
-import datatypes.iotdevices.IdIp
-import datatypes.iotdevices.Procuration
-import datatypes.iotdevices.ProcurationAck
+import datatypes.iotdevices.*
 import helpers.EncryptionHelper
 import org.eclipse.californium.core.CoapClient
 import org.eclipse.californium.core.coap.MediaTypeRegistry
 import org.slf4j.simple.SimpleLoggerFactory
 import java.math.BigDecimal
+import java.security.PrivateKey
 import java.util.*
 
 
+//TODO DB OG CACHES VEDLIGEHOLDELSE, BÅDE PUT OG REMOVE ETC.
+//TODO BRUG HASH READ MESSAGES TING FLERE STEDER
+
 class DeviceManager {
-    private val devicesIdIpToSpecification = mutableMapOf<IdIp, String>()
+    private val devicesIdIpToSpecification = mutableMapOf<IdIp, Device>()
     private val registeredDevices = mutableListOf<IdIp>()
     private val gson = Gson()
     private val tangle = TangleController()
     private val logger = SimpleLoggerFactory().getLogger("DeviceManager")
     private val seed = "TESTQ9999999999999999999999999999999999999999999999999999999999999999999999999999"
 
-    fun getRegisteredDevices(): Map<IdIp, String> = devicesIdIpToSpecification.filter { it.key in registeredDevices }
+    fun getRegisteredDevices(): Map<IdIp, Device> = devicesIdIpToSpecification.filter { it.key in registeredDevices }
 
-    fun getNotRegisteredDevices(): Map<IdIp, String> =
-        devicesIdIpToSpecification.filterNot { it.key in registeredDevices }
+    fun getNotRegisteredDevices(): Map<IdIp, Device> = devicesIdIpToSpecification.filterNot { it.key in registeredDevices }
 
     fun startDiscovery() {
         Thread {
             ClientDiscovery().startListening {
                 val simpleDevice = gson.fromJson<Device>(it, Device::class.java)
                 println(simpleDevice)
-                devicesIdIpToSpecification[simpleDevice.idIp] = simpleDevice.specification
+                devicesIdIpToSpecification[simpleDevice.idIp] = simpleDevice
             }
         }.start()
     }
 
 
-    fun registerDevice(publicKey: String, deviceID: String): String {
-        val idIp = devicesIdIpToSpecification.keys.firstOrNull { it.id == deviceID }
-        idIp?.let {
-            tangle.attachDeviceToTangle(seed, getDeviceSpecificationFromId(idIp.id))?.let { registeredDevices.add(idIp) }
+    fun registerDevice(privateKey: PrivateKey, publicKey: String, deviceID: String): String {
+        val spec = devicesIdIpToSpecification.entries.firstOrNull { it.value.idIp.id == deviceID }.let { e ->
+            val deviceSpecification = TangleDeviceSpecification(publicKey, e!!.value.specification)
+            val toJson = gson.toJson(deviceSpecification)
+            val signedJson = "$toJson||${EncryptionHelper.signBase64(privateKey, toJson)}"
+            tangle.attachDeviceToTangle(seed, signedJson)?.let { registeredDevices.add(e.key) }
         }
-
         return "{\"register\" :" +
-                (idIp?.let { "\"successful\"}" } ?: "\"unsuccessful\"}")
+                (spec?.let { "\"successful\"}" } ?: "\"unsuccessful\"}")
     }
 
     fun unregisterDevice(deviceId: String): String {
@@ -56,7 +57,6 @@ class DeviceManager {
     }
 
     private fun getDeviceSpecificationFromId(id: String) = devicesIdIpToSpecification.filter { it.key.id == id }.map { it.value }.firstOrNull()
-        ?: "{\"error\": \"invalid id\"}"
 
 
     fun getDevices(parameter: String = "all") = gson.toJson(
@@ -69,7 +69,7 @@ class DeviceManager {
 
 
     private fun getAllDevices() = devicesIdIpToSpecification
-    fun getDevice(id: String): String = getDeviceSpecificationFromId(id)
+    fun getDevice(id: String): Device? = getDeviceSpecificationFromId(id)
 
     private fun getDeviceKeyFromId(id: String) = devicesIdIpToSpecification.filter { it.key.id == id }.map { it.key }.firstOrNull()
 
@@ -84,15 +84,22 @@ class DeviceManager {
         return client.get()?.responseText ?: "{\"error\":\"No response received\"}"
     }
 
-    fun post(deviceId: String, path: String, parameter: String): String {
-        val mapKey = getDeviceKeyFromId(deviceId) ?: return "{\"error\":\"Invalid device id\"}"
-        val client = CoapClient("${mapKey.ip}:5683/$path") //todo resource på port
-        return client.post(parameter, MediaTypeRegistry.APPLICATION_JSON)?.responseText
+    fun post(postMessage: PostMessage): String {
+        val mapKey = getDeviceKeyFromId(postMessage.devicedID) ?: return "{\"error\":\"Invalid device id\"}"
+        val client = CoapClient("${mapKey.ip}:5683/${postMessage.path}") //todo resource på port
+        return client.post(gson.toJson(postMessage.params), MediaTypeRegistry.APPLICATION_JSON)?.responseText
             ?: "{\"error\":\"No response received\"}"
     }
 
-    fun getActivePendingProcurations(): List<Procuration> {
-        val messages = tangle.getMessages(seed, "PRO")
+    fun post(id: String, path: String, params: String): String {
+        val mapKey = getDeviceKeyFromId(id) ?: return "{\"error\":\"Invalid device id\"}"
+        val client = CoapClient("${mapKey.ip}:5683/${path}") //todo resource på port
+        return client.post(gson.toJson(params), MediaTypeRegistry.APPLICATION_JSON)?.responseText
+            ?: "{\"error\":\"No response received\"}"
+    }
+
+    fun getActivePendingProcurations(accepted: List<Procuration>): List<Procuration> {
+        val messages = tangle.getMessagesUnchecked(seed, "PRO")
         val procurations = messages.mapNotNull { m ->
             try {
                 gson.fromJson(m, Procuration::class.java)
@@ -100,29 +107,11 @@ class DeviceManager {
                 null
             }
         }
-        val accepts = messages.mapNotNull { m ->
-            try {
-                gson.fromJson(m, Procuration::class.java)
-            } catch (e: Exception) {
-                null
-            }
-        }
-        return procurations.filter { p -> accepts.firstOrNull { a -> p.messageChainID == a.messageChainID } == null }.filter { p -> p.dateTo >= Date() }
-    }
-
-    fun getActiveAcceptedProcurations(): List<Procuration> {
-        val messages = tangle.getMessages(seed, "PROACK")
-        return messages.mapNotNull { m ->
-            try {
-                gson.fromJson(m, Procuration::class.java)
-            } catch (e: Exception) {
-                null
-            }
-        }.filter { p -> p.dateTo >= Date() }
+        return procurations.filter { p -> accepted.firstOrNull { a -> p.messageChainID == a.messageChainID } == null }.filter { p -> p.dateTo >= Date() }
     }
 
     fun getExpiredProcurations(): List<Procuration> {
-        val messages = tangle.getMessages(seed, "PROACK")
+        val messages = tangle.getMessagesUnchecked(seed, "PROACK")
         return messages.mapNotNull { m ->
             try {
                 gson.fromJson(m, Procuration::class.java)
@@ -132,7 +121,7 @@ class DeviceManager {
         }.filter { p -> p.dateTo <= Date() }
     }
 
-    fun RespondToProcuration(procuration: Procuration, accepted: Boolean) {
+    fun respondToProcuration(procuration: Procuration, accepted: Boolean) {
         val procurationAck = ProcurationAck(procuration.messageChainID, accepted)
         val privateKey = EncryptionHelper.loadPrivateECKeyFromProperties("houseHoldPrivateKey")
         val json = gson.toJson(procurationAck)
