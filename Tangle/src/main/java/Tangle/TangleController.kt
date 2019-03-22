@@ -85,9 +85,9 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
         return transactions.mapNotNull { getASCIIFromTrytes(it.signatureFragments) }
     }
 
-    fun getNewestMessageSortedByTimeStamp(seed: String, tag: String?): String {
-        val transactions = getTransactions(seed)
-        return (tag?.let { transactions.filter { it.tag == tag } } ?: transactions)
+    fun getNewestMessageSortedByTimeStamp(seed: String, tag: Tag?): String {
+        val transactions = getTransactions(seed, tag)
+        return transactions
             .sortedBy { it.timestamp }
             .mapNotNull { getASCIIFromTrytes(it.signatureFragments) }.first()
     }
