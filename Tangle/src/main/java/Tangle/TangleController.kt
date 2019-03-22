@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import datatypes.iotdevices.PostMessage
 import datatypes.iotdevices.PostMessageHack
 import datatypes.iotdevices.Procuration
+import datatypes.tangle.Tag
 import helpers.EncryptionHelper
 import helpers.PropertiesLoader
 import jota.IotaAPI
@@ -21,7 +22,6 @@ class TangleController(
     private val logger: Logger = SimpleLoggerFactory().getLogger("TangleController")
 ) {
 
-    private lateinit var deviceSpecificationTag: String
     private lateinit var nodeAddress: String
     private lateinit var nodePort: String
     private var nodeSecurity = 2
@@ -38,7 +38,6 @@ class TangleController(
     private fun loadProperties(): Boolean {
         logger.info("Loading properties")
         val properties = PropertiesLoader.instance
-        deviceSpecificationTag = properties.getProperty("deviceSpecificationTag")
         nodeAddress = properties.getProperty("nodeAddress")
         nodePort = properties.getProperty("nodePort")
         nodeSecurity = properties.getProperty("nodeSecurity").toInt()
@@ -57,7 +56,7 @@ class TangleController(
 
     }
 
-    fun getTransactions(seed: String, tag: String?): List<Transaction> {
+    fun getTransactions(seed: String, tag: Tag?): List<Transaction> {
         logger.info("getTransactions for seed: $seed")
 
         val transferResponse = try {
@@ -68,14 +67,15 @@ class TangleController(
         }
 
         var transactions = transferResponse?.transfers?.flatMap { it.transactions } ?: listOf()
-        tag.let { transactions = transactions.filter { it.tag == tag } }
+        tag?.let { transactions = transactions.filter { it.tag == tag.name } }
         transactions = transactions.filter { !pt.hashStoredInDB(it.hash) }
         transactions.forEach { pt.saveHash(it.hash) }
 
         return transactions
     }
 
-    fun getMessagesUnchecked(seed: String, tag: String?): List<String> { //does not compare signatures
+    fun getMessagesUnchecked(seed: String, tag: Tag?): List<String> { //does not compare signatures
+
         val transactions = getTransactions(seed, tag)
         return transactions.mapNotNull { getASCIIFromTrytes(it.signatureFragments) }
     }
@@ -107,7 +107,7 @@ class TangleController(
     fun attachDeviceToTangle(seed: String, tangleDeviceSpecification: String): SendTransferResponse? {
         logger.info("Attaching device to tangle, seed: $seed\ndeviceSpecification: $tangleDeviceSpecification")
         val messageTrytes = TrytesConverter.asciiToTrytes(tangleDeviceSpecification)
-        val deviceSpecificationTagTrytes = TrytesConverter.asciiToTrytes(deviceSpecificationTag)
+        val deviceSpecificationTagTrytes = TrytesConverter.asciiToTrytes(Tag.DSPEC.name)
         val transfer = Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, deviceSpecificationTagTrytes)
         return try {
             pt.saveHash(transfer.hash)
@@ -169,7 +169,7 @@ class TangleController(
     }
 
     fun getPendingMethodCalls(seed: String, procurations: List<Procuration>): List<PostMessage> {
-        val transactions = getTransactions(seed, "MC")
+        val transactions = getTransactions(seed, Tag.MC)
         val postMessages = transactions.mapNotNull { transaction ->
             getASCIIFromTrytes(transaction.signatureFragments)?.let { ascii ->
                 val signature = ascii.substringAfter("__")

@@ -3,6 +3,7 @@ package DeviceManager
 import Tangle.TangleController
 import com.google.gson.Gson
 import datatypes.iotdevices.*
+import datatypes.tangle.Tag
 import helpers.EncryptionHelper
 import org.eclipse.californium.core.CoapClient
 import org.eclipse.californium.core.coap.MediaTypeRegistry
@@ -97,7 +98,7 @@ class DeviceManager {
     }
 
     fun getActivePendingProcurations(accepted: List<Procuration>, seed: String, tangle: TangleController): List<Procuration> {
-        val messages = tangle.getMessagesUnchecked(seed, "PRO")
+        val messages = tangle.getMessagesUnchecked(seed, Tag.PRO)
         val procurations = messages.mapNotNull { m ->
             try {
                 gson.fromJson(m, Procuration::class.java)
@@ -109,7 +110,7 @@ class DeviceManager {
     }
 
     fun getExpiredProcurations(seed: String, tangle: TangleController): List<Procuration> {
-        val messages = tangle.getMessagesUnchecked(seed, "PROACK")
+        val messages = tangle.getMessagesUnchecked(seed, Tag.PROACK)
         return messages.mapNotNull { m ->
             try {
                 gson.fromJson(m, Procuration::class.java)
