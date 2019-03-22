@@ -1,6 +1,8 @@
 package IoTDevices
 
 import com.google.gson.Gson
+import datatypes.iotdevices.Device
+import datatypes.iotdevices.IdIp
 import org.jgroups.JChannel
 import org.jgroups.Message
 import org.jgroups.ReceiverAdapter
@@ -27,7 +29,8 @@ class Discovery(val ioTDevice: IoTDevice) : ReceiverAdapter() {
     }
 
     override fun viewAccepted(new_view: View) {
-        val simpleDeviceString = gson.toJson(ioTDevice.deviceSpecification) //TODO maybe revisit this
+        val device = Device(IdIp(ioTDevice.id, ip), ioTDevice.deviceSpecification)
+        val simpleDeviceString = gson.toJson(device) //TODO maybe revisit this again
         channel.send(Message(null, simpleDeviceString.toByteArray()))
     }
 }

@@ -1,6 +1,7 @@
 package IoTAPI
 
 import DeviceManager.DeviceManager
+import Tangle.TangleController
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import datatypes.iotdevices.PostMessage
@@ -17,10 +18,12 @@ import spark.Spark.*
 import java.math.BigInteger
 import java.security.PrivateKey
 import java.security.PublicKey
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 fun main() {
     val hs = HouseRules()
-
+    val seed = "TESTQ9999999999999999999999999999999999999999999999999999999999999999999999999999"
     val logger = SimpleLoggerFactory().getLogger("IoTAPI")
     val deviceManger = DeviceManager()
     val procurations = AcceptedProcurations()
@@ -28,6 +31,10 @@ fun main() {
     deviceManger.startDiscovery()
     val privateKey: PrivateKey
     val publicKey: PublicKey
+    val tangleController = TangleController()
+    val threadPool = ScheduledThreadPoolExecutor(1)
+    val pendingMethodCalls = mutableListOf<PostMessage>()
+    threadPool.scheduleAtFixedRate({ }, 0, 20, TimeUnit.SECONDS)
     if (PropertiesLoader.instance.getOptionalProperty("householdPrivateKey") == null || PropertiesLoader.instance.getOptionalProperty("householdPublicKey") == null) {
         val keyPair = EncryptionHelper.generateKeys()
         privateKey = keyPair.private
@@ -89,18 +96,18 @@ fun main() {
 
     get("/device/procurations/pending") { _, response ->
         response.type("application/json")
-        deviceManger.getActivePendingProcurations(procurations.getAllProcurations())
+        deviceManger.getActivePendingProcurations(procurations.getAllProcurations(), seed, tangleController)
     }
 
     put("/device/procuration/:id/accept") { request, response ->
         response.type("application/json")
         val id = request.params().get(":id")
-        id?.let { pendingProcurations.find { it.messageChainID == id }?.let { deviceManger.respondToProcuration(it, true) } }
+        id?.let { pendingProcurations.find { it.messageChainID == id }?.let { deviceManger.respondToProcuration(it, true, seed, tangleController) } }
     }
     put("/device/procuration/:id/reject") { request, response ->
         response.type("application/json")
         val id = request.params().get(":id")
-        id?.let { pendingProcurations.find { it.messageChainID == id }?.let { deviceManger.respondToProcuration(it, true) } }
+        id?.let { pendingProcurations.find { it.messageChainID == id }?.let { deviceManger.respondToProcuration(it, true, seed, tangleController) } }
     }
 
     get("/device/procurations/accepted") { _, response ->
@@ -110,7 +117,7 @@ fun main() {
 
     get("/device/procurations/expired") { _, response ->
         response.type("application/json")
-        deviceManger.getExpiredProcurations()
+        deviceManger.getExpiredProcurations(seed, tangleController)
     }
 
     get("/device/:id") { request, _ -> deviceManger.getDevice(request.params(":id")) }
@@ -119,7 +126,7 @@ fun main() {
         val path = request.params(":path")
         val params = if (request.queryParams().isNotEmpty()) "?" + request.queryParams().map { request.params(it) } else ""
         response.type("application/json")
-        val ret = deviceManger.get(id, path, params)
+        val ret = deviceManger.get(PostMessage("this", id, path, params))
         ret
     }
 
@@ -134,7 +141,7 @@ fun main() {
         val from = request.params(":from").toLong()
         val to = request.params(":to").toLong()
         val id = request.params(":id").toString()
-        deviceManger.getSavingsForDevice(from, to, id)
+        deviceManger.getSavingsForDevice(from, to, id, tangleController)
     }
 
     get("/device/:id/time") { request, _ ->
@@ -150,7 +157,7 @@ fun main() {
         //todo
         val from = request.params(":from").toLong()
         val to = request.params(":to").toLong()
-        deviceManger.getAllSavings(from, to)
+        deviceManger.getAllSavings(from, to, tangleController)
     }
 
     delete("/device/:id") { request, _ ->
@@ -160,6 +167,19 @@ fun main() {
 
     put("/device/:id") { request, _ ->
         val id = request.params(":id")
-        deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), id)
+        deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), id, seed, tangleController)
+    }
+
+    fun methodTask() {
+        pendingMethodCalls += tangleController.getPendingMethodCalls(seed, procurations.getAllProcurations())
+        pendingMethodCalls.forEach { it.type }
+    }
+
+    fun handleMethodType(message: PostMessage) {
+        when (message.type.toLowerCase()) {
+            "get" -> deviceManger.get(PostMessage(message.deviceID, message.path, message.params.getOrDefault("query", "")))
+            "post" -> deviceManger.post(message)
+        }
+
     }
 }

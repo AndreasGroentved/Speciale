@@ -59,15 +59,20 @@ class TangleController(
 
     fun getTransactions(seed: String, tag: String?): List<Transaction> {
         logger.info("getTransactions for seed: $seed")
+
         val transferResponse = try {
             iotaAPI.getTransfers(seed, nodeSecurity, 0, 5, false)
         } catch (e: ArgumentException) {
             logger.error("Invalid parameters supplied for getTransactions, likely invalid seed", e)
             null
         }
-        var list = transferResponse?.transfers?.flatMap { it.transactions } ?: listOf()
-        tag.let { list = list.filter { it.tag == tag } }
-        return transferResponse?.transfers?.flatMap { it.transactions } ?: listOf()
+
+        var transactions = transferResponse?.transfers?.flatMap { it.transactions } ?: listOf()
+        tag.let { transactions = transactions.filter { it.tag == tag } }
+        transactions = transactions.filter { !pt.hashStoredInDB(it.hash) }
+        transactions.forEach { pt.saveHash(it.hash) }
+
+        return transactions
     }
 
     fun getMessagesUnchecked(seed: String, tag: String?): List<String> { //does not compare signatures
