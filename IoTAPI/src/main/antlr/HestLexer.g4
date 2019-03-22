@@ -10,7 +10,8 @@ VAR                : 'var' ;
 INTLIT             : '0'|[1-9][0-9]* ;
 DECLIT             : '0'|[1-9][0-9]* '.' [0-9]+ ;
 TIMELIT: [0-2][0-9]':'[0-5][0-9];
-STRINGLIT:     '"' ~["\\\r\n]* '"';
+STRINGLIT:     QUOTE ~["\\\r\n]* QUOTE;
+QUOTE: '"';
 
 // Operators
 PLUS               : '+' ;

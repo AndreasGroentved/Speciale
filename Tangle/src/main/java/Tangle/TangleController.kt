@@ -17,6 +17,7 @@ import org.slf4j.Logger
 import org.slf4j.simple.SimpleLoggerFactory
 import repositories.ProcessedTransactions
 import java.math.BigDecimal
+import java.math.BigInteger
 
 class TangleController(
     private val logger: Logger = SimpleLoggerFactory().getLogger("TangleController")
@@ -65,11 +66,18 @@ class TangleController(
             logger.error("Invalid parameters supplied for getTransactions, likely invalid seed", e)
             null
         }
-
         var transactions = transferResponse?.transfers?.flatMap { it.transactions } ?: listOf()
-        tag?.let { transactions = transactions.filter { it.tag == tag.name } }
+        tag?.let {
+            transactions = transactions.filter {
+                logger.info(getASCIIFromTrytes(it.tag))
+                getASCIIFromTrytes(it.tag) == tag.name
+            }
+        }
+        logger.info("$transactions")
         transactions = transactions.filter { !pt.hashStoredInDB(it.hash) }
+        logger.info("$transactions")
         transactions.forEach { pt.saveHash(it.hash) }
+        logger.info("$transactions")
 
         return transactions
     }
@@ -80,13 +88,45 @@ class TangleController(
         return transactions.mapNotNull { getASCIIFromTrytes(it.signatureFragments) }
     }
 
-    fun attachTransactionToTangle(seed: String, message: String, tag: String): SendTransferResponse? {
+    fun attachBroadcastToTangle(seed: String, message: String, tag: Tag): SendTransferResponse? {
+        return attachBroadcastToTangle(seed, message, tag.name)
+    }
+
+    fun attachBroadcastToTangle(seed: String, message: String, tag: String): SendTransferResponse? {
         logger.info("Attaching transaction to tangle, seed: $seed\nmessage: $message\ntag:$tag")
         val messageTrytes = TrytesConverter.asciiToTrytes(message)
+        val tagTrytes = TrytesConverter.asciiToTrytes(tag)
         val transfer =
-            Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, tag)
+            Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, tagTrytes)
+        logger.info("$transfer")
         return try {
-            pt.saveHash(transfer.hash)
+            //pt.saveHash(transfer.hash)
+            iotaAPI.sendTransfer(
+                seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(),
+                false, false, null
+            )
+        } catch (e: Exception) {
+            when (e) {
+                is ArgumentException -> {
+                    logger.error("Invalid parameters supplied for sendTransfer");null
+                }
+                is IllegalStateException -> {
+                    logger.error("Cannot attach message to Tangle"); null
+                }
+                else -> throw e
+            }
+        }
+    }
+
+    fun attachTransactionToTangle(seed: String, message: String, tag: String, addressTo: String): SendTransferResponse? {
+        logger.info("Attaching transaction to tangle, seed: $seed\nmessage: $message\ntag:$tag")
+        val messageTrytes = TrytesConverter.asciiToTrytes(message)
+        val tagTrytes = TrytesConverter.asciiToTrytes(tag)
+        val transfer =
+            Transfer(addressTo, 0, messageTrytes, tagTrytes)
+        logger.info("$transfer")
+        return try {
+            //pt.saveHash(transfer.hash)
             iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(),
                 false, false, null
@@ -152,9 +192,18 @@ class TangleController(
     }
 
     private fun parseAndVerifyMessage(messageASCII: String, publicKey: String): Boolean {
+        logger.info("parsing and verifying message : $messageASCII $publicKey")
         val signature = messageASCII.substringAfter("__")
         val message = messageASCII.substringBefore("__")
         val publicECKey = EncryptionHelper.loadPublicECKeyFromProperties(publicKey)
+        return EncryptionHelper.verifySignatureBase64(publicECKey, message, signature)
+    }
+
+    private fun parseAndVerifyMessageStringKey(messageASCII: String, publicKey: String): Boolean {
+        logger.info("parsing and verifying message : $messageASCII $publicKey")
+        val signature = messageASCII.substringAfter("__")
+        val message = messageASCII.substringBefore("__")
+        val publicECKey = EncryptionHelper.loadPublicECKeyFromBigInteger(BigInteger(publicKey))
         return EncryptionHelper.verifySignatureBase64(publicECKey, message, signature)
     }
 
@@ -169,19 +218,23 @@ class TangleController(
     }
 
     fun getPendingMethodCalls(seed: String, procurations: List<Procuration>): List<PostMessage> {
+        logger.info("getting Pending Method Calls, seed: $seed procurations: $procurations")
         val transactions = getTransactions(seed, Tag.MC)
+        logger.info("gottem")
         val postMessages = transactions.mapNotNull { transaction ->
             getASCIIFromTrytes(transaction.signatureFragments)?.let { ascii ->
                 val signature = ascii.substringAfter("__")
                 val message = ascii.substringBefore("__")
-                Pair(PostMessageHack(gson.fromJson(message, PostMessage::class.java), message), signature)
+                Pair(PostMessageHack(gson.fromJson(message, PostMessage::class.java), ascii), signature)
             }
         }
+        logger.info("postMessages\n\n\n$postMessages")
         val verifiedMessages = postMessages.filter { m ->
             procurations.find { p -> p.messageChainID == m.first.postMessage.messageChainID }?.recipientPublicKey.toString().let {
-                parseAndVerifyMessage(m.first.json, it)
+                parseAndVerifyMessageStringKey(m.first.json, it)
             }
         }
+        logger.info("verified $verifiedMessages")
         return verifiedMessages.map { it.first.postMessage }
     }
 }

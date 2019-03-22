@@ -78,6 +78,7 @@ class DeviceManager {
     fun getSavingsForDevice(from: Long, to: Long, deviceId: String, tangle: TangleController): BigDecimal = tangle.getDevicePriceSavings(from, to, deviceId)
 
     fun get(postMessage: PostMessage): String {
+        logger.info("calling get with message: $postMessage")
         val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return "{\"error\":\"Invalid device id\"}"
         val client = CoapClient("${mapKey.ip}:5683/${postMessage.path}?${postMessage.params["queryString"]}")
         return client.get()?.responseText ?: "{\"error\":\"No response received\"}"
@@ -125,7 +126,7 @@ class DeviceManager {
         val privateKey = EncryptionHelper.loadPrivateECKeyFromProperties("houseHoldPrivateKey")
         val json = gson.toJson(procurationAck)
         val signBase64 = EncryptionHelper.signBase64(privateKey, json)
-        tangle.attachTransactionToTangle(seed, "$json||$signBase64", "PROACK")
+        tangle.attachBroadcastToTangle(seed, "$json||$signBase64", Tag.PROACK)
     }
 
 }

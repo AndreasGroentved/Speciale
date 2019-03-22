@@ -1,3 +1,3 @@
 package datatypes.iotdevices
 
-data class ProcurationAck(val messageChainID: String, val accept: Boolean)
+data class ProcurationAck(val messageChainID: String = "", val accept: Boolean = false)

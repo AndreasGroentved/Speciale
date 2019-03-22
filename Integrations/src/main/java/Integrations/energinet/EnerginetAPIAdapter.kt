@@ -37,7 +37,7 @@ class EnerginetAPIAdapter {
             val privateECKey = EncryptionHelper.loadPrivateECKeyFromProperties("energinetPrivateKey")
             val signed = toJson + "__" + EncryptionHelper.signBase64(privateECKey, toJson)
             logger.info("Attaching to tangle: $signed")
-            tangleController.attachTransactionToTangle(seed, signed, "EN")
+            tangleController.attachBroadcastToTangle(seed, signed, "EN")
         } else return publishCO2Signal(retries + 1)
     }
 

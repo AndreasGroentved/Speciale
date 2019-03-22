@@ -29,9 +29,9 @@ class NordPoolAPIMock(
         val signedResponse1 = signMockResponse(gson.toJson(copy))
         val signedResponse2 = signMockResponse(gson.toJson(copy2))
         logger.info("Attaching to tangle: $signedResponse1")
-        tangleController.attachTransactionToTangle(seed, signedResponse1, "NP")
+        tangleController.attachBroadcastToTangle(seed, signedResponse1, "NP")
         logger.info("Attaching to tangle: $signedResponse2")
-        tangleController.attachTransactionToTangle(seed, signedResponse2, "NP")
+        tangleController.attachBroadcastToTangle(seed, signedResponse2, "NP")
     }
 
     private fun loadMockResponse(): NordPoolAPIMockResponse {
