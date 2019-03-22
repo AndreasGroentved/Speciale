@@ -1,7 +1,7 @@
 package DeviceManager
 
 
-fun main(args: Array<String>) {
+fun main() {
     DeviceManager().startDiscovery()
 }
 

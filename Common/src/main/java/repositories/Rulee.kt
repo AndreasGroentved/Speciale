@@ -1,4 +1,4 @@
-package IoTAPI
+package repositories
 
 import org.dizitart.no2.objects.Id
 import org.dizitart.no2.objects.Index

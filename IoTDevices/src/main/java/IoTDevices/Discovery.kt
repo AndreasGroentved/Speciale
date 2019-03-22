@@ -24,26 +24,13 @@ class Discovery(val ioTDevice: IoTDevice) : ReceiverAdapter() {
         channel.connect("DiscoveryCluster")
         thread = Thread {
             running = true
-            announceLoop()
         }
         thread?.start()
     }
 
-
-    fun stopDiscovery() {
-        thread?.stop()
-    }
-
-    private fun announceLoop() {
-        while (thread?.isAlive == true) { //TODO det er nok, nok at at gøre dette i viewAccepted een gang
-            Thread.sleep(2000)
-            if (!thread?.isAlive!!) break
-            val simpleDeviceString = gson.toJson(Device(IdIp(ioTDevice.id, ip), gson.toJson(ioTDevice.deviceSpecification))) //TODO hax hax hax
-            channel.send(Message(null, simpleDeviceString.toByteArray()))
-        }
-    }
-
     override fun viewAccepted(new_view: View) {
-        println("** view: $new_view")
+        val device = Device(IdIp(ioTDevice.id, ip), ioTDevice.deviceSpecification)
+        val simpleDeviceString = gson.toJson(device) //TODO maybe revisit this again
+        channel.send(Message(null, simpleDeviceString.toByteArray()))
     }
 }

@@ -17,7 +17,7 @@ class ClientDiscovery : ReceiverAdapter() {
         channel.connect("DiscoveryCluster")
     }
 
-    override fun viewAccepted(new_view: View) = println("** view: $new_view")
+    override fun viewAccepted(new_view: View) = println("** view: $new_view") //todo: something more exciting and betterer than a println
 
 
     override fun receive(msg: Message) {
