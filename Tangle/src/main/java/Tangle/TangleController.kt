@@ -12,9 +12,7 @@ import org.slf4j.Logger
 import org.slf4j.simple.SimpleLoggerFactory
 import java.math.BigDecimal
 
-class TangleController(
-    private val logger: Logger = SimpleLoggerFactory().getLogger("TangleController")
-) {
+class TangleController(private val logger: Logger = SimpleLoggerFactory().getLogger("TangleController")) {
 
     private lateinit var deviceSpecificationTag: String
     private lateinit var nodeAddress: String
@@ -24,8 +22,7 @@ class TangleController(
     private lateinit var iotaAPI: IotaAPI
 
     init {
-        val loadProperties = loadProperties()
-        initIotaAPI(loadProperties)
+        initIotaAPI(loadProperties())
     }
 
     private fun loadProperties(): Boolean {
@@ -65,6 +62,13 @@ class TangleController(
         var transactions = getTransactions(seed)
         tag.let { transactions = transactions.filter { it.tag == tag } }
         return transactions.mapNotNull { getASCIIFromTrytes(it.signatureFragments) }
+    }
+
+    fun getNewestMessageSortedByTimeStamp(seed: String, tag: String?): String {
+        val transactions = getTransactions(seed)
+        return (tag?.let { transactions.filter { it.tag == tag } } ?: transactions)
+            .sortedBy { it.timestamp }
+            .mapNotNull { getASCIIFromTrytes(it.signatureFragments) }.first()
     }
 
     fun attachTransactionToTangle(seed: String, message: String, tag: String): SendTransferResponse? {

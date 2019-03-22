@@ -7,10 +7,14 @@ WS:                 [ \t\r\n\u000C]+ -> skip;
 VAR                : 'var' ;
 
 // Literals
-INTLIT             : '0'|[1-9][0-9]* ;
-DECLIT             : '0'|[1-9][0-9]* '.' [0-9]+ ;
-TIMELIT: [0-2][0-9]':'[0-5][0-9];
-STRINGLIT:     '"' ~["\\\r\n]* '"';
+INTLIT             : [1-9][0-9]*;
+DECLIT             : '0'|[1-9][0-9]* ('.' [0-9]+)?;
+TIMELIT            : [0-2][0-9]':'[0-5][0-9];
+DATELIT            : [0-9][0-9][0-9][0-9]':'[0-1][0-9]':'[0-3][0-9];
+STRINGLIT          : '"' ~["\\\r\n]* '"';
+BOOL               : 'false' | 'true';
+NOT                : '!';
+QOUTE              : '"';
 
 // Operators
 PLUS               : '+' ;
@@ -21,6 +25,9 @@ ASSIGN             : '=' ;
 LPAREN             : '(' ;
 RPAREN             : ')' ;
 LESSTHAN: '<';
+NOTEQUALS: '!=';
+
+
 EQUALS: '==';
 EQUALSLESS: '<=';
 MORETHAN: '>';
@@ -28,7 +35,6 @@ EQUALSMORE: '=>';
 LBRACKET : '{';
 RBRACKET : '}';
 
-BOOL: 'true'|'false';
 DATASET: 'dataset' ;
 TAG : 'tag' ;
 HEADER : 'header' ;
@@ -51,5 +57,8 @@ RULE :'rule';
 // Formats
 JSON : 'JSON';
 XML : 'XML' ;
+KEY : 'key';
+OR: '||';
+AND: '&&';
 // Identifiers
 ID: [a-z][A-Za-z0-9_]* ;

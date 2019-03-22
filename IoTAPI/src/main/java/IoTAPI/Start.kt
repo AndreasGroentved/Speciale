@@ -22,6 +22,11 @@ import java.security.PublicKey
 //todo: gem fuldmagter
 
 fun main() {
+
+    RuleManager().updateDsl()
+
+
+    return
     val hs = HouseRules()
 
     val logger = SimpleLoggerFactory().getLogger("IoTAPI")
