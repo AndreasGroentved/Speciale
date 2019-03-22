@@ -3,23 +3,44 @@ parser grammar HestParser;
 options { tokenVocab=HestLexer; }
 content: (dataset | rulee)* ;
 
-rulee: 'rule' '{' (config|variable|condition|device|output|run)* '}';
+rulee: 'rule' '{' (config|variable|device|output|run)* '}';
 config: 'config' time;
-time: 'every' timeDefinition | 'once' timeDefinition | interval; //Nok mere...
-timeDefinition: INTLIT 'day' | INTLIT 'hour' | INTLIT 'min';
-interval: 'from' TIMELIT 'to' TIMELIT;
-run: 'run' '{' (condition (output|varpath)+ | output|varpath+)+ '}';
-condition: cName=ID ((eqOperator condition)?);  //And or's senere
-eqOperator: '<' | '==' | '<=' | '>' | '=>';
+time: 'every' timeDefinition | 'once' timeDefinition | interval;
+timeDefinition: INTLIT unit='day' | INTLIT unit='hour' | INTLIT unit='min';
+interval: 'from' fromDate = DATELIT fromTime = TIMELIT 'to' toDate=DATELIT toTime=TIMELIT 'every' timeDefinition; //TODO fra 'every' er tilføjet men ikke håndteret
+run: 'run' '{' condition=expression? output* varpath* '}';
+
+
+/*
+condition: cName=STRINGLIT ((eqOperator right = condition)?);  //And or's senere
+exp: cName=condition ((eqOperator right = condition)?);*/
+
+
+
+eqOperator: '<' | '==' | '!=' | '<=' | '>' | '=>';
 output:  device path  ('post' | 'get') parameter*;
-device: 'device' ID;
+device: 'device' deviceName=ID;
 path: 'path' ID;
-parameter: STRINGLIT varTypes;
-varpath: 'var' ID '=' output;
-dataset: 'dataset' '{' (tag | header | name | format | variable)* '}';
-tag: 'tag' '=' STRINGLIT;
-header: 'header' '=' STRINGLIT;
-name: 'name' '=' STRINGLIT;
-format: 'format' '=' ('JSON' | 'XML');
-variable: VAR ID '=' varTypes;
-varTypes: INTLIT|STRINGLIT|DECLIT|BOOL;
+parameter: parName=STRINGLIT parValue=varTypes;
+varpath: ('var' varName=ID '=')? output;
+dataset: 'dataset' '{' tag  pkey  name  format  variable*  '}';
+tag: 'tag' '=' tagName=STRINGLIT;
+pkey: 'key' '=' pKey=INTLIT ;
+name: 'name' '=' nameName=STRINGLIT;
+format: 'format' '=' formatName=('JSON' | 'XML');
+variable: 'var' ID '=' expression;
+varTypes: STRINGLIT|DECLIT|BOOL;
+string: QOUTE ID QOUTE;
+
+binaryOp: '&&' | '||';
+
+expression:
+/*   LPAREN expression RPAREN                       #parenExpression
+ | NOT expression                                 #notExpression
+ |*/ left=expression op=binaryOp right=expression #comparatorExpression
+ | left=expression op=eqOperator  right=expression   #binaryExpression
+ | BOOL                                           #boolExpression
+ | ID                                             #identifierExpression
+ | DECLIT                                         #decimalExpression
+ | STRINGLIT                                      #stringExpression
+ ;

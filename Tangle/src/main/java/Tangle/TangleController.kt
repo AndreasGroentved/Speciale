@@ -19,9 +19,7 @@ import repositories.ProcessedTransactions
 import java.math.BigDecimal
 import java.math.BigInteger
 
-class TangleController(
-    private val logger: Logger = SimpleLoggerFactory().getLogger("TangleController")
-) {
+class TangleController(private val logger: Logger = SimpleLoggerFactory().getLogger("TangleController")) {
 
     private lateinit var nodeAddress: String
     private lateinit var nodePort: String
@@ -32,8 +30,7 @@ class TangleController(
     private val pt = ProcessedTransactions()
 
     init {
-        val loadProperties = loadProperties()
-        initIotaAPI(loadProperties)
+        initIotaAPI(loadProperties())
     }
 
     private fun loadProperties(): Boolean {
@@ -86,6 +83,13 @@ class TangleController(
 
         val transactions = getTransactions(seed, tag)
         return transactions.mapNotNull { getASCIIFromTrytes(it.signatureFragments) }
+    }
+
+    fun getNewestMessageSortedByTimeStamp(seed: String, tag: String?): String {
+        val transactions = getTransactions(seed)
+        return (tag?.let { transactions.filter { it.tag == tag } } ?: transactions)
+            .sortedBy { it.timestamp }
+            .mapNotNull { getASCIIFromTrytes(it.signatureFragments) }.first()
     }
 
     fun attachBroadcastToTangle(seed: String, message: String, tag: Tag): SendTransferResponse? {
