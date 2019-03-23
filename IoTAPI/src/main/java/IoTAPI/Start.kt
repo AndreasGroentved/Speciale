@@ -41,6 +41,7 @@ class IoTAPI {
         val privateKey: PrivateKey
         val publicKey: PublicKey
         threadPool.scheduleAtFixedRate({ methodTask() }, 0, 20, TimeUnit.SECONDS)
+
         if (PropertiesLoader.instance.getOptionalProperty("householdPrivateKey") == null || PropertiesLoader.instance.getOptionalProperty("householdPublicKey") == null) {
             val keyPair = EncryptionHelper.generateKeys()
             privateKey = keyPair.private
@@ -50,10 +51,6 @@ class IoTAPI {
         } else {
             privateKey = EncryptionHelper.loadPrivateECKeyFromProperties("householdPrivateKey")
             publicKey = EncryptionHelper.loadPublicECKeyFromProperties("householdPublicKey")
-        }
-        fun getParameterMap(body: String): Map<String, String> {
-            val mapType = object : TypeToken<Map<String, String>>() {}.type
-            return Gson().fromJson(body, mapType)
         }
 
         Spark.exception(Exception::class.java) { e, _, _ -> logger.error(e.toString()) }
@@ -109,6 +106,7 @@ class IoTAPI {
             val id = request.params().get(":id")
             id?.let { pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, true, seed, tangleController, privateKey) } }
         }
+
         //TODO: REVISIT DE HER, PATH ER LIDT WANK
         put("/device/procuration/:id/reject") { request, response ->
             response.type("application/json")
@@ -233,6 +231,11 @@ class IoTAPI {
         val json = gson.toJson(procuration)
         val signBase64 = EncryptionHelper.signBase64(privateKey, json)
         tangle.attachTransactionToTangle(seed, json + "__" + signBase64, Tag.PRO, addressTo)
+    }
+
+    fun getParameterMap(body: String): Map<String, String> {
+        val mapType = object : TypeToken<Map<String, String>>() {}.type
+        return gson.fromJson(body, mapType)
     }
 }
 
