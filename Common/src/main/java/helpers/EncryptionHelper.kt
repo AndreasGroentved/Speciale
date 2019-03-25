@@ -37,6 +37,7 @@ object EncryptionHelper {
     }
 
     fun signBase64(privateKey: PrivateKey, text: String): String {
+        logger.info("Signing, privateKey: $privateKey text: $text")
         val signature = Signature.getInstance("SHA1withECDSA", "SunEC")
         signature.initSign(privateKey)
         signature.update(text.toByteArray())
@@ -45,6 +46,7 @@ object EncryptionHelper {
     }
 
     fun verifySignatureBase64(publicKey: PublicKey, text: String, signatureBase64: String): Boolean {
+        logger.info("Verifying signature publicKey: $publicKey text: $text signatureBase64: $signatureBase64")
         val signature = Base64.getDecoder().decode(signatureBase64)
         val sig = Signature.getInstance("SHA1withECDSA", "SunEC")
         return try {

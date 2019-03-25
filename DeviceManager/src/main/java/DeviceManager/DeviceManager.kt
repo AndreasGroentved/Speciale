@@ -15,6 +15,8 @@ import java.util.*
 
 //TODO DB OG CACHES VEDLIGEHOLDELSE, BÅDE PUT OG REMOVE ETC.
 //TODO BRUG HASH READ MESSAGES TING FLERE STEDER
+//TODO BURDE VÆRE GJORT, MEN DET SKAL I HVERT FALD GÅES EFTER
+//TODO JEG ER RET UENIG MED AT ALTING SKAL RETURNERE STRING HERINDE
 
 class DeviceManager {
     private val devicesIdIpToSpecification = mutableMapOf<IdIp, Device>()
@@ -48,11 +50,16 @@ class DeviceManager {
                 (spec?.let { "\"successful\"}" } ?: "\"unsuccessful\"}")
     }
 
-    fun unregisterDevice(deviceId: String): String {
-        val idIp = devicesIdIpToSpecification.keys.firstOrNull { it.id == deviceId }
-        val successful = idIp?.let { registeredDevices.remove(idIp) } ?: false
-        return "{\"result\" :" +
-                (if (successful) "\"successful\"}" else "\"unsuccessful\"}")
+    fun unregisterDevice(privateKey: PrivateKey, seed: String, deviceId: String, tangle: TangleController): String {
+        val entry = devicesIdIpToSpecification.entries.firstOrNull { it.key.id == deviceId }
+        entry?.let {
+            val toJson = gson.toJson(it.value.specification)
+            val signed = EncryptionHelper.signBase64(privateKey, toJson)
+            tangle.attachBroadcastToTangle(seed, toJson + "__" + signed, Tag.XDSPEC)
+            return "{\"unRegister\" :" + "\"successful\"}"
+        }
+        return "{\"unRegister\" :" + "\"unsuccessful\"}"
+
     }
 
     private fun getDeviceSpecificationFromId(id: String) = devicesIdIpToSpecification.filter { it.key.id == id }.map { it.value }.firstOrNull()
@@ -77,14 +84,15 @@ class DeviceManager {
 
     fun getSavingsForDevice(from: Long, to: Long, deviceId: String, tangle: TangleController): BigDecimal = tangle.getDevicePriceSavings(from, to, deviceId)
 
-    fun get(postMessage: PostMessage): String {
-        logger.info("calling get with message: $postMessage")
+    fun get(postMessage: PostMessage): String { //todo, noget retry logik måske?
+        logger.info("attempting to call get with message: $postMessage")
         val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return "{\"error\":\"Invalid device id\"}"
         val client = CoapClient("${mapKey.ip}:5683/${postMessage.path}?${postMessage.params["queryString"]}")
         return client.get()?.responseText ?: "{\"error\":\"No result received\"}"
     }
 
     fun post(postMessage: PostMessage): String {
+        logger.info("attempting to call post with message: $postMessage")
         val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return "{\"error\":\"Invalid device id\"}"
         val client = CoapClient("${mapKey.ip}:5683/${postMessage.path}") //todo resource på port
         return client.post(gson.toJson(postMessage.params), MediaTypeRegistry.APPLICATION_JSON)?.responseText
@@ -119,14 +127,6 @@ class DeviceManager {
                 null
             }
         }.filter { p -> p.dateTo <= Date() }
-    }
-
-    fun respondToProcuration(procuration: Procuration, accepted: Boolean, seed: String, tangle: TangleController) {
-        val procurationAck = ProcurationAck(procuration.messageChainID, accepted)
-        val privateKey = EncryptionHelper.loadPrivateECKeyFromProperties("houseHoldPrivateKey")
-        val json = gson.toJson(procurationAck)
-        val signBase64 = EncryptionHelper.signBase64(privateKey, json)
-        tangle.attachBroadcastToTangle(seed, "$json||$signBase64", Tag.PROACK)
     }
 
 }

@@ -102,9 +102,8 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
         val tagTrytes = TrytesConverter.asciiToTrytes(tag)
         val transfer =
             Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, tagTrytes)
-        logger.info("$transfer")
         return try {
-            //pt.saveHash(transfer.hash)
+            pt.saveHash(transfer.hash)
             iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(),
                 false, false, null
@@ -122,13 +121,12 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
         }
     }
 
-    fun attachTransactionToTangle(seed: String, message: String, tag: String, addressTo: String): SendTransferResponse? {
+    fun attachTransactionToTangle(seed: String, message: String, tag: Tag, addressTo: String): SendTransferResponse? {
         logger.info("Attaching transaction to tangle, seed: $seed\nmessage: $message\ntag:$tag")
         val messageTrytes = TrytesConverter.asciiToTrytes(message)
-        val tagTrytes = TrytesConverter.asciiToTrytes(tag)
+        val tagTrytes = TrytesConverter.asciiToTrytes(tag.name)
         val transfer =
             Transfer(addressTo, 0, messageTrytes, tagTrytes)
-        logger.info("$transfer")
         return try {
             //pt.saveHash(transfer.hash)
             iotaAPI.sendTransfer(
@@ -216,7 +214,7 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
         return try {
             TrytesConverter.trytesToAscii(paddedTrytes).trim((0).toChar())
         } catch (e: ArgumentException) {
-            logger.error("Unable to convert invalid trytes")
+            logger.error("Unable to convert - invalid trytes: $trytes")
             null
         }
     }
@@ -224,7 +222,6 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
     fun getPendingMethodCalls(seed: String, procurations: List<Procuration>): List<PostMessage> {
         logger.info("getting Pending Method Calls, seed: $seed procurations: $procurations")
         val transactions = getTransactions(seed, Tag.MC)
-        logger.info("gottem")
         val postMessages = transactions.mapNotNull { transaction ->
             getASCIIFromTrytes(transaction.signatureFragments)?.let { ascii ->
                 val signature = ascii.substringAfter("__")
@@ -232,13 +229,11 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
                 Pair(PostMessageHack(gson.fromJson(message, PostMessage::class.java), ascii), signature)
             }
         }
-        logger.info("postMessages\n\n\n$postMessages")
         val verifiedMessages = postMessages.filter { m ->
             procurations.find { p -> p.messageChainID == m.first.postMessage.messageChainID }?.recipientPublicKey.toString().let {
                 parseAndVerifyMessageStringKey(m.first.json, it)
             }
         }
-        logger.info("verified $verifiedMessages")
         return verifiedMessages.map { it.first.postMessage }
     }
 }

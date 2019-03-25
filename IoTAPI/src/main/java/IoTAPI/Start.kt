@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import datatypes.iotdevices.PostMessage
 import datatypes.iotdevices.Procuration
+import datatypes.iotdevices.ProcurationAck
 import datatypes.tangle.Tag
 import helpers.EncryptionHelper
 import helpers.PropertiesLoader
@@ -19,6 +20,7 @@ import spark.Spark.*
 import java.math.BigInteger
 import java.security.PrivateKey
 import java.security.PublicKey
+import java.util.*
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
@@ -28,40 +30,19 @@ class IoTAPI {
     private val seed = "TESTQ9999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val logger = SimpleLoggerFactory().getLogger("IoTAPI")
     private val deviceManger = DeviceManager()
+    private val gson = Gson()
     private val procurations = AcceptedProcurations()
     private val pendingProcurations: MutableList<Procuration> = mutableListOf()
     private val tangleController = TangleController()
     private val threadPool = ScheduledThreadPoolExecutor(1)
     private val pendingMethodCalls = mutableListOf<PostMessage>()
 
-    fun methodTask() {
-        pendingMethodCalls += tangleController.getPendingMethodCalls(seed, procurations.getAllProcurations())
-        logger.info("$pendingMethodCalls")
-        pendingMethodCalls.forEach { handleMethodType(it) }
-    }
-
-    fun handleMethodType(message: PostMessage) {
-        logger.info(message.type)
-        when (message.type.toLowerCase()) {
-            "get" -> logger.info(deviceManger.get(message))
-            "post" -> deviceManger.post(message)
-            else -> logger.error("method type unsupported ${message.type}")
-        }
-
-    }
-
-    fun sendMethodCall(privateKey: PrivateKey) {
-        val postMessage = PostMessage("abc", "hest", "GET", "temperature")
-        val toJson = Gson().toJson(postMessage)
-        val signBase64 = EncryptionHelper.signBase64(privateKey, toJson)
-        tangleController.attachTransactionToTangle(seed, toJson + "__" + signBase64, Tag.MC.name, "9PTQZ99ZRDEVRMGNQHOBFESO9TJHXBLUCFVRFRKWCZTXKTJOUNKIBINBOTGPSVLKYBWGFJNWUMAVMTCHY")
-    }
-
     fun start() {
         deviceManger.startDiscovery()
         val privateKey: PrivateKey
         val publicKey: PublicKey
         threadPool.scheduleAtFixedRate({ methodTask() }, 0, 20, TimeUnit.SECONDS)
+
         if (PropertiesLoader.instance.getOptionalProperty("householdPrivateKey") == null || PropertiesLoader.instance.getOptionalProperty("householdPublicKey") == null) {
             val keyPair = EncryptionHelper.generateKeys()
             privateKey = keyPair.private
@@ -71,11 +52,6 @@ class IoTAPI {
         } else {
             privateKey = EncryptionHelper.loadPrivateECKeyFromProperties("householdPrivateKey")
             publicKey = EncryptionHelper.loadPublicECKeyFromProperties("householdPublicKey")
-        }
-        sendMethodCall(privateKey)
-        fun getParameterMap(body: String): Map<String, String> {
-            val mapType = object : TypeToken<Map<String, String>>() {}.type
-            return Gson().fromJson(body, mapType)
         }
 
         Spark.exception(Exception::class.java) { e, _, _ -> logger.error(e.toString()) }
@@ -129,13 +105,15 @@ class IoTAPI {
 
         put("/device/procuration/:id/accept") { request, response ->
             response.type("application/json")
-            val id = request.params()[":id"]
-            id?.let { pendingProcurations.find { it.messageChainID == id }?.let { deviceManger.respondToProcuration(it, true, seed, tangleController) } }
+            val id = request.params().get(":id")
+            id?.let { pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, true, seed, tangleController, privateKey) } }
         }
+
+        //TODO: REVISIT DE HER, PATH ER LIDT WANK
         put("/device/procuration/:id/reject") { request, response ->
             response.type("application/json")
             val id = request.params().get(":id")
-            id?.let { pendingProcurations.find { it.messageChainID == id }?.let { deviceManger.respondToProcuration(it, true, seed, tangleController) } }
+            id?.let { pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, true, seed, tangleController, privateKey) } }
         }
 
         get("/device/procurations/accepted") { _, response ->
@@ -160,7 +138,7 @@ class IoTAPI {
         post("/device/:id/:path") { request, _ ->
             val id = request.params(":id")
             val path = request.params(":path")
-            deviceManger.post(id, path, request.body())
+            deviceManger.post(PostMessage("this", id, "POST", path, getParameterMap(request.body())))
         }
 
         get("/device/:id/price") { request, _ ->
@@ -172,7 +150,7 @@ class IoTAPI {
         }
 
         get("/device/:id/time") { request, _ ->
-            //TODO
+            //TODO ????? skal der laves noget her?
             val from = request.queryParams(":from") as String
             val toTime = request.queryParams(":to") as String
             val id = request.params(":id") as String
@@ -189,7 +167,7 @@ class IoTAPI {
 
         delete("/device/:id") { request, _ ->
             val id = request.params(":id")
-            deviceManger.unregisterDevice(id)
+            deviceManger.unregisterDevice(privateKey, seed, id, tangleController)
         }
 
         put("/device/:id") { request, _ ->
@@ -197,6 +175,68 @@ class IoTAPI {
             deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), id, seed, tangleController)
         }
 
+        post("tangle/permissioned/devices") { request, _ ->
+            val postMessage = gson.fromJson(request.body(), PostMessage::class.java)
+            sendMethodCall(postMessage, privateKey, "")
+        }
+
+        get("tangle/unpermissioned/devices") { _, _ ->
+            tangleController.getMessagesUnchecked(seed, Tag.DSPEC)
+        }
+
+        //TODO: OVERVEJ MESSAGE DESIGN HER + navnet recipientPublicKey + !!
+        post("tangle/unpermissioned/devices/procuration") { request, _ ->
+            val params = getParameterMap(request.body())
+            val dateFrom = gson.fromJson(params["dateFrom"], Date::class.java)
+            val dateTo = gson.fromJson(params["dateTo"], Date::class.java)
+            requestProcuration(
+                Procuration(
+                    UUID.randomUUID().toString(), params["deviceID"]!!, BigInteger(params["recipientPublicKey"]),
+                    dateTo, dateFrom
+                ), params["addressTo"]!!, tangleController, privateKey
+            )
+        }
+
+    }
+
+    fun methodTask() {
+        pendingMethodCalls += tangleController.getPendingMethodCalls(seed, procurations.getAllProcurations())
+        logger.info("$pendingMethodCalls")
+        pendingMethodCalls.forEach { handleMethodType(it) }
+    }
+
+    fun handleMethodType(message: PostMessage) {
+        logger.info(message.type)
+        when (message.type.toLowerCase()) {
+            "get" -> logger.info(deviceManger.get(message))
+            "post" -> deviceManger.post(message)
+            else -> logger.error("method type unsupported ${message.type}")
+        }
+
+    }
+
+    fun sendMethodCall(postMessage: PostMessage, privateKey: PrivateKey, addressTo: String) {
+        val toJson = Gson().toJson(postMessage)
+        val signBase64 = EncryptionHelper.signBase64(privateKey, toJson)
+        tangleController.attachTransactionToTangle(seed, toJson + "__" + signBase64, Tag.MC, addressTo)
+    }
+
+    fun respondToProcuration(procuration: Procuration, accepted: Boolean, seed: String, tangle: TangleController, privateKey: PrivateKey) {
+        val procurationAck = ProcurationAck(procuration.messageChainID, accepted)
+        val json = gson.toJson(procurationAck)
+        val signBase64 = EncryptionHelper.signBase64(privateKey, json)
+        tangle.attachBroadcastToTangle(seed, json + "__" + signBase64, Tag.PROACK)
+    }
+
+    fun requestProcuration(procuration: Procuration, addressTo: String, tangle: TangleController, privateKey: PrivateKey) {
+        val json = gson.toJson(procuration)
+        val signBase64 = EncryptionHelper.signBase64(privateKey, json)
+        tangle.attachTransactionToTangle(seed, json + "__" + signBase64, Tag.PRO, addressTo)
+    }
+
+    fun getParameterMap(body: String): Map<String, String> {
+        val mapType = object : TypeToken<Map<String, String>>() {}.type
+        return gson.fromJson(body, mapType)
     }
 }
 
