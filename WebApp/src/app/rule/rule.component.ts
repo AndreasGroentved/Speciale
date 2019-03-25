@@ -7,7 +7,6 @@ import {WebService} from "../web.service";
   styleUrls: ['./rule.component.css']
 })
 export class RuleComponent implements OnInit {
-
   inputText = "";
 
   constructor(private ws: WebService) {

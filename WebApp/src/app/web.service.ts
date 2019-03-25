@@ -23,7 +23,7 @@ export class WebService {
   getDevices(registered: boolean, callback: (device: [Device]) => (void)) {
     this.http.get(this.serverUrl + "/device?registered=" + registered).subscribe(results => {
       console.log(results);
-      let devices: [Device] = results as [Device];
+      let devices: [Device] = results["result"] as [Device];
       callback(devices)
     });
   }
@@ -31,11 +31,11 @@ export class WebService {
   addRemoveDevice(deviceId: string, add: boolean, callback: (val) => (void)) {
     if (add) {
       this.http.put(this.serverUrl + "/device/" + deviceId, "").subscribe(results => {
-        callback(results)
+        callback(results["result"]);
       });
     } else {
       this.http.delete(this.serverUrl + "/device/" + deviceId).subscribe(results => {
-        callback(results)
+        callback(results["result"]);
       });
     }
   }
@@ -43,34 +43,34 @@ export class WebService {
   getAllDevices(callback: (device: [Device]) => (void)) {
     this.http.get(this.serverUrl + "/device").subscribe(results => {
       console.log(results);
-      let devices: [Device] = results as [Device];
+      let devices: [Device] = results["result"] as [Device];
       callback(devices)
     });
   }
 
   getOnTime(from: string = "0", to: string = Date.now() + "", id: string, callback: (val: Map<string, string>) => (void)) {
     this.http.get(this.serverUrl + "/device/" + id + "/time ? from=" + from + "&to=" + to).subscribe(results => {
-      callback(results as Map<string, string>);
+      callback(results["result"] as Map<string, string>);
     });
   }
 
   postDeviceValue(deviceId: string, path: string, postValue, callback: (val) => (void)) {
     let postMessage = new PostMessage(postValue);
     this.http.post(this.serverUrl + "/device/" + deviceId + "/" + path, JSON.stringify(postMessage)).subscribe(results => {
-      callback(results);
+      callback(results["result"]);
     });
   }
 
   getDeviceValueFromPath(deviceId: string, path: string, callback: (val) => (void)) {
     console.log(this.serverUrl + "/device/" + deviceId + "/" + path);
     this.http.get(this.serverUrl + "/device/" + deviceId + "/" + path).subscribe(results => {
-      callback(results);
+      callback(results["result"]);
     });
   }
 
   getDevice(deviceID, callback: (device: DeviceSpecification) => (void)) {
     this.http.get(this.serverUrl + "/device/" + deviceID).subscribe(results => {
-      let device: DeviceSpecification = results as DeviceSpecification;
+      let device: DeviceSpecification = results["result"] as DeviceSpecification;
       device.deviceResources = device.deviceResources.filter(a => a.path != "time");
       callback(device)
     });
@@ -78,13 +78,13 @@ export class WebService {
 
   updateRules(rules: string, callback: (string) => (void)) {
     this.http.post(this.serverUrl + "/rule", JSON.stringify({rules: rules})).subscribe(results => {
-      callback(results);
+      callback(results["result"]);
     });
   }
 
   getRules(callback: (string) => (void)) {
     this.http.get(this.serverUrl + "/rule").subscribe(value => {
-      callback(value);
+      callback(value["result"]);
     });
   }
 

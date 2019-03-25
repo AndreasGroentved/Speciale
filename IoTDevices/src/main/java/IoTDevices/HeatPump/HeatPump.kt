@@ -49,7 +49,7 @@ class HeatPump : IoTDevice("hest") {
         }
 
         override fun handleGET(exchange: CoapExchange?) {
-            exchange?.respond("{\"temperature\": $temperature}")
+            exchange?.respond("{\"result\": $temperature}")
         }
 
         override fun handlePOST(exchange: CoapExchange?) {
@@ -61,14 +61,14 @@ class HeatPump : IoTDevice("hest") {
                     val temp = fromJson.params["temperature"]
                     println(temp)
                     temperature = temp?.toInt() ?: temperature
-                    exchange.respond("{\"temperature\": $temperature}")
+                    exchange.respond("{\"result\": $temperature}")
                 }
             } catch (e: Exception) {
                 when (e) {
-                    is NumberFormatException -> exchange?.respond("Parameter is not a real number")
-                    is IndexOutOfBoundsException -> exchange?.respond("Missing parameter diff")
+                    is NumberFormatException -> exchange?.respond("{\"error\":\"Parameter is not a real number\"")
+                    is IndexOutOfBoundsException -> exchange?.respond("{\"error\":\"Missing parameter diff\"")
                 }
-                exchange?.respond("Parameter is not a real number")
+                exchange?.respond("{\"error\":\"Parameter is not a real number\"}")
                 e.printStackTrace()
             }
         }

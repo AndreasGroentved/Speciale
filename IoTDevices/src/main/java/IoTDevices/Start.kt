@@ -14,12 +14,12 @@ fun main() {
      val discover = client.discover()
 
      println(discover)
-     val response = client.get()
+     val result = client.get()
 
-     if (response != null) {
-         println(response.responseText)
+     if (result != null) {
+         println(result.responseText)
      } else {
-         println("No response received.")
+         println("No result received.")
      }
 
      val params = listOf("2")

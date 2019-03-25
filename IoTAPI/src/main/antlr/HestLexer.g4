@@ -47,6 +47,7 @@ EVERY: 'every';
 ONCE: 'once';
 DAY: 'day';
 HOUR: 'hour';
+SECONDS: 'seconds';
 MIN: 'min';
 FROM: 'from';
 TO: 'to';

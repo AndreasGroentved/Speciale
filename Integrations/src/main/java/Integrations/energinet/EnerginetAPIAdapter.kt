@@ -31,7 +31,7 @@ class EnerginetAPIAdapter {
         )
         val success = httpResponse.statusCode() == 200
         if (success) {
-            logger.info("Recieved Energinet response: " + httpResponse.body())
+            logger.info("Recieved Energinet result: " + httpResponse.body())
             val fromJson = gson.fromJson(httpResponse.body(), EnerginetAPIResponse::class.java)
             val toJson = gson.toJson(fromJson)
             val privateECKey = EncryptionHelper.loadPrivateECKeyFromProperties("energinetPrivateKey")

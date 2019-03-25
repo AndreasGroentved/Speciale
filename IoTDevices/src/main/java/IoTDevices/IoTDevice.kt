@@ -111,7 +111,7 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
                     }
                 }.first() //TODO det er fedt -> lav om
                 val timeFromTo = getOnTimeFromTo(map["from"]!!.toLong(), map["to"]!!.toLong()).map { TimeUsage(it.key, it.value) }
-                val hourOnList = gson.toJson(timeFromTo)
+                val hourOnList = "{\"result\":${gson.toJson(timeFromTo)}}"
                 exchange.respond(hourOnList)
             }
         }
@@ -124,18 +124,18 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
         }
 
         override fun handleGET(exchange: CoapExchange?) {
-            exchange?.respond("{\"status\":$isOn}")
+            exchange?.respond("{\"result\":$isOn}")
         }
 
         override fun handlePOST(exchange: CoapExchange?) {
             exchange?.apply {
                 if (!exchange.isValidJson(exchange.requestText)) {
-                    exchange.respond("invalid json"); return@handlePOST
+                    exchange.respond("{\"error\":\"invalid json\"}"); return@handlePOST
                 }
                 val postMessage = gson.fromJson(exchange.requestText, PostMessage::class.java).params
                 val turnOn = postMessage["status"]?.toBoolean() ?: return@apply
                 if (turnOn) turnOn() else turnOff()
-                respond("{\"status\":$turnOn }")
+                respond("{\"result\":$turnOn }")
             }
         }
     }

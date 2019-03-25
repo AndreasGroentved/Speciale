@@ -35,14 +35,14 @@ class NordPoolAPIMock(
     }
 
     private fun loadMockResponse(): NordPoolAPIMockResponse {
-        logger.info("Loading mock response NordPool.json")
+        logger.info("Loading mock result NordPool.json")
         val mockFile = ClassLoader.getSystemResourceAsStream("NordPool.json")
         val readText = mockFile.bufferedReader().readText()
         return Gson().fromJson(readText, NordPoolAPIMockResponse::class.java)
     }
 
     private fun signMockResponse(json: String): String {
-        logger.info("Signing mock response")
+        logger.info("Signing mock result")
         val privateECKey = EncryptionHelper.loadPrivateECKeyFromProperties("nordPoolPrivateKey")
         return json + "__" + EncryptionHelper.signBase64(privateECKey, json)
     }

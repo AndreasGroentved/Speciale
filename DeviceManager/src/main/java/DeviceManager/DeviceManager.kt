@@ -44,26 +44,26 @@ class DeviceManager {
             val signedJson = "$toJson||${EncryptionHelper.signBase64(privateKey, toJson)}"
             tangle.attachDeviceToTangle(seed, signedJson)?.let { registeredDevices.add(e.key) }
         }
-        return "{\"register\" :" +
+        return "{\"result\" :" +
                 (spec?.let { "\"successful\"}" } ?: "\"unsuccessful\"}")
     }
 
     fun unregisterDevice(deviceId: String): String {
         val idIp = devicesIdIpToSpecification.keys.firstOrNull { it.id == deviceId }
         val successful = idIp?.let { registeredDevices.remove(idIp) } ?: false
-        return "{\"register\" :" +
+        return "{\"result\" :" +
                 (if (successful) "\"successful\"}" else "\"unsuccessful\"}")
     }
 
     private fun getDeviceSpecificationFromId(id: String) = devicesIdIpToSpecification.filter { it.key.id == id }.map { it.value }.firstOrNull()
 
 
-    fun getDevices(parameter: String = "all") = gson.toJson(
+    fun getDevices(parameter: String = "all") = "{\"result\":" + gson.toJson(
         when (parameter.trim()) {
             "registered=true" -> getRegisteredDevices()
             "registered=false" -> getNotRegisteredDevices()
             else -> getAllDevices()
-        }.keys
+        }.keys + "}"
     )
 
 
@@ -81,21 +81,21 @@ class DeviceManager {
         logger.info("calling get with message: $postMessage")
         val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return "{\"error\":\"Invalid device id\"}"
         val client = CoapClient("${mapKey.ip}:5683/${postMessage.path}?${postMessage.params["queryString"]}")
-        return client.get()?.responseText ?: "{\"error\":\"No response received\"}"
+        return client.get()?.responseText ?: "{\"error\":\"No result received\"}"
     }
 
     fun post(postMessage: PostMessage): String {
         val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return "{\"error\":\"Invalid device id\"}"
         val client = CoapClient("${mapKey.ip}:5683/${postMessage.path}") //todo resource på port
         return client.post(gson.toJson(postMessage.params), MediaTypeRegistry.APPLICATION_JSON)?.responseText
-            ?: "{\"error\":\"No response received\"}"
+            ?: "{\"error\":\"No result received\"}"
     }
 
     fun post(id: String, path: String, params: String): String {
         val mapKey = getDeviceKeyFromId(id) ?: return "{\"error\":\"Invalid device id\"}"
         val client = CoapClient("${mapKey.ip}:5683/${path}") //todo resource på port
-        return client.post(gson.toJson(params), MediaTypeRegistry.APPLICATION_JSON)?.responseText
-            ?: "{\"error\":\"No response received\"}"
+        return client.post(gson.toJson(params), MediaTypeRegistry.APPLICATION_JSON)?.responseText //todo to json på JSON?
+            ?: "{\"error\":\"No result received\"}"
     }
 
     fun getActivePendingProcurations(accepted: List<Procuration>, seed: String, tangle: TangleController): List<Procuration> {

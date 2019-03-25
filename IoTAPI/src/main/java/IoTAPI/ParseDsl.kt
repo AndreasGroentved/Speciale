@@ -5,18 +5,12 @@ import hest.HestParserBaseListener
 import org.antlr.v4.runtime.tree.ErrorNode
 
 
-sealed class Step
-
-
 data class TimeDefinition(var fromDate: String? = null, var fromTime: String? = null, var toDate: String? = null, var toTime: String? = null)
 data class Time(var pattern: String = "once", var count: Int = 0, var unit: String = "seconds", var timeDefinition: TimeDefinition = TimeDefinition())
-data class Rule(var steps: MutableList<Expression> = mutableListOf(), var time: Time = Time(), var assignments: MutableMap<String, OutPut> = mutableMapOf(), var deviceCalls: MutableList<OutPut> = mutableListOf())
+data class Rule(var steps: MutableList<Expression> = mutableListOf(), var time: Time = Time(), var dassignmentsFromDevice: MutableList<Pair<String, OutPut>> = mutableListOf(), var deviceCalls: MutableList<OutPut> = mutableListOf())
 data class Content(val rules: MutableList<Rule> = mutableListOf(), val dataSets: MutableList<DataSet> = mutableListOf())
-/*data class Exp(var value: String = "", var op: String? = null, var exp: Exp? = null) : Step()*/
 data class DataSet(var name: String = "", var tag: String = "", var format: String = "", var vars: MutableMap<String, Expression> = mutableMapOf(), var publicKey: String = "")
-
 data class OutPut(var deviceID: String = "", var path: String = "", var method: String = "", val params: MutableList<Pair<String, String>> = mutableListOf())
-
 
 class ParseDsl : HestParserBaseListener() {
 
@@ -59,28 +53,7 @@ class ParseDsl : HestParserBaseListener() {
     override fun enterInterval(ctx: HestParser.IntervalContext) {
         currentTime.timeDefinition.run { fromTime = ctx.fromTime.text; fromDate = ctx.fromDate.text; toTime = ctx.toTime.text; toDate = ctx.toDate.text }
     }
-/*
-    private fun updateExpression(exp: Exp?, ctx: HestParser.ConditionContext): Exp {
-        return if (exp != null) {
-            exp.exp = updateExpression(exp.exp, ctx)
-            exp
-        } else {
-            val expression = Exp()
-            expression.value = ctx.cName.text
-            if (ctx.eqOperator() != null) expression.op = ctx.eqOperator().text
-            expression
-        }
-    }*/
 
-    /*   override fun enterCondition(ctx: HestParser.ConditionContext) {
-           currentExp = updateExpression(currentExp, ctx)
-       }
-
-       override fun exitCondition(ctx: HestParser.ConditionContext) {
-           if (currentExp != null) currentRule.steps.add(currentExp!!)
-           currentExp = null
-       }
-   */
     override fun enterOutput(ctx: HestParser.OutputContext?) {
         currentOutPut = OutPut()
     }
@@ -94,29 +67,16 @@ class ParseDsl : HestParserBaseListener() {
         currentOutPut.deviceID = ctx.deviceName.text
     }
 
-    override fun exitDevice(ctx: HestParser.DeviceContext?) {
-        super.exitDevice(ctx)
-    }
-
     override fun enterPath(ctx: HestParser.PathContext) {
         currentOutPut.deviceID = ctx.ID().text
-    }
-
-    override fun exitPath(ctx: HestParser.PathContext?) {
-        super.exitPath(ctx)
     }
 
     override fun enterParameter(ctx: HestParser.ParameterContext) {
         currentOutPut.params.add(Pair(ctx.parName.text, ctx.parValue.text))
     }
 
-    /*
-    override fun enterVarpath(ctx: HestParser.VarpathContext?) {
-        super.enterVarpath(ctx)
-    }*/
-
     override fun exitVarpath(ctx: HestParser.VarpathContext) {
-        currentRule.assignments[ctx.varName.text] = currentOutPut
+        currentRule.dassignmentsFromDevice.add(Pair(ctx.varName.text, currentOutPut))
     }
 
     override fun enterDataset(ctx: HestParser.DatasetContext) {
@@ -133,6 +93,7 @@ class ParseDsl : HestParserBaseListener() {
     }
 
     override fun enterName(ctx: HestParser.NameContext) {
+        println(ctx.text)
         currentDataSet.name = ctx.nameName.text
     }
 
@@ -163,7 +124,6 @@ class ParseDsl : HestParserBaseListener() {
 
     private fun buildExpressionTree(expression: HestParser.ExpressionContext): Expression = when (expression) {
         is HestParser.ComparatorExpressionContext -> {
-            println("run")
             AndOrExp(buildExpressionTree(expression.left), expression.op.text, buildExpressionTree(expression.right))
         }
         is HestParser.BinaryExpressionContext -> expression.run { CompareExp(buildExpressionTree(left), op?.text, right?.let { buildExpressionTree(it) }) }
@@ -171,16 +131,13 @@ class ParseDsl : HestParserBaseListener() {
         is HestParser.IdentifierExpressionContext -> ReferenceType(expression.ID().text!!.toString())
         is HestParser.DecimalExpressionContext -> NumberType(expression.DECLIT().text!!.toDouble())
         is HestParser.StringExpressionContext -> StringType(expression.text!!)
-        else -> {
-            throw RuntimeException("impossible")
-        }
-    }
+        else -> throw RuntimeException("impossible")
 
+    }
 
     override fun visitErrorNode(node: ErrorNode) {
         println("error $node")
     }
-
 
 }
 

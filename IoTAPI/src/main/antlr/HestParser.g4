@@ -3,20 +3,12 @@ parser grammar HestParser;
 options { tokenVocab=HestLexer; }
 content: (dataset | rulee)* ;
 
-rulee: 'rule' '{' (config|variable|device|output|run)* '}';
+rulee: 'rule' '{' (config|variable|device|/*output*/ varpath|run)* '}';
 config: 'config' time;
 time: 'every' timeDefinition | 'once' timeDefinition | interval;
-timeDefinition: INTLIT unit='day' | INTLIT unit='hour' | INTLIT unit='min';
+timeDefinition: INTLIT unit='day' | INTLIT unit='hour' | INTLIT unit='min' | INTLIT unit='seconds' ;
 interval: 'from' fromDate = DATELIT fromTime = TIMELIT 'to' toDate=DATELIT toTime=TIMELIT 'every' timeDefinition; //TODO fra 'every' er tilføjet men ikke håndteret
-run: 'run' '{' condition=expression? output* varpath* '}';
-
-
-/*
-condition: cName=STRINGLIT ((eqOperator right = condition)?);  //And or's senere
-exp: cName=condition ((eqOperator right = condition)?);*/
-
-
-
+run: 'run' '{' condition=expression? output* /*varpath* */'}';
 eqOperator: '<' | '==' | '!=' | '<=' | '>' | '=>';
 output:  device path  ('post' | 'get') parameter*;
 device: 'device' deviceName=ID;

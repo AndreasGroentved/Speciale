@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit
 
 class IoTAPI {
     private val hs = HouseRules()
+    private val ruleManager = RuleManager()
     private val seed = "TESTQ9999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val logger = SimpleLoggerFactory().getLogger("IoTAPI")
     private val deviceManger = DeviceManager()
@@ -111,7 +112,8 @@ class IoTAPI {
         post("rule") { request, _ ->
             val rule = getParameterMap(request.body())["rules"] ?: return@post "{\"error\":\"invalid json\"}"
             hs.saveRules(rule)
-            "{\"Post\":\"Successful\"}"
+            ruleManager.updateDsl(rule)
+            "{\"result\":\"successful\"}"
         }
 
         get("/device") { request, response ->
@@ -127,7 +129,7 @@ class IoTAPI {
 
         put("/device/procuration/:id/accept") { request, response ->
             response.type("application/json")
-            val id = request.params().get(":id")
+            val id = request.params()[":id"]
             id?.let { pendingProcurations.find { it.messageChainID == id }?.let { deviceManger.respondToProcuration(it, true, seed, tangleController) } }
         }
         put("/device/procuration/:id/reject") { request, response ->
@@ -152,8 +154,7 @@ class IoTAPI {
             val path = request.params(":path")
             val params = if (request.queryParams().isNotEmpty()) "?" + request.queryParams().map { request.params(it) } else ""
             response.type("application/json")
-            val ret = deviceManger.get(PostMessage("this", id, path, params))
-            ret
+            deviceManger.get(PostMessage("this", id, path, params))
         }
 
         post("/device/:id/:path") { request, _ ->
@@ -201,4 +202,5 @@ class IoTAPI {
 
 fun main() {
     IoTAPI().start()
+    //RuleManager().updateDsl(RuleManager.sampleDsl)
 }
