@@ -60,8 +60,8 @@ class HeatPump : IoTDevice("hest") {
                     println(fromJson)
                     val temp = fromJson.params["temperature"]
                     println(temp)
-                    temperature = temp?.toInt() ?: temperature
-                    exchange.respond("{\"result\": $temperature}")
+                    temperature = Integer.parseInt(temp) ?: temperature
+                    exchange.respond("{\"result\":{\"temperature\": $temperature}}")
                 }
             } catch (e: Exception) {
                 when (e) {

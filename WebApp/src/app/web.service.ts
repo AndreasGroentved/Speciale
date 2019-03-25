@@ -55,8 +55,15 @@ export class WebService {
   }
 
   postDeviceValue(deviceId: string, path: string, postValue, callback: (val) => (void)) {
-    let postMessage = new PostMessage(postValue);
-    this.http.post(this.serverUrl + "/device/" + deviceId + "/" + path, JSON.stringify(postMessage)).subscribe(results => {
+    for (var key in postValue) {
+      postValue[key] = postValue[key].toString();
+    }
+/*    let postMessage = new PostMessage(postValue);*/
+    console.log("yo");
+    console.log(JSON.stringify(postMessage));
+    console.log(path);
+
+    this.http.post(this.serverUrl + "/device/" + deviceId + "/" + path, JSON.stringify(postValue)).subscribe(results => {
       callback(results["result"]);
     });
   }
@@ -72,6 +79,8 @@ export class WebService {
     this.http.get(this.serverUrl + "/device/" + deviceID).subscribe(results => {
       let device: DeviceSpecification = results["result"] as DeviceSpecification;
       device.deviceResources = device.deviceResources.filter(a => a.path != "time");
+      console.log(
+      )
       callback(device)
     });
   }
@@ -84,6 +93,7 @@ export class WebService {
 
   getRules(callback: (string) => (void)) {
     this.http.get(this.serverUrl + "/rule").subscribe(value => {
+      console.log(value);
       callback(value["result"]);
     });
   }

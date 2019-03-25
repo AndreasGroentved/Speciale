@@ -14,7 +14,7 @@ export class RuleComponent implements OnInit {
 
   ngOnInit() {
     this.ws.getRules(val => {
-      this.inputText = val.result;
+      this.inputText = val;
     });
   }
 

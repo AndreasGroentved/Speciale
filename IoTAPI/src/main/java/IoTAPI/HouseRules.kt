@@ -17,7 +17,8 @@ class HouseRules {
         ruleRep = db.getRepository(Rulee::class.java)
     }
 
-    fun getRules() = ruleRep.find().firstOrNull<Rulee>() ?: Rulee(UUID.randomUUID().toString(), "")
+    fun getRules() = ruleRep.find().firstOrNull<Rulee>()
+        ?: Rulee(UUID.randomUUID().toString(), "")
 
     fun saveRules(ruleString: String) {
         val rule = ruleRep.find()

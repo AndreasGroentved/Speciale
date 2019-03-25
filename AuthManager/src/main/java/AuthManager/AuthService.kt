@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import datatypes.authmanager.User
 import datatypes.iotdevices.DeviceSpecification
+import helpers.PropertiesLoader
 import org.slf4j.simple.SimpleLoggerFactory
 import spark.Filter
 import spark.Request
@@ -32,6 +33,7 @@ class AuthService {
             e.printStackTrace(pw)
             logger.error(sw.buffer.toString())
         }
+        Spark.port(PropertiesLoader.instance.getProperty("authPort").toInt())
         Spark.after("/*") { request, _ -> logger.info(request.pathInfo());logger.info(request.body()); logger.debug(tokensToUsers.toString()); logger.debug(users.toString()) }
 
         options(

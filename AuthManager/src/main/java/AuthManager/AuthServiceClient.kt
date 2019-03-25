@@ -9,7 +9,7 @@ import java.net.URL
 
 class AuthServiceClient {
     private val gson = Gson()
-    private val address = PropertiesLoader.instance.getProperty("authServiceAddress")
+    private val address = PropertiesLoader.instance.getProperty("authServiceAddress") + PropertiesLoader.instance.getProperty("authPort")
 
     fun registerUser(username: String, password: String, publicKey: String): String {
         val url = URL("$address/register/user")

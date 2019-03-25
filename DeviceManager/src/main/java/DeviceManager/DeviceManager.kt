@@ -41,6 +41,7 @@ class DeviceManager {
 
     fun registerDevice(privateKey: PrivateKey, publicKey: String, deviceID: String, seed: String, tangle: TangleController): String {
         val spec = devicesIdIpToSpecification.entries.firstOrNull { it.value.idIp.id == deviceID }.let { e ->
+            println("device yolo")
             val deviceSpecification = TangleDeviceSpecification(publicKey, e!!.value.specification)
             val toJson = gson.toJson(deviceSpecification)
             val signedJson = "$toJson||${EncryptionHelper.signBase64(privateKey, toJson)}"
@@ -70,8 +71,8 @@ class DeviceManager {
             "registered=true" -> getRegisteredDevices()
             "registered=false" -> getNotRegisteredDevices()
             else -> getAllDevices()
-        }.keys + "}"
-    )
+        }.keys
+    ) + "}"
 
 
     private fun getAllDevices() = devicesIdIpToSpecification
@@ -87,7 +88,9 @@ class DeviceManager {
     fun get(postMessage: PostMessage): String { //todo, noget retry logik måske?
         logger.info("attempting to call get with message: $postMessage")
         val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return "{\"error\":\"Invalid device id\"}"
+        println("${mapKey.ip}:5683/${postMessage.path}?${postMessage.params["queryString"]}")
         val client = CoapClient("${mapKey.ip}:5683/${postMessage.path}?${postMessage.params["queryString"]}")
+
         return client.get()?.responseText ?: "{\"error\":\"No result received\"}"
     }
 
@@ -95,8 +98,11 @@ class DeviceManager {
         logger.info("attempting to call post with message: $postMessage")
         val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return "{\"error\":\"Invalid device id\"}"
         val client = CoapClient("${mapKey.ip}:5683/${postMessage.path}") //todo resource på port
-        return client.post(gson.toJson(postMessage.params), MediaTypeRegistry.APPLICATION_JSON)?.responseText
+        println(gson.toJson(postMessage.params))
+        println("yo")
+        val a = client.post(gson.toJson(postMessage), MediaTypeRegistry.APPLICATION_JSON)?.responseText
             ?: "{\"error\":\"No result received\"}"
+        return a
     }
 
     fun post(id: String, path: String, params: String): String {

@@ -135,7 +135,7 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
                 val postMessage = gson.fromJson(exchange.requestText, PostMessage::class.java).params
                 val turnOn = postMessage["status"]?.toBoolean() ?: return@apply
                 if (turnOn) turnOn() else turnOff()
-                respond("{\"result\":$turnOn }")
+                respond("{\"result\":{\"status\" :$turnOn }}")
             }
         }
     }

@@ -54,9 +54,9 @@ export class IotDeviceModuleComponent implements OnInit {
     let outer = this;
     ws.postDeviceValue(this.deviceId, this.deviceResource.path, this.formData, val => {
       console.log(val);
-      Object.keys(val).forEach(function (key) {
+      Object.keys(val).forEach(key => {
         outer.getValues.set(key, val[key]);
-        console.log(key, val[key]);
+        console.log(key + " " + val[key]);
       });
 
       console.log(this.getValues);
@@ -67,10 +67,12 @@ export class IotDeviceModuleComponent implements OnInit {
     this.webService.getDeviceValueFromPath(this.deviceId, this.deviceResource.path, val => {
       this.deviceResource.resourceMethods.filter(value => value.methodType == "GET").map(value => {
         try {
+          console.log(val);
+          console.log(value);
           console.log(value.parameters);
           let a = value.parameters[getMethod];
           console.log(a);
-          this.getValues.set(getMethod, val[getMethod]);
+          this.getValues.set(getMethod, val);
         } catch (e) {
         }
       });
