@@ -1,4 +1,5 @@
 import {Component, OnInit} from '@angular/core';
+import {WebService} from "../web.service";
 
 @Component({
   selector: 'app-tangle-devices',
@@ -7,8 +8,9 @@ import {Component, OnInit} from '@angular/core';
 })
 export class TangleDevicesComponent implements OnInit {
 
-  constructor() {
 
+
+  constructor(private webService: WebService) {
   }
 
   ngOnInit() {

@@ -133,10 +133,7 @@ class IoTAPI {
 
 
         get("/device/:id") { request, _ ->
-            println("yo")
-            val ret = "{\"result\": " + gson.toJson(deviceManger.getDevice(request!!.params(":id"))!!.specification) + "}"
-            println(ret)
-            ret
+            "{\"result\": " + gson.toJson(deviceManger.getDevice(request!!.params(":id"))!!.specification) + "}"
         }
 
 
@@ -179,41 +176,35 @@ class IoTAPI {
             deviceManger.post(postMessage)
         }
 
-        get("/price")
-        { request, _ ->
+        get("/price") { request, _ ->
             //todo
             val from = request.params(":from").toLong()
             val to = request.params(":to").toLong()
             deviceManger.getAllSavings(from, to, tangleController)
         }
 
-        delete("/device/:id")
-        { request, _ ->
+        delete("/device/:id") { request, _ ->
             val id = request.params(":id")
             deviceManger.unregisterDevice(privateKey, seed, id, tangleController)
         }
 
-        put("/device/:id")
-        { request, _ ->
+        put("/device/:id") { request, _ ->
             println("put")
             val id = request.params(":id")
             deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), id, seed, tangleController)
         }
 
-        post("tangle/permissioned/devices")
-        { request, _ ->
+        post("tangle/permissioned/devices") { request, _ ->
             val postMessage = gson.fromJson(request.body(), PostMessage::class.java)
             sendMethodCall(postMessage, privateKey, "")
         }
 
-        get("tangle/unpermissioned/devices")
-        { _, _ ->
-            tangleController.getMessagesUnchecked(seed, Tag.DSPEC)
+        get("tangle/unpermissioned/devices") { _, _ ->
+            ClientResponse(tangleController.getMessagesUnchecked(seed, Tag.DSPEC)).let { gson }
         }
 
         //TODO: OVERVEJ MESSAGE DESIGN HER + navnet recipientPublicKey + !!
-        post("tangle/unpermissioned/devices/procuration")
-        { request, _ ->
+        post("tangle/unpermissioned/devices/procuration") { request, _ ->
             val params = getParameterMap(request.body()) as? Map<String, String>
                 ?: throw RuntimeException("invalid params")
             val dateFrom = gson.fromJson(params["dateFrom"] as String, Date::class.java)

@@ -1,3 +1,8 @@
 <p>
   tangle-devices works!
 </p>
+
+
+<li *ngFor="let module of modules; let i = index">
+  <app-iot-module [deviceResource]=module [deviceId]=id></app-iot-module>
+</li>
