@@ -17,9 +17,11 @@ import {HttpClientModule} from "@angular/common/http";
 import {ModuleGetComponent} from './module-get/module-get.component';
 import {ModulePostComponent} from './module-post/module-post.component';
 import { RuleComponent } from './rule/rule.component';
+import { TangleDevicesComponent } from './tangle-devices/tangle-devices.component';
 
 const appRoutes: Routes = [
   {path: 'device/:id', component: IotDeviceComponent},
+  {path: 'tangle', component: TangleDevicesComponent},
   {path: 'house_overview', component: HouseOverviewComponent},
   {
     path: "",
@@ -43,7 +45,8 @@ const appRoutes: Routes = [
     PageNotFoundComponent,
     ModuleGetComponent,
     ModulePostComponent,
-    RuleComponent
+    RuleComponent,
+    TangleDevicesComponent
   ],
   imports: [
     BrowserModule,

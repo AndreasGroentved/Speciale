@@ -87,7 +87,7 @@ class IoTAPI {
         }
 
         post("rule") { request, _ ->
-            val rule = getParameterMap(request.body())["rules"] as? String ?: return@post "{\"error\":\"invalid json\"}"
+            val rule = getParameterMap(request.body())["rules"] ?: return@post "{\"error\":\"invalid json\"}"
             hs.saveRules(rule)
             ruleManager.updateDsl(rule)
             "{\"result\":\"successful\"}"

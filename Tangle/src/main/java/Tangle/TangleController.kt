@@ -151,7 +151,6 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
         val messageTrytes = TrytesConverter.asciiToTrytes(tangleDeviceSpecification)
         val deviceSpecificationTagTrytes = TrytesConverter.asciiToTrytes(Tag.DSPEC.name)
         val transfer = Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, deviceSpecificationTagTrytes)
-
         return try {
             iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null,
