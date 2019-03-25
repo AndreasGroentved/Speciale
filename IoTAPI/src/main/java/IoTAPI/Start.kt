@@ -103,7 +103,7 @@ class IoTAPI {
 
         get("/device/procurations/pending") { _, response ->
             response.type("application/json")
-            deviceManger.getActivePendingProcurations(procurations.getAllProcurations(), seed, tangleController)
+            gson.toJson(getActivePendingProcurations(procurations.getAllProcurations()))
         }
 
         put("/device/procuration/:id/accept") { request, response ->
@@ -121,12 +121,12 @@ class IoTAPI {
 
         get("/device/procurations/accepted") { _, response ->
             response.type("application/json")
-            procurations.getAllProcurations()
+            gson.toJson(procurations.getAllProcurations())
         }
 
         get("/device/procurations/expired") { _, response ->
             response.type("application/json")
-            deviceManger.getExpiredProcurations(seed, tangleController)
+            gson.toJson(getExpiredProcurations())
         }
 
 
@@ -211,21 +211,21 @@ class IoTAPI {
             val dateTo = gson.fromJson(params["dateTo"] as String, Date::class.java)
             requestProcuration(
                 Procuration(
-                    UUID.randomUUID().toString(), params["deviceID"]!!, BigInteger(params["recipientPublicKey"]),
+                    UUID.randomUUID().toString(), params.getValue("deviceID"), BigInteger(params["recipientPublicKey"]),
                     dateTo, dateFrom
-                ), params["addressTo"]!!, tangleController, privateKey
+                ), params.getValue("addressTo"), tangleController, privateKey
             )
         }
 
     }
 
-    fun methodTask() {
+    private fun methodTask() {
         pendingMethodCalls += tangleController.getPendingMethodCalls(seed, procurations.getAllProcurations())
         logger.info("$pendingMethodCalls")
         pendingMethodCalls.forEach { handleMethodType(it) }
     }
 
-    fun handleMethodType(message: PostMessage) {
+    private fun handleMethodType(message: PostMessage) {
         logger.info(message.type)
         when (message.type.toLowerCase()) {
             "get" -> logger.info(deviceManger.get(message))
@@ -235,28 +235,53 @@ class IoTAPI {
 
     }
 
-    fun sendMethodCall(postMessage: PostMessage, privateKey: PrivateKey, addressTo: String) {
+    private fun sendMethodCall(postMessage: PostMessage, privateKey: PrivateKey, addressTo: String) {
         val toJson = Gson().toJson(postMessage)
         val signBase64 = EncryptionHelper.signBase64(privateKey, toJson)
         tangleController.attachTransactionToTangle(seed, toJson + "__" + signBase64, Tag.MC, addressTo)
     }
 
-    fun respondToProcuration(procuration: Procuration, accepted: Boolean, seed: String, tangle: TangleController, privateKey: PrivateKey) {
+    private fun respondToProcuration(procuration: Procuration, accepted: Boolean, seed: String, tangle: TangleController, privateKey: PrivateKey) {
         val procurationAck = ProcurationAck(procuration.messageChainID, accepted)
         val json = gson.toJson(procurationAck)
         val signBase64 = EncryptionHelper.signBase64(privateKey, json)
         tangle.attachBroadcastToTangle(seed, json + "__" + signBase64, Tag.PROACK)
     }
 
-    fun requestProcuration(procuration: Procuration, addressTo: String, tangle: TangleController, privateKey: PrivateKey) {
+    private fun requestProcuration(procuration: Procuration, addressTo: String, tangle: TangleController, privateKey: PrivateKey) {
         val json = gson.toJson(procuration)
         val signBase64 = EncryptionHelper.signBase64(privateKey, json)
         tangle.attachTransactionToTangle(seed, json + "__" + signBase64, Tag.PRO, addressTo)
     }
 
-    fun getParameterMap(body: String): Map<String, String> {
+    private fun getParameterMap(body: String): Map<String, String> {
         val mapType = object : TypeToken<Map<String, String>>() {}.type
         return gson.fromJson(body, mapType)
+    }
+
+    private fun getActivePendingProcurations(accepted: List<Procuration>): List<Procuration> {
+        val messages = tangleController.getMessagesUnchecked(seed, Tag.PRO)
+        val procurations = messages.mapNotNull { m ->
+            try {
+                gson.fromJson(m, Procuration::class.java)
+            } catch (e: Exception) {
+                null
+            }
+        }
+        return procurations.filter { p -> accepted.firstOrNull { a -> p.messageChainID == a.messageChainID } == null }.filter { p -> p.dateTo >= Date() }
+    }
+
+    private fun getExpiredProcurations(): List<Procuration> {
+        /*
+        val messages = tangleController.getMessagesUnchecked(seed, Tag.PROACK)
+        return messages.mapNotNull { m ->
+            try {
+                gson.fromJson(m, Procuration::class.java)
+            } catch (e: Exception) {
+                null
+            }
+        }.filter { p -> p.dateTo <= Date() } */
+        return procurations.getAllProcurations().filter { p -> p.dateTo <= Date() }
     }
 }
 

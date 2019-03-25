@@ -2,6 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Device} from './Device';
 import {DeviceSpecification} from './DeviceSpecification';
+import {Procuration}from './Procuration';
 
 @Injectable({
   providedIn: 'root'
@@ -98,6 +99,25 @@ export class WebService {
     this.http.get(this.serverUrl + '/rule').subscribe(value => {
       console.log(value);
       callback(value['result']);
+    });
+  }
+
+  getPendingProcurations(callback: (string) => (void)) {
+    this.http.get(this.serverUrl + "/device/procurations/pending").subscribe(value => {
+      console.log(value);
+      callback(value as [Procuration]);
+    });
+  }
+  getAcceptedProcurations(callback: (string) => (void)) {
+    this.http.get(this.serverUrl + "/device/procurations/accepted").subscribe(value => {
+      console.log(value as Procuration[]);
+      callback(value as Procuration[]);
+    });
+  }
+  getExpiredProcurations(callback: (string) => (void)) {
+    this.http.get(this.serverUrl + "/device/procurations/expired").subscribe(value => {
+      console.log(value);
+      callback(value as [Procuration]);
     });
   }
 

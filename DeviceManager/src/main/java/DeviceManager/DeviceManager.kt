@@ -2,7 +2,10 @@ package DeviceManager
 
 import Tangle.TangleController
 import com.google.gson.Gson
-import datatypes.iotdevices.*
+import datatypes.iotdevices.Device
+import datatypes.iotdevices.IdIp
+import datatypes.iotdevices.PostMessage
+import datatypes.iotdevices.TangleDeviceSpecification
 import datatypes.tangle.Tag
 import helpers.EncryptionHelper
 import org.eclipse.californium.core.CoapClient
@@ -10,7 +13,6 @@ import org.eclipse.californium.core.coap.MediaTypeRegistry
 import org.slf4j.simple.SimpleLoggerFactory
 import java.math.BigDecimal
 import java.security.PrivateKey
-import java.util.*
 
 
 //TODO DB OG CACHES VEDLIGEHOLDELSE, BÅDE PUT OG REMOVE ETC.
@@ -110,29 +112,6 @@ class DeviceManager {
         val client = CoapClient("${mapKey.ip}:5683/${path}") //todo resource på port
         return client.post(gson.toJson(params), MediaTypeRegistry.APPLICATION_JSON)?.responseText //todo to json på JSON?
             ?: "{\"error\":\"No result received\"}"
-    }
-
-    fun getActivePendingProcurations(accepted: List<Procuration>, seed: String, tangle: TangleController): List<Procuration> {
-        val messages = tangle.getMessagesUnchecked(seed, Tag.PRO)
-        val procurations = messages.mapNotNull { m ->
-            try {
-                gson.fromJson(m, Procuration::class.java)
-            } catch (e: Exception) {
-                null
-            }
-        }
-        return procurations.filter { p -> accepted.firstOrNull { a -> p.messageChainID == a.messageChainID } == null }.filter { p -> p.dateTo >= Date() }
-    }
-
-    fun getExpiredProcurations(seed: String, tangle: TangleController): List<Procuration> {
-        val messages = tangle.getMessagesUnchecked(seed, Tag.PROACK)
-        return messages.mapNotNull { m ->
-            try {
-                gson.fromJson(m, Procuration::class.java)
-            } catch (e: Exception) {
-                null
-            }
-        }.filter { p -> p.dateTo <= Date() }
     }
 
 }

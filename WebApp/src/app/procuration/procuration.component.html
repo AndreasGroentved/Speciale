@@ -1,0 +1,35 @@
+<p>
+  {{name}}
+</p>
+<div ngSwitch={{status}}>
+  <div *ngSwitchCase="'expired'">
+    <div>expired</div>
+    <br>
+    <div *ngFor="let proc of expired">
+      <div>{{proc.deviceID}}</div>
+      <div>{{proc.recipientPublicKey}}</div>
+      <div>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</div>
+      <br>
+    </div>
+  </div>
+  <div *ngSwitchCase="'accepted'">
+    <div>accepted</div>
+    <br>
+    <div *ngFor="let proc of accepted">
+      <div>DeviceID: {{proc.deviceID}}</div>
+      <div>Requestee Public Key: {{proc.recipientPublicKey}}</div>
+      <div>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</div>
+      <br>
+    </div>
+  </div>
+  <div *ngSwitchCase="'pending'">
+    <div>pending</div>
+    <br>
+    <div *ngFor="let proc of pending">
+      <div>{{proc.deviceID}}</div>
+      <div>{{proc.recipientPublicKey}}</div>
+      <div>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</div>
+      <br>
+    </div>
+  </div>
+</div>
