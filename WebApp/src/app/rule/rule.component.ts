@@ -1,5 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {WebService} from "../web.service";
+import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-rule',

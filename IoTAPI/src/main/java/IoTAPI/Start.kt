@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit
 class IoTAPI {
     private val hs = HouseRules()
     private val ruleManager = RuleManager()
-    private val seed = "TESEQ9999999999999999999999999999999999999999999999999999999999999999999999999999"
+    private val seed = "TESER9999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val seedTEST = "TESTQT999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val logger = SimpleLoggerFactory().getLogger("IoTAPI")
     private val deviceManger = DeviceManager()
@@ -199,17 +199,17 @@ class IoTAPI {
             deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), id, seed, tangleController)
         }
 
-        post("tangle/permissioned/devices") { request, _ ->
+        post("/tangle/permissioned/devices") { request, _ ->
             val postMessage = gson.fromJson(request.body(), PostMessage::class.java)
             sendMethodCall(postMessage, privateKey, "")
         }
 
-        get("tangle/unpermissioned/devices") { _, _ ->
-            ClientResponse(tangleController.getMessagesUnchecked(seed, Tag.DSPEC)).let { gson }
+        get("/tangle/unpermissioned/devices") { _, _ ->
+            ClientResponse(tangleController.getMessagesUnchecked(seed, Tag.DSPEC)).let { gson.toJson(it) }
         }
 
         //TODO: OVERVEJ MESSAGE DESIGN HER + navnet recipientPublicKey + !!
-        post("tangle/unpermissioned/devices/procuration") { request, _ ->
+        post("/tangle/unpermissioned/devices/procuration") { request, _ ->
             val params = getParameterMap(request.body()) as? Map<String, String>
                 ?: throw RuntimeException("invalid params")
             val dateFrom = gson.fromJson(params["dateFrom"] as String, Date::class.java)

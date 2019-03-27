@@ -1,0 +1,11 @@
+<p>
+  Device id {{id}}
+</p>
+
+<label>From date </label>
+<input type="datetime-local" name="fromDate" value="2017-06-01T08:30" [(ngModel)]="fromDate">
+<br>
+<label>To date </label>
+<input type="datetime-local" name="toDate" value="2017-06-01T08:30" [(ngModel)]="toDate">
+<button (click)="requestDeviceAccess()">Request access</button>
+
