@@ -181,6 +181,13 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
         return sorted.firstOrNull { transaction -> parseAndVerifyMessage(getASCIIFromTrytes(transaction.signatureFragments)!!, publicKey) }
     }
 
+    fun getBroadcastsUnchecked(tag: Tag): List<String> {
+        logger.info("getNewestBroadcast tag: $tag")
+        val transactions =
+            iotaAPI.findTransactionObjectsByTag(arrayOf(TrytesConverter.asciiToTrytes(tag.name)))
+        return transactions.mapNotNull { t -> getASCIIFromTrytes(t.signatureFragments)}
+    }
+
     fun getNewestBroadcasts(entityName: String, publicKey: String): List<Transaction>? {
         logger.info("getNewestBroadcasts entityName: $entityName publicKey: $publicKey")
         val transactions =

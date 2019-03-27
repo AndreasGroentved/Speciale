@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken
 import datatypes.iotdevices.PostMessage
 import datatypes.iotdevices.Procuration
 import datatypes.iotdevices.ProcurationAck
+import datatypes.iotdevices.TangleDeviceSpecification
 import datatypes.tangle.Tag
 import helpers.EncryptionHelper
 import helpers.PropertiesLoader
@@ -58,6 +59,7 @@ class IoTAPI {
         threadPool.scheduleAtFixedRate({
             requestProcuration(Procuration(UUID.randomUUID().toString(), "hest", BigInteger(publicKey.encoded), Date(), Date(1654523307558)), tangleController.getTestAddress(seed), tangleController, privateKey)
         }, 0, 20, TimeUnit.SECONDS)
+        threadPool.scheduleAtFixedRate({deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), "hest", seedTEST, tangleController)}, 0, 20, TimeUnit.SECONDS)
 
         Spark.exception(Exception::class.java) { e, _, _ -> logger.error(e.toString()) }
         Spark.after("/*") { request, _ -> logger.info(request.requestMethod());logger.info(request.pathInfo());logger.info(request.body()); logger.info(request.params().toString());logger.info(request.uri()) }
@@ -205,7 +207,11 @@ class IoTAPI {
         }
 
         get("/tangle/unpermissioned/devices") { _, _ ->
-            ClientResponse(tangleController.getMessagesUnchecked(seed, Tag.DSPEC)).let { println(it);it }.let { gson.toJson(it) }.apply { println(this) }
+            val map = tangleController.getBroadcastsUnchecked(Tag.DSPEC).map {
+                gson.fromJson(it.substringBefore("__"), TangleDeviceSpecification::class.java)
+            }
+            println(map)
+            ClientResponse(map).let { gson.toJson(it) }.apply { println() }
         }
 
         //TODO: OVERVEJ MESSAGE DESIGN HER + navnet recipientPublicKey + !!
