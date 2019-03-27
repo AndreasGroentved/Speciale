@@ -16,7 +16,6 @@ class AcceptedProcurations {
             .filePath("procuration.db")
             .openOrCreate()
         procRep = db.getRepository(Procuration::class.java)
-        saveProcuration(Procuration("abc", "hest", BigInteger("165615760792845808078562255657443417455825412085455006148620929027491723303411487844979141873745096637953045819064779313008630684872882194634243766937424079829"), Date(), Date(1553523307558)))
     }
 
     fun getProcurationsByDeviceID(deviceID: String): MutableList<Procuration> {

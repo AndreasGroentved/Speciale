@@ -54,11 +54,12 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
 
     }
 
+    fun getTestAddress(seed: String) = iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first()
+
     fun getTransactions(seed: String, tag: Tag?): List<Transaction> {
         logger.info("getTransactions for seed: $seed")
-
         val transferResponse = try {
-            iotaAPI.getTransfers(seed, nodeSecurity, 0, 5, false)
+            iotaAPI.getTransfers(seed, nodeSecurity, 0, 10, false)
         } catch (e: ArgumentException) {
             logger.error("Invalid parameters supplied for getTransactions, likely invalid seed", e)
             null
@@ -66,21 +67,15 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
         var transactions = transferResponse?.transfers?.flatMap { it.transactions } ?: listOf()
         tag?.let {
             transactions = transactions.filter {
-                logger.info(getASCIIFromTrytes(it.tag))
                 getASCIIFromTrytes(it.tag) == tag.name
             }
         }
-        logger.info("$transactions")
         transactions = transactions.filter { !pt.hashStoredInDB(it.hash) }
-        logger.info("$transactions")
         transactions.forEach { pt.saveHash(it.hash) }
-        logger.info("$transactions")
-
         return transactions
     }
 
     fun getMessagesUnchecked(seed: String, tag: Tag?): List<String> { //does not compare signatures
-
         val transactions = getTransactions(seed, tag)
         return transactions.mapNotNull { getASCIIFromTrytes(it.signatureFragments) }
     }

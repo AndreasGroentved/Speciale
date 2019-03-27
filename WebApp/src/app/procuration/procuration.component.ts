@@ -31,4 +31,12 @@ constructor(private route: ActivatedRoute, private router: Router, private webSe
     console.log(this.accepted);
   }
 
+  accept(proc: Procuration) {
+    this.accepted.push(proc);
+    this.pending = this.pending.filter(p => p !== proc);
+  }
+  reject(proc: Procuration) {
+    this.pending = this.pending.filter(p => p !== proc);
+  }
+
 }

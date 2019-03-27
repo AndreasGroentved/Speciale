@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Device} from './Device';
 import {DeviceSpecification} from './DeviceSpecification';
-import {Procuration}from './Procuration';
+import {Procuration} from './Procuration';
 
 @Injectable({
   providedIn: 'root'
@@ -24,7 +24,7 @@ export class WebService {
     this.http.get(this.serverUrl + '/device?registered=' + registered).subscribe(results => {
       console.log(results);
       let devices: [Device] = results['result'] as [Device];
-      callback(devices)
+      callback(devices);
     });
   }
 
@@ -44,7 +44,7 @@ export class WebService {
     this.http.get(this.serverUrl + '/device').subscribe(results => {
       console.log(results);
       let devices: [Device] = results['result'] as [Device];
-      callback(devices)
+      callback(devices);
     });
   }
 
@@ -79,7 +79,7 @@ export class WebService {
     this.http.get(this.serverUrl + '/device/' + deviceID).subscribe(results => {
       let device: DeviceSpecification = results['result'] as DeviceSpecification;
       device.deviceResources = device.deviceResources.filter(a => a.path != 'time');
-      callback(device)
+      callback(device);
     });
   }
 
@@ -92,7 +92,7 @@ export class WebService {
   getTangleDevices(callback: (val) => (void)) {
     this.http.get(this.serverUrl + '/tangle/unpermissioned/devices').subscribe(value => {
       callback(value['result']);
-    })
+    });
   }
 
   getRules(callback: (string) => (void)) {
@@ -103,21 +103,35 @@ export class WebService {
   }
 
   getPendingProcurations(callback: (string) => (void)) {
-    this.http.get(this.serverUrl + "/device/procurations/pending").subscribe(value => {
+    this.http.get(this.serverUrl + '/device/procurations/pending').subscribe(value => {
       console.log(value);
       callback(value as [Procuration]);
     });
   }
+
   getAcceptedProcurations(callback: (string) => (void)) {
-    this.http.get(this.serverUrl + "/device/procurations/accepted").subscribe(value => {
+    this.http.get(this.serverUrl + '/device/procurations/accepted').subscribe(value => {
       console.log(value as Procuration[]);
       callback(value as Procuration[]);
     });
   }
+
   getExpiredProcurations(callback: (string) => (void)) {
-    this.http.get(this.serverUrl + "/device/procurations/expired").subscribe(value => {
+    this.http.get(this.serverUrl + '/device/procurations/expired').subscribe(value => {
       console.log(value);
       callback(value as [Procuration]);
+    });
+  }
+
+  acceptProcurarion(deviceID: string) {
+    this.http.put(this.serverUrl + '/device/procuration/' + deviceID + '/accept', '').subscribe(value => {
+      console.log(value);
+      });
+  }
+
+  rejectProcurarion(deviceID: string) {
+    this.http.put(this.serverUrl + '/device/procuration/' + deviceID + '/reject', '').subscribe(value => {
+      console.log(value);
     });
   }
 

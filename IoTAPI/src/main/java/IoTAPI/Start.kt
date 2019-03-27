@@ -28,6 +28,7 @@ class IoTAPI {
     private val hs = HouseRules()
     private val ruleManager = RuleManager()
     private val seed = "TESTQ9999999999999999999999999999999999999999999999999999999999999999999999999999"
+    private val seedTEST = "TESTQT999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val logger = SimpleLoggerFactory().getLogger("IoTAPI")
     private val deviceManger = DeviceManager()
     private val gson = Gson()
@@ -54,6 +55,7 @@ class IoTAPI {
             privateKey = EncryptionHelper.loadPrivateECKeyFromProperties("householdPrivateKey")
             publicKey = EncryptionHelper.loadPublicECKeyFromProperties("householdPublicKey")
         }
+        requestProcuration(Procuration(UUID.randomUUID().toString(), "hest2", BigInteger(publicKey.encoded), Date(), Date(1654523307558)), tangleController.getTestAddress(seed), tangleController, privateKey)
 
         Spark.exception(Exception::class.java) { e, _, _ -> logger.error(e.toString()) }
         Spark.after("/*") { request, _ -> logger.info(request.requestMethod());logger.info(request.pathInfo());logger.info(request.body()); logger.info(request.params().toString());logger.info(request.uri()) }
@@ -103,7 +105,8 @@ class IoTAPI {
 
         get("/device/procurations/pending") { _, response ->
             response.type("application/json")
-            gson.toJson(getActivePendingProcurations(procurations.getAllProcurations()))
+            val toJson = gson.toJson(getActivePendingProcurations(procurations.getAllProcurations()))
+            toJson
         }
 
         put("/device/procuration/:id/accept") { request, response ->
@@ -150,10 +153,8 @@ class IoTAPI {
 
         post("/device/:id/:path")
         { request, _ ->
-
             val id = request.params(":id")
             val path = request.params(":path")
-
             deviceManger.post(PostMessage("this", id, "POST", path, getParameterMap(request.body())))
         }
 
@@ -232,7 +233,6 @@ class IoTAPI {
             "post" -> deviceManger.post(message)
             else -> logger.error("method type unsupported ${message.type}")
         }
-
     }
 
     private fun sendMethodCall(postMessage: PostMessage, privateKey: PrivateKey, addressTo: String) {
@@ -251,7 +251,7 @@ class IoTAPI {
     private fun requestProcuration(procuration: Procuration, addressTo: String, tangle: TangleController, privateKey: PrivateKey) {
         val json = gson.toJson(procuration)
         val signBase64 = EncryptionHelper.signBase64(privateKey, json)
-        tangle.attachTransactionToTangle(seed, json + "__" + signBase64, Tag.PRO, addressTo)
+        tangle.attachTransactionToTangle(seedTEST, json + "__" + signBase64, Tag.PRO, addressTo)
     }
 
     private fun getParameterMap(body: String): Map<String, String> {
@@ -263,7 +263,7 @@ class IoTAPI {
         val messages = tangleController.getMessagesUnchecked(seed, Tag.PRO)
         val procurations = messages.mapNotNull { m ->
             try {
-                gson.fromJson(m, Procuration::class.java)
+                gson.fromJson(m.substringBefore("__"), Procuration::class.java)
             } catch (e: Exception) {
                 null
             }
