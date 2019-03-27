@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, NgModule, OnInit} from '@angular/core';
+import {MatExpansionModule} from '@angular/material/expansion';
 
 @Component({
   selector: 'app-house-overview',
@@ -7,7 +8,8 @@ import { Component, OnInit } from '@angular/core';
 })
 export class HouseOverviewComponent implements OnInit {
 
-  constructor() { }
+  constructor() {
+  }
 
   ngOnInit() {
   }

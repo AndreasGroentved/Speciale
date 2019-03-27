@@ -1,8 +1,15 @@
-<p>
-  tangle-devices works!
-</p>
+<h1>Accessible devices</h1>
+<div *ngFor="let device of permissionedDevices; let i = index">
+  Id: {{device.deviceSpecification.id  }}
+  Capabilities
+  {{getCapabilities(device.deviceSpecification) }}
+</div>
 
-
-<li *ngFor="let module of modules; let i = index">
-  <app-iot-module [deviceResource]=module [deviceId]=id></app-iot-module>
-</li>
+<h1>Available devices</h1>
+<div *ngFor="let device of unPermissionedDevices; let i = index">
+  Id: {{device.deviceSpecification.id }}
+  Capabilities
+  {{getCapabilities(device.deviceSpecification) }}
+  <a routerLink="/tangle/{{device.deviceSpecification.id}}" [queryParams]="{device: device}"
+     routerLinkActive="active">Other Devices</a>
+</div>

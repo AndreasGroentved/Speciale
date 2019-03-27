@@ -3,6 +3,7 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Device} from './Device';
 import {DeviceSpecification} from './DeviceSpecification';
 import {Procuration} from './Procuration';
+import {TangleDeviceSpecification} from "./TangleDeviceSpecification";
 
 @Injectable({
   providedIn: 'root'
@@ -89,11 +90,31 @@ export class WebService {
     });
   }
 
-  getTangleDevices(callback: (val) => (void)) {
-    this.http.get(this.serverUrl + '/tangle/unpermissioned/devices').subscribe(value => {
-      callback(value['result']);
+  requestDevice(addressTo: string, deviceId: string, fromDate: Date, toDate: Date, callback: (val) => (void)) {
+    this.http.post(this.serverUrl + '/tangle/unpermissioned/devices/procuration', JSON.stringify({
+      addressTo: addressTo,
+      deviceId: deviceId,
+      dateFrom: fromDate.getTime().toString(),
+      dateTo: toDate.getTime().toString()
+    })).subscribe(value => {
+      callback(value['result'] as [DeviceSpecification]);
     });
   }
+
+  getUnpermissionedTangleDevices(callback: (devices: [TangleDeviceSpecification]) => (void)) {
+    this.http.get(this.serverUrl + '/tangle/unpermissioned/devices').subscribe(value => {
+      console.log(value);
+      if (value == null) return;
+      callback(value['result'] as [TangleDeviceSpecification]);
+    })
+  }
+
+  getPermissionedTangleDevices(callback: (devices: [TangleDeviceSpecification]) => (void)) {
+    /*   this.http.get(this.serverUrl + 'tangle/permissioned/devices').subscribe(value => {
+         callback(value['result'] as [DeviceSpecification]);
+       })*/
+  }
+
 
   getRules(callback: (string) => (void)) {
     this.http.get(this.serverUrl + '/rule').subscribe(value => {
@@ -126,11 +147,11 @@ export class WebService {
   acceptProcuration(deviceID: string) {
     this.http.put(this.serverUrl + '/device/procuration/' + deviceID + '/accept', '').subscribe(value => {
       console.log(value);
-      });
+    });
   }
 
   rejectProcuration(deviceID: string) {
-    console.log(this.serverUrl + '/device/procuration/' + deviceID + '/reject')
+    console.log(this.serverUrl + '/device/procuration/' + deviceID + '/reject');
     this.http.put(this.serverUrl + '/device/procuration/' + deviceID + '/reject', '').subscribe(value => {
       console.log(value);
     });
