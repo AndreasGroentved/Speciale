@@ -205,19 +205,21 @@ class IoTAPI {
         }
 
         get("/tangle/unpermissioned/devices") { _, _ ->
-            ClientResponse(tangleController.getMessagesUnchecked(seed, Tag.DSPEC)).let { gson.toJson(it) }
+            ClientResponse(tangleController.getMessagesUnchecked(seed, Tag.DSPEC)).let { println(it);it }.let { gson.toJson(it) }.apply { println(this) }
         }
 
         //TODO: OVERVEJ MESSAGE DESIGN HER + navnet recipientPublicKey + !!
-        post("/tangle/unpermissioned/devices/procuration") { request, _ ->
+        post("/tangle/unpermissioned/devices/procuration") { request, response ->
             val params = getParameterMap(request.body()) as? Map<String, String>
                 ?: throw RuntimeException("invalid params")
-            val dateFrom = gson.fromJson(params["dateFrom"] as String, Date::class.java)
-            val dateTo = gson.fromJson(params["dateTo"] as String, Date::class.java)
+            println(params)
+            val dateFrom = params["dateFrom"]?.toLongOrNull() ?: throw RuntimeException("Invalid from date")
+            val dateTo = params["dateTo"]?.toLongOrNull() ?: throw RuntimeException("Invalid to date")
+
             requestProcuration(
                 Procuration(
-                    UUID.randomUUID().toString(), params.getValue("deviceID"), BigInteger(params["recipientPublicKey"]),
-                    dateTo, dateFrom
+                    UUID.randomUUID().toString(), params.getValue("deviceId"), BigInteger(publicKey.encoded),
+                    Date(dateTo), Date(dateFrom)
                 ), params.getValue("addressTo"), tangleController, privateKey
             )
         }
