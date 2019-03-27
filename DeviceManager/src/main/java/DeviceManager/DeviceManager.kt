@@ -46,7 +46,7 @@ class DeviceManager {
             println("device yolo")
             val deviceSpecification = TangleDeviceSpecification(publicKey, e!!.value.specification)
             val toJson = gson.toJson(deviceSpecification)
-            val signedJson = "$toJson||${EncryptionHelper.signBase64(privateKey, toJson)}"
+            val signedJson = toJson + "__" + EncryptionHelper.signBase64(privateKey, toJson)
             tangle.attachDeviceToTangle(seed, signedJson)?.let { registeredDevices.add(e.key) }
         }
         return "{\"result\" :" +
