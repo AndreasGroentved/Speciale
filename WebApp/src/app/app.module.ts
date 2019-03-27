@@ -1,6 +1,6 @@
 import {BrowserModule} from '@angular/platform-browser';
 import {NgModule} from '@angular/core';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {FormsModule} from '@angular/forms';
 
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
@@ -19,10 +19,8 @@ import {ModulePostComponent} from './module-post/module-post.component';
 import {RuleComponent} from './rule/rule.component';
 import {TangleDevicesComponent} from './tangle-devices/tangle-devices.component';
 import {ProcurationComponent} from './procuration/procuration.component';
-import {RequestDeviceComponent} from "./request-device/request-device.component";
-import {MatButtonModule, MatCheckboxModule, MatNativeDateModule} from "@angular/material";
-import {DemoMaterialModule} from "./mat";
-import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
+
 
 const appRoutes: Routes = [
   {path: 'device/:id', component: IotDeviceComponent},
@@ -34,7 +32,6 @@ const appRoutes: Routes = [
     pathMatch: 'full'
   },
   {path: 'procurations/:status', component: ProcurationComponent},
-  {path: 'tangle/:id', component: RequestDeviceComponent},
   {path: '**', component: PageNotFoundComponent}
 ];
 
@@ -53,25 +50,23 @@ const appRoutes: Routes = [
     ModulePostComponent,
     ProcurationComponent,
     RuleComponent,
-    TangleDevicesComponent,
-    RequestDeviceComponent
+    TangleDevicesComponent
   ],
   imports: [
+    NgbModule,
     BrowserModule,
-    MatButtonModule, MatCheckboxModule,
     HttpClientModule,
     FormsModule,
-    DemoMaterialModule,
-    BrowserAnimationsModule,
-    FormsModule,
-    HttpClientModule,
-    DemoMaterialModule,
-    MatNativeDateModule,
-    ReactiveFormsModule,
     RouterModule.forRoot(
       appRoutes,
       {enableTracing: true} // <-- debugging purposes only
     )
+  ],
+  exports: [
+    NgbModule,
+    BrowserModule,
+    HttpClientModule,
+    FormsModule
   ],
 
   providers: [AppRoutingModule],

@@ -1,29 +1,21 @@
 <p>
   {{name}}
 </p>
-<div ngSwitch={{status}}>
-  <div *ngSwitchCase="'expired'">
-    <div>expired</div>
+<div (click)="acceptedCollapsed = !acceptedCollapsed">
+  <b>accepted</b>
+  <div [ngbCollapse]="acceptedCollapsed">
+  <br>
+  <div *ngFor="let proc of accepted">
+    <div>DeviceID: {{proc.deviceID}}</div>
+    <div>Requestee Public Key: {{proc.recipientPublicKey}}</div>
+    <div>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</div>
     <br>
-    <div *ngFor="let proc of expired">
-      <div>{{proc.deviceID}}</div>
-      <div>{{proc.recipientPublicKey}}</div>
-      <div>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</div>
-      <br>
-    </div>
   </div>
-  <div *ngSwitchCase="'accepted'">
-    <div>accepted</div>
-    <br>
-    <div *ngFor="let proc of accepted">
-      <div>DeviceID: {{proc.deviceID}}</div>
-      <div>Requestee Public Key: {{proc.recipientPublicKey}}</div>
-      <div>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</div>
-      <br>
-    </div>
-  </div>
-  <div *ngSwitchCase="'pending'">
-    <div>pending</div>
+</div>
+</div>
+<div (click)="pendingCollapsed = !pendingCollapsed">
+  <b>pending</b>
+  <div [ngbCollapse]="pendingCollapsed">
     <br>
     <div *ngFor="let proc of pending">
       <div>{{proc.deviceID}}</div>
@@ -33,6 +25,17 @@
         <button class="btn btn-success" (click)="this.acceptProc(proc.messageChainID)">ACCEPT</button>
         <button class="btn btn-reject" (click)="this.rejectProc(proc.messageChainID)">REJECT</button>
       </div>
+      <br>
+    </div>
+  </div>
+</div>
+<div (click)="expiredCollapsed = !expiredCollapsed"><b>expired</b>
+  <div [ngbCollapse]="expiredCollapsed">
+    <br>
+    <div *ngFor="let proc of expired">
+      <div>{{proc.deviceID}}</div>
+      <div>{{proc.recipientPublicKey}}</div>
+      <div>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</div>
       <br>
     </div>
   </div>

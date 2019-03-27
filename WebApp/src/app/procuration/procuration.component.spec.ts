@@ -1,4 +1,6 @@
-import{async, ComponentFixture, TestBed}from '@angular/core/testing';
+import {async, ComponentFixture, TestBed} from '@angular/core/testing';
+
+import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 
 import {ProcurationComponent} from './procuration.component';
 
@@ -8,9 +10,9 @@ describe('ProcurationComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ProcurationComponent ]
+      declarations: [ProcurationComponent]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

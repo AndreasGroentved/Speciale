@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit
 class IoTAPI {
     private val hs = HouseRules()
     private val ruleManager = RuleManager()
-    private val seed = "TESTQ9999999999999999999999999999999999999999999999999999999999999999999999999999"
+    private val seed = "TESEQ9999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val seedTEST = "TESTQT999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val logger = SimpleLoggerFactory().getLogger("IoTAPI")
     private val deviceManger = DeviceManager()
@@ -114,14 +114,16 @@ class IoTAPI {
         put("/device/procuration/:id/accept") { request, response ->
             response.type("application/json")
             val id = request.params()[":id"]
-            id?.let {pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, true, seed, tangleController, privateKey) } }?.let { pendingProcurations.removeIf{p -> p.messageChainID == id} } ?: ""
+            id?.let { pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, true, seed, tangleController, privateKey) } }?.let { pendingProcurations.removeIf { p -> p.messageChainID == id } }
+                ?: ""
         }
 
         //TODO: REVISIT DE HER, PATH ER LIDT WANK
         put("/device/procuration/:id/reject") { request, response ->
             response.type("application/json")
             val id = request.params()[":id"]
-            id?.let {pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, false, seed, tangleController, privateKey) } }?.let { pendingProcurations.removeIf{p -> p.messageChainID == id} } ?: ""
+            id?.let { pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, false, seed, tangleController, privateKey) } }?.let { pendingProcurations.removeIf { p -> p.messageChainID == id } }
+                ?: ""
         }
 
         get("/device/procurations/accepted") { _, response ->
