@@ -144,15 +144,14 @@ export class WebService {
     });
   }
 
-  acceptProcuration(deviceID: string) {
-    this.http.put(this.serverUrl + '/device/procuration/' + deviceID + '/accept', '').subscribe(value => {
+  acceptProcuration(messageChainID: string) {
+    this.http.put(this.serverUrl + '/device/procuration/' + messageChainID + '/accept', '').subscribe(value => {
       console.log(value);
     });
   }
 
-  rejectProcuration(deviceID: string) {
-    console.log(this.serverUrl + '/device/procuration/' + deviceID + '/reject');
-    this.http.put(this.serverUrl + '/device/procuration/' + deviceID + '/reject', '').subscribe(value => {
+  rejectProcuration(messageChainID: string) {
+    this.http.put(this.serverUrl + '/device/procuration/' + messageChainID + '/reject', '').subscribe(value => {
       console.log(value);
     });
   }

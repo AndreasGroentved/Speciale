@@ -114,14 +114,14 @@ class IoTAPI {
         put("/device/procuration/:id/accept") { request, response ->
             response.type("application/json")
             val id = request.params()[":id"]
-            id?.let { pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, true, seed, tangleController, privateKey) } }
+            id?.let {pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, true, seed, tangleController, privateKey) } }?.let { pendingProcurations.removeIf{p -> p.messageChainID == id} } ?: ""
         }
 
         //TODO: REVISIT DE HER, PATH ER LIDT WANK
         put("/device/procuration/:id/reject") { request, response ->
             response.type("application/json")
             val id = request.params()[":id"]
-            id?.let { pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, true, seed, tangleController, privateKey) } }
+            id?.let {pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, false, seed, tangleController, privateKey) } }?.let { pendingProcurations.removeIf{p -> p.messageChainID == id} } ?: ""
         }
 
         get("/device/procurations/accepted") { _, response ->
@@ -270,7 +270,8 @@ class IoTAPI {
                 null
             }
         }
-        return procurations.filter { p -> accepted.firstOrNull { a -> p.messageChainID == a.messageChainID } == null }.filter { p -> p.dateTo >= Date() }
+        pendingProcurations.addAll(procurations.filter { p -> accepted.firstOrNull { a -> p.messageChainID == a.messageChainID } == null }.filter { p -> p.dateTo >= Date() })
+        return pendingProcurations
     }
 
     private fun getExpiredProcurations(): List<Procuration> {
