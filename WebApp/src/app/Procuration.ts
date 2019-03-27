@@ -1,12 +1,12 @@
-exportclassProcuration {
-  messageChainID:string;
-deviceID: string;
-recipientPublicKey: BigInteger;
-dateFrom: Date;
-dateTo: Date;
+export class Procuration {
+  messageChainID: string;
+  deviceID: string;
+  recipientPublicKey: BigInteger;
+  dateFrom: Date;
+  dateTo: Date;
 
 
-constructor(messageChainID: string, deviceID: string, recipientPublicKey: BigInteger, dateFrom: Date, dateTo: Date) {
+  constructor(messageChainID: string, deviceID: string, recipientPublicKey: BigInteger, dateFrom: Date, dateTo: Date) {
     this.messageChainID = messageChainID;
     this.deviceID = deviceID;
     this.recipientPublicKey = recipientPublicKey;
