@@ -59,7 +59,7 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
     fun getTransactions(seed: String, tag: Tag?): List<Transaction> {
         logger.info("getTransactions for seed: $seed")
         val transferResponse = try {
-            iotaAPI.getTransfers(seed, nodeSecurity, 0, 10, false)
+            iotaAPI.getTransfers(seed, nodeSecurity, 0, 99, false)
         } catch (e: ArgumentException) {
             logger.error("Invalid parameters supplied for getTransactions, likely invalid seed", e)
             null

@@ -30,8 +30,8 @@
       <div>{{proc.recipientPublicKey}}</div>
       <div>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</div>
       <div>
-        <button class="btn btn-success" (click)="this.acceptProcurarion(proc.deviceID);this.accept(proc)">ACCEPT</button>
-        <button class="btn btn-reject" (click)="this.rejectProcurarion(proc.deviceID);this.reject(proc)">REJECT</button>
+        <button class="btn btn-success" (click)="this.acceptProc(proc.deviceID)">ACCEPT</button>
+        <button class="btn btn-reject" (click)="this.rejectProc(proc.deviceID)">REJECT</button>
       </div>
       <br>
     </div>
