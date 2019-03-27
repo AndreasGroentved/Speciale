@@ -31,14 +31,15 @@ constructor(private route: ActivatedRoute, private router: Router, private webSe
     console.log(this.accepted);
   }
 
-  acceptProc(deviceID: string) {
-    this.webService.acceptProcuration(deviceID)
+  acceptProc(messageChainID: string) {
+    this.webService.acceptProcuration(messageChainID)
     this.webService.getAcceptedProcurations(val => this.accepted = val);
     this.webService.getPendingProcurations(val => this.pending = val);
   }
-  rejectProc(deviceID: string) {
-    this.webService.rejectProcuration(deviceID)
+  rejectProc(messageChainID: string) {
+    this.webService.rejectProcuration(messageChainID)
     this.webService.getPendingProcurations(val => this.pending = val);
+    this.webService.getAcceptedProcurations(val => this.accepted = val);
   }
 
 }
