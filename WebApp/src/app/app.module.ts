@@ -20,18 +20,21 @@ import {RuleComponent} from './rule/rule.component';
 import {TangleDevicesComponent} from './tangle-devices/tangle-devices.component';
 import {ProcurationComponent} from './procuration/procuration.component';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
+import {RequestDeviceComponent} from "./request-device/request-device.component";
 
 
 const appRoutes: Routes = [
   {path: 'device/:id', component: IotDeviceComponent},
   {path: 'tangle', component: TangleDevicesComponent},
+
   {path: 'house_overview', component: HouseOverviewComponent},
   {
     path: '',
     redirectTo: '/house_overview',
     pathMatch: 'full'
   },
-  {path: 'procurations', component: ProcurationComponent},
+  {path: 'procurations/:status', component: ProcurationComponent},
+  {path: 'tangle/:id', component: RequestDeviceComponent},
   {path: '**', component: PageNotFoundComponent}
 ];
 
@@ -50,7 +53,8 @@ const appRoutes: Routes = [
     ModulePostComponent,
     ProcurationComponent,
     RuleComponent,
-    TangleDevicesComponent
+    TangleDevicesComponent,
+    RequestDeviceComponent
   ],
   imports: [
     NgbModule,
