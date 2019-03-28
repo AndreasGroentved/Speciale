@@ -10,6 +10,5 @@
   Id: {{device.deviceSpecification.id }}
   Capabilities
   {{getCapabilities(device.deviceSpecification) }}
-  <a routerLink="/tangle/{{device.deviceSpecification.id}}" [queryParams]="{device: device}"
-     routerLinkActive="active">Other Devices</a>
+  <a [routerLink]="('/tangle/'+device.deviceSpecification.id)" [state]="{ device: device }">More info</a>
 </div>

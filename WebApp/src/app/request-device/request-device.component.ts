@@ -22,10 +22,8 @@ export class RequestDeviceComponent implements OnInit {
 
   ngOnInit() {
     this.id = this.route.snapshot.paramMap.get('id');
-    this.route.queryParams.subscribe(params => {
-      console.log(params);
-      this.tangleDevice = JSON.parse(params["device"]);
-    });
+    const navigation = this.router.getCurrentNavigation();
+    this.tangleDevice = navigation.extras.state.device;
   }
 
   requestDeviceAccess() {
