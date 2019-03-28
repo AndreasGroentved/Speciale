@@ -2,7 +2,9 @@
 <div *ngFor="let device of permissionedDevices; let i = index">
   Id: {{device.first.deviceSpecification.id  }}
   Capabilities
-  {{getCapabilities(device.deviceSpecification) }}
+  {{getCapabilities(device.first.deviceSpecification) }}
+  <button (click)="navigateToStrangerDevice(device.first.deviceSpecification.id,device.first,device.second)">More info
+  </button>
 </div>
 
 <h1>Available devices</h1>

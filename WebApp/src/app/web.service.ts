@@ -3,8 +3,9 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Device} from './Device';
 import {DeviceSpecification} from './DeviceSpecification';
 import {Procuration} from './Procuration';
-import {TangleDeviceSpecification} from "./TangleDeviceSpecification";
 import {DeviceSpecificationToAddressPair} from "./DeviceSpecificationToAddressPair";
+import {TangleDeviceSpecification} from "./TangleDeviceSpecification";
+import {DeviceDataService} from "./device-data.service";
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +13,7 @@ import {DeviceSpecificationToAddressPair} from "./DeviceSpecificationToAddressPa
 export class WebService {
   serverUrl = 'http://localhost:4567'; //TODO
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private ds: DeviceDataService) {
 
   }
 
@@ -56,18 +57,28 @@ export class WebService {
     });
   }
 
-  postDeviceValue(deviceId: string, path: string, postValue, callback: (val) => (void)) {
+  postDeviceValue(deviceId: string, isOwned: boolean = true, path: string, postValue, callback: (val) => (void)) {
     for (var key in postValue) {
       postValue[key] = postValue[key].toString();
     }
-    /*    let postMessage = new PostMessage(postValue);*/
-    console.log('yo');
-    console.log(JSON.stringify(postMessage));
-    console.log(path);
 
-    this.http.post(this.serverUrl + '/device/' + deviceId + '/' + path, JSON.stringify(postValue)).subscribe(results => {
-      callback(results['result']);
-    });
+    if (isOwned) {
+      this.http.post(this.serverUrl + '/device/' + deviceId + '/' + path, JSON.stringify(postValue)).subscribe(results => {
+        callback(results['result']);
+      });
+    } else {
+      let post = {
+        deviceID: deviceId,
+        type: "POST",
+        path: path,
+        addressTo: this.ds.addressTo,
+        params: postValue
+      };
+      console.log(JSON.stringify(post));
+      this.http.post(this.serverUrl + "/tangle/permissioned/devices", JSON.stringify(post)).subscribe(results => {
+        callback(results['result']);
+      });
+    }
   }
 
   getDeviceValueFromPath(deviceId: string, path: string, callback: (val) => (void)) {
@@ -91,9 +102,10 @@ export class WebService {
     });
   }
 
-  requestDevice(addressTo: string, deviceId: string, fromDate: Date, toDate: Date, callback: (val) => (void)) {
+  requestDevice(addressTo: string, deviceId: string, fromDate: Date, toDate: Date, deviceSpec: TangleDeviceSpecification, callback: (val) => (void)) {
     this.http.post(this.serverUrl + '/tangle/unpermissioned/devices/procuration', JSON.stringify({
       addressTo: addressTo,
+      specification: JSON.stringify(deviceSpec),
       deviceId: deviceId,
       dateFrom: fromDate.getTime().toString(),
       dateTo: toDate.getTime().toString()
@@ -111,9 +123,10 @@ export class WebService {
   }
 
   getPermissionedTangleDevices(callback: (devices: [DeviceSpecificationToAddressPair]) => (void)) {
-    /*   this.http.get(this.serverUrl + 'tangle/permissioned/devices').subscribe(value => {
-         callback(value['result'] as [DeviceSpecification]);
-       })*/
+    this.http.get(this.serverUrl + '/tangle/permissioned/devices').subscribe(value => {
+      console.log(value);
+      callback(value['result'] as [DeviceSpecificationToAddressPair]);
+    })
   }
 
 

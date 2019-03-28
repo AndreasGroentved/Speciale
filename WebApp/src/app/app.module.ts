@@ -14,19 +14,18 @@ import {IotDeviceComponent} from './iot-device/iot-device.component';
 import {HouseOverviewComponent} from './house-overview/house-overview.component';
 import {PageNotFoundComponent} from './page-not-found/page-not-found.component';
 import {HttpClientModule} from '@angular/common/http';
-import {ModuleGetComponent} from './module-get/module-get.component';
-import {ModulePostComponent} from './module-post/module-post.component';
 import {RuleComponent} from './rule/rule.component';
 import {TangleDevicesComponent} from './tangle-devices/tangle-devices.component';
 import {ProcurationComponent} from './procuration/procuration.component';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 import {RequestDeviceComponent} from './request-device/request-device.component';
+import {StrangerDeviceComponent} from './stranger-device/stranger-device.component';
 
 
 const appRoutes: Routes = [
   {path: 'device/:id', component: IotDeviceComponent},
   {path: 'tangle', component: TangleDevicesComponent},
-
+  {path: 'stranger', component: StrangerDeviceComponent},
   {path: 'house_overview', component: HouseOverviewComponent},
   {
     path: '',
@@ -48,12 +47,11 @@ const appRoutes: Routes = [
     IotDeviceComponent,
     HouseOverviewComponent,
     PageNotFoundComponent,
-    ModuleGetComponent,
-    ModulePostComponent,
     ProcurationComponent,
     RuleComponent,
     TangleDevicesComponent,
-    RequestDeviceComponent
+    RequestDeviceComponent,
+    StrangerDeviceComponent
   ],
   imports: [
     NgbModule,

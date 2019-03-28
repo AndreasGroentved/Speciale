@@ -12,6 +12,7 @@ import {ParameterNameToType} from "../ParameterNameToType";
 export class IotDeviceModuleComponent implements OnInit {
   @Input() deviceResource: DeviceResource;
   @Input() deviceId: string;
+  @Input() ownedDevice: boolean;
   name = "loading...";
   private getModules: Array<ParameterNameToType> = [];
   private postModules: Array<ParameterNameToType> = [];
@@ -40,8 +41,6 @@ export class IotDeviceModuleComponent implements OnInit {
     this.postModules.forEach(value => {
       if (!this.formData.hasOwnProperty(value.name)) {
         try {
-          console.log("ahh yeah");
-          console.log(value.name);
           this.formData[value.name] = this.getValues.get(value.name);
         } catch (e) {
           console.log("can't assign value");
@@ -52,14 +51,14 @@ export class IotDeviceModuleComponent implements OnInit {
     let ws = this.webService;
     console.log(this.formData);
     let outer = this;
-    ws.postDeviceValue(this.deviceId, this.deviceResource.path, this.formData, val => {
-      console.log(val);
-      Object.keys(val).forEach(key => {
-        outer.getValues.set(key, val[key]);
-        console.log(key + " " + val[key]);
-      });
+    ws.postDeviceValue(this.deviceId, this.ownedDevice, this.deviceResource.path, this.formData, val => {
+      try {
+        Object.keys(val).forEach(key => {
+          outer.getValues.set(key, val[key]);
+        });
+      } catch (e) {
 
-      console.log(this.getValues);
+      }
     })
   }
 
@@ -67,11 +66,7 @@ export class IotDeviceModuleComponent implements OnInit {
     this.webService.getDeviceValueFromPath(this.deviceId, this.deviceResource.path, val => {
       this.deviceResource.resourceMethods.filter(value => value.methodType == "GET").map(value => {
         try {
-          console.log(val);
-          console.log(value);
-          console.log(value.parameters);
           let a = value.parameters[getMethod];
-          console.log(a);
           this.getValues.set(getMethod, val);
         } catch (e) {
         }

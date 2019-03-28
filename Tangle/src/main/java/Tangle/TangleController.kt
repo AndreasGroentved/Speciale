@@ -7,6 +7,7 @@ import datatypes.iotdevices.Procuration
 import datatypes.tangle.Tag
 import helpers.EncryptionHelper
 import helpers.PropertiesLoader
+import helpers.i
 import jota.IotaAPI
 import jota.dto.response.SendTransferResponse
 import jota.error.ArgumentException
@@ -117,7 +118,7 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
     }
 
     fun attachTransactionToTangle(seed: String, message: String, tag: Tag, addressTo: String): SendTransferResponse? {
-        logger.info("Attaching transaction to tangle, seed: $seed\nmessage: $message\ntag:$tag")
+        logger.i("Attaching transaction to tangle, seed: $seed\nmessage: $message\ntag:$tag")
         val messageTrytes = TrytesConverter.asciiToTrytes(message)
         val tagTrytes = TrytesConverter.asciiToTrytes(tag.name)
         val transfer =

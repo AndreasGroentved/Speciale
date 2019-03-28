@@ -13,8 +13,8 @@ import {DeviceDataService} from "../device-data.service";
 export class RequestDeviceComponent implements OnInit {
 
   private id: string;
-  fromDate = "1988-10-10T10:00";
-  toDate = "1988-10-10T10:00";
+  fromDate = "2019-10-10T10:00";
+  toDate = "2019-10-17T10:00";
   tangleDevice: TangleDeviceSpecification;
   addressTo: string;
 
@@ -44,7 +44,7 @@ export class RequestDeviceComponent implements OnInit {
     console.log(this.fromDate);
     let fromD = new Date(this.fromDate);
     let toD = new Date(this.toDate);
-    this.ws.requestDevice(this.addressTo, this.id, fromD, toD, val => {
+    this.ws.requestDevice(this.addressTo, this.id, fromD, toD, this.tangleDevice, val => {
       if (!val.hasOwnProperty("error")) this.location.back();
       else alert("yo request failed");
     });

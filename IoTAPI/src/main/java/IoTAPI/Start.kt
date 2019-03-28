@@ -56,10 +56,10 @@ class IoTAPI {
             privateKey = EncryptionHelper.loadPrivateECKeyFromProperties("householdPrivateKey")
             publicKey = EncryptionHelper.loadPublicECKeyFromProperties("householdPublicKey")
         }
-     /*   threadPool.scheduleAtFixedRate({
-            requestProcuration(Procuration(UUID.randomUUID().toString(), "hest", BigInteger(publicKey.encoded), Date(), Date(1654523307558)), tangleController.getTestAddress(seed), tangleController, privateKey)
-        }, 0, 20, TimeUnit.SECONDS)
-        threadPool.scheduleAtFixedRate({ deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), "hest", seedTEST, tangleController) }, 0, 20, TimeUnit.SECONDS)*/
+        /*   threadPool.scheduleAtFixedRate({
+               requestProcuration(Procuration(UUID.randomUUID().toString(), "hest", BigInteger(publicKey.encoded), Date(), Date(1654523307558)), tangleController.getTestAddress(seed), tangleController, privateKey)
+           }, 0, 20, TimeUnit.SECONDS)
+           threadPool.scheduleAtFixedRate({ deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), "hest", seedTEST, tangleController) }, 0, 20, TimeUnit.SECONDS)*/
 
         Spark.exception(Exception::class.java) { e, _, _ -> logger.error(e.toString()) }
         Spark.after("/*") { request, _ -> logger.info(request.requestMethod());logger.info(request.pathInfo());logger.info(request.body()); logger.info(request.params().toString());logger.info(request.uri()) }
@@ -93,7 +93,8 @@ class IoTAPI {
         }
 
         post("rule") { request, _ ->
-            val rule = getParameterMap(request.body())["rules"] ?: return@post "{\"error\":\"invalid json\"}"
+            val rule = (getParameterMap(request.body())as? Map<String, String>?)?.get("rules")
+                ?: return@post "{\"error\":\"invalid json\"}"
             hs.saveRules(rule)
             ruleManager.updateDsl(rule)
             "{\"result\":\"successful\"}"
@@ -161,7 +162,7 @@ class IoTAPI {
         { request, _ ->
             val id = request.params(":id")
             val path = request.params(":path")
-            deviceManger.post(PostMessage("this", id, "POST", path, getParameterMap(request.body())))
+            deviceManger.post(PostMessage("this", id, "POST", path, getParameterMap(request.body()) as Map<String, String>))
         }
 
         get("/device/:id/price")
@@ -202,27 +203,60 @@ class IoTAPI {
         }
 
         post("/tangle/permissioned/devices") { request, _ ->
-            val postMessage = gson.fromJson(request.body(), PostMessage::class.java)
-            sendMethodCall(postMessage, privateKey, "")
+            val a = request.body()
+            // val params = getParameterMap(request.body())
+            val postMessage = request.body().let {
+                gson.fromJson(it, PostMessage::class.java)
+            }
+                ?: throw RuntimeException("invalid postMessage")
+            // val addressTo = params["addressTo"] as? String ?: throw RuntimeException("invalid addressTo")
+
+            println("yo")
+            sendMethodCall(postMessage, privateKey, postMessage.addressTo)
+            ClientResponse("success").let { gson.toJson(it) }
         }
+
+        val requests = mutableMapOf<String, Pair<TangleDeviceSpecification, String>>()
+
+        get("/tangle/permissioned/devices") { _, _ ->
+            tangleController.getBroadcastsUnchecked(Tag.PROACK).mapNotNull {
+                println(it)
+                val mId = gson.fromJson(it.first.substringBefore("__"), ProcurationAck::class.java).messageChainID
+                val a = requests.getOrElse(mId) {
+                    println("no")
+                    null
+                }
+                a
+            }.let { ClientResponse(it) }.let { gson.toJson(it) }
+        }
+
+
 
         get("/tangle/unpermissioned/devices") { _, _ ->
             val map = tangleController.getBroadcastsUnchecked(Tag.DSPEC).map {
-                Pair(gson.fromJson(it.first.substringBefore("__"), TangleDeviceSpecification::class.java),it.second)
+                println(it)
+                Pair(gson.fromJson(it.first.substringBefore("__"), TangleDeviceSpecification::class.java), it.second)
             }
             ClientResponse(map).let { gson.toJson(it) }
         }
+
 
         //TODO: OVERVEJ MESSAGE DESIGN HER + navnet recipientPublicKey + !!
         post("/tangle/unpermissioned/devices/procuration") { request, _ ->
             val params = getParameterMap(request.body()) as? Map<String, String>
                 ?: throw RuntimeException("invalid params")
+            println(params)
+            val specification = params["specification"].let { gson.fromJson(it, TangleDeviceSpecification::class.java) }
             val dateFrom = params["dateFrom"]?.toLongOrNull() ?: throw RuntimeException("Invalid from date")
             val dateTo = params["dateTo"]?.toLongOrNull() ?: throw RuntimeException("Invalid to date")
+            val messageId = UUID.randomUUID().toString()
+            requests[messageId] = Pair(specification, params.getValue("addressTo"))
+
+
 
             requestProcuration(
                 Procuration(
-                    UUID.randomUUID().toString(), params.getValue("deviceId"), BigInteger(publicKey.encoded),
+                    messageId, params.getValue("deviceId"), BigInteger(publicKey.encoded),
                     Date(dateTo), Date(dateFrom)
                 ), params.getValue("addressTo"), tangleController, privateKey
             ).let { ClientResponse("yolo") }.let { gson.toJson(it) }
@@ -261,12 +295,12 @@ class IoTAPI {
     private fun requestProcuration(procuration: Procuration, addressTo: String, tangle: TangleController, privateKey: PrivateKey) {
         val json = gson.toJson(procuration)
         val signBase64 = EncryptionHelper.signBase64(privateKey, json)
-        println(addressTo)
         tangle.attachTransactionToTangle(seedTEST, json + "__" + signBase64, Tag.PRO, addressTo)
     }
 
-    private fun getParameterMap(body: String): Map<String, String> {
-        val mapType = object : TypeToken<Map<String, String>>() {}.type
+    private fun getParameterMap(body: String): Map<String, Any> {
+        val mapType = object : TypeToken<Map<String, Any>>() {}.type
+        println(body)
         return gson.fromJson(body, mapType)
     }
 

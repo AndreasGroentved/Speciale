@@ -9,6 +9,7 @@ export class DeviceDataService {
   constructor() {
   }
 
+  id:string;
   deviceSpecification: TangleDeviceSpecification;
   addressTo:string;
 

@@ -26,6 +26,7 @@ export class TangleDevicesComponent implements OnInit {
       this.unPermissionedDevices = devices;
     });
     this.webService.getPermissionedTangleDevices(devices => {
+      console.log(devices);
       this.permissionedDevices = devices;
     });
   }
@@ -34,9 +35,18 @@ export class TangleDevicesComponent implements OnInit {
     return device.deviceResources.map(value => value.path.toString()).toString()
   }
 
+  navigateToStrangerDevice(deviceId, deviceSpecification: TangleDeviceSpecification, addressTo) {
+    this.deviceService.deviceSpecification = deviceSpecification;
+    this.deviceService.addressTo = addressTo;
+    this.deviceService.id = deviceId;
+    this.router.navigateByUrl('/stranger');
+  }
+
+
   navigateToInfo(deviceId, deviceSpecification: TangleDeviceSpecification, addressTo) {
     this.deviceService.deviceSpecification = deviceSpecification;
     this.deviceService.addressTo = addressTo;
+    this.deviceService.id = deviceId;
     this.router.navigateByUrl('/tangle/' + deviceId);
     /*this.router.navigate(['/tangle/' + deviceId], {
       queryParams: {device: deviceSpecification},
