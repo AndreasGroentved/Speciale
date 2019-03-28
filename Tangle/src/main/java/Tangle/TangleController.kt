@@ -129,6 +129,7 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
                 false, false, null
             )
         } catch (e: Exception) {
+            println(e.message)
             when (e) {
                 is ArgumentException -> {
                     logger.error("Invalid parameters supplied for sendTransfer");null

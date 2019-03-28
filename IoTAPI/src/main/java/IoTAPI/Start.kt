@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
 class IoTAPI {
     private val hs = HouseRules()
     private val ruleManager = RuleManager()
-    private val seed = "TEEER9999999999999999999999999999999999999999999999999999999999999999999999999999"
+    private val seed = "TESEA9999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val seedTEST = "TESTQT999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val logger = SimpleLoggerFactory().getLogger("IoTAPI")
     private val deviceManger = DeviceManager()
@@ -56,10 +56,10 @@ class IoTAPI {
             privateKey = EncryptionHelper.loadPrivateECKeyFromProperties("householdPrivateKey")
             publicKey = EncryptionHelper.loadPublicECKeyFromProperties("householdPublicKey")
         }
-        threadPool.scheduleAtFixedRate({
+     /*   threadPool.scheduleAtFixedRate({
             requestProcuration(Procuration(UUID.randomUUID().toString(), "hest", BigInteger(publicKey.encoded), Date(), Date(1654523307558)), tangleController.getTestAddress(seed), tangleController, privateKey)
         }, 0, 20, TimeUnit.SECONDS)
-        threadPool.scheduleAtFixedRate({deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), "hest", seedTEST, tangleController)}, 0, 20, TimeUnit.SECONDS)
+        threadPool.scheduleAtFixedRate({ deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), "hest", seedTEST, tangleController) }, 0, 20, TimeUnit.SECONDS)*/
 
         Spark.exception(Exception::class.java) { e, _, _ -> logger.error(e.toString()) }
         Spark.after("/*") { request, _ -> logger.info(request.requestMethod());logger.info(request.pathInfo());logger.info(request.body()); logger.info(request.params().toString());logger.info(request.uri()) }
@@ -217,7 +217,6 @@ class IoTAPI {
         post("/tangle/unpermissioned/devices/procuration") { request, _ ->
             val params = getParameterMap(request.body()) as? Map<String, String>
                 ?: throw RuntimeException("invalid params")
-            println(params)
             val dateFrom = params["dateFrom"]?.toLongOrNull() ?: throw RuntimeException("Invalid from date")
             val dateTo = params["dateTo"]?.toLongOrNull() ?: throw RuntimeException("Invalid to date")
 
@@ -226,7 +225,7 @@ class IoTAPI {
                     UUID.randomUUID().toString(), params.getValue("deviceId"), BigInteger(publicKey.encoded),
                     Date(dateTo), Date(dateFrom)
                 ), params.getValue("addressTo"), tangleController, privateKey
-            )
+            ).let { ClientResponse("yolo") }.let { gson.toJson(it) }
         }
 
     }
@@ -262,6 +261,7 @@ class IoTAPI {
     private fun requestProcuration(procuration: Procuration, addressTo: String, tangle: TangleController, privateKey: PrivateKey) {
         val json = gson.toJson(procuration)
         val signBase64 = EncryptionHelper.signBase64(privateKey, json)
+        println(addressTo)
         tangle.attachTransactionToTangle(seedTEST, json + "__" + signBase64, Tag.PRO, addressTo)
     }
 

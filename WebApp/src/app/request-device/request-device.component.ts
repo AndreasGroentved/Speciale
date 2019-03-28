@@ -3,6 +3,7 @@ import {WebService} from "../web.service";
 import {ActivatedRoute, Router} from "@angular/router";
 import {Location} from '@angular/common';
 import {TangleDeviceSpecification} from "../TangleDeviceSpecification";
+import {DeviceDataService} from "../device-data.service";
 
 @Component({
   selector: 'app-request-device',
@@ -15,22 +16,35 @@ export class RequestDeviceComponent implements OnInit {
   fromDate = "1988-10-10T10:00";
   toDate = "1988-10-10T10:00";
   tangleDevice: TangleDeviceSpecification;
+  addressTo: string;
 
-  constructor(private route: ActivatedRoute, private router: Router, private ws: WebService, private location: Location) {
+  constructor(private route: ActivatedRoute, private router: Router, private ws: WebService, private location: Location, private deviceService: DeviceDataService) {
   }
 
 
   ngOnInit() {
+
     this.id = this.route.snapshot.paramMap.get('id');
-    const navigation = this.router.getCurrentNavigation();
-    this.tangleDevice = navigation.extras.state.device;
+    /*console.log(this.route.snapshot.paramMap);
+    console.log(this.route.snapshot)
+    this.route.queryParamMap.subscribe(params => {
+      console.log(params);
+    });*/
+    /*const navigation = this.router.getCurrentNavigation();
+    console.log(navigation);*/
+    //console.log(navigation.extras.state);
+    /* const navigation = this.router.getCurrentNavigation();
+    console.log(navigation.extras);
+    this.tangleDevice = navigation.extras.state.device;*/
+    this.tangleDevice = this.deviceService.deviceSpecification;
+    this.addressTo = this.deviceService.addressTo;
   }
 
   requestDeviceAccess() {
     console.log(this.fromDate);
     let fromD = new Date(this.fromDate);
     let toD = new Date(this.toDate);
-    this.ws.requestDevice(this.tangleDevice.publicKey, this.id, fromD, toD, val => {
+    this.ws.requestDevice(this.addressTo, this.id, fromD, toD, val => {
       if (!val.hasOwnProperty("error")) this.location.back();
       else alert("yo request failed");
     });

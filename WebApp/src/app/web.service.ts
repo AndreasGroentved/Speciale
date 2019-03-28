@@ -4,6 +4,7 @@ import {Device} from './Device';
 import {DeviceSpecification} from './DeviceSpecification';
 import {Procuration} from './Procuration';
 import {TangleDeviceSpecification} from "./TangleDeviceSpecification";
+import {DeviceSpecificationToAddressPair} from "./DeviceSpecificationToAddressPair";
 
 @Injectable({
   providedIn: 'root'
@@ -101,15 +102,15 @@ export class WebService {
     });
   }
 
-  getUnpermissionedTangleDevices(callback: (devices: [TangleDeviceSpecification]) => (void)) {
+  getUnpermissionedTangleDevices(callback: (devices: [DeviceSpecificationToAddressPair]) => (void)) {
     this.http.get(this.serverUrl + '/tangle/unpermissioned/devices').subscribe(value => {
       console.log(value);
       if (value == null) return;
-      callback(value['result'] as [TangleDeviceSpecification]);
+      callback(value['result'] as [DeviceSpecificationToAddressPair]);
     })
   }
 
-  getPermissionedTangleDevices(callback: (devices: [TangleDeviceSpecification]) => (void)) {
+  getPermissionedTangleDevices(callback: (devices: [DeviceSpecificationToAddressPair]) => (void)) {
     /*   this.http.get(this.serverUrl + 'tangle/permissioned/devices').subscribe(value => {
          callback(value['result'] as [DeviceSpecification]);
        })*/

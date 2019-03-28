@@ -1,14 +1,16 @@
 <h1>Accessible devices</h1>
 <div *ngFor="let device of permissionedDevices; let i = index">
-  Id: {{device.deviceSpecification.id  }}
+  Id: {{device.first.deviceSpecification.id  }}
   Capabilities
   {{getCapabilities(device.deviceSpecification) }}
 </div>
 
 <h1>Available devices</h1>
 <div *ngFor="let device of unPermissionedDevices; let i = index">
-  Id: {{device.deviceSpecification.id }}
+  Id: {{device.first.deviceSpecification.id }}
   Capabilities
-  {{getCapabilities(device.deviceSpecification) }}
-  <a [routerLink]="('/tangle/'+device.deviceSpecification.id)" [state]="{ device: device }">More info</a>
+  {{getCapabilities(device.first.deviceSpecification) }}
+  <!--<a [routerLink]="('/tangle/'+device.deviceSpecification.id)" [state]="{ device: device }">More info</a>
+  -->
+  <button (click)="navigateToInfo(device.first.deviceSpecification.id,device.first,device.second)">More info</button>
 </div>
