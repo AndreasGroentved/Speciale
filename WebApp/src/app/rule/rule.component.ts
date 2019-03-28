@@ -9,6 +9,7 @@ import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 })
 export class RuleComponent implements OnInit {
   inputText = "";
+  collapsed = true;
 
   constructor(private ws: WebService) {
   }

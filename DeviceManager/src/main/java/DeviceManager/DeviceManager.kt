@@ -43,7 +43,6 @@ class DeviceManager {
 
     fun registerDevice(privateKey: PrivateKey, publicKey: String, deviceID: String, seed: String, tangle: TangleController): String {
         val spec = devicesIdIpToSpecification.entries.firstOrNull { it.value.idIp.id == deviceID }.let { e ->
-            println("device yolo")
             val deviceSpecification = TangleDeviceSpecification(publicKey, e!!.value.specification)
             val toJson = gson.toJson(deviceSpecification)
             val signedJson = toJson + "__" + EncryptionHelper.signBase64(privateKey, toJson)

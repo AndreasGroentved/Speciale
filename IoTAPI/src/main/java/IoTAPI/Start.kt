@@ -62,7 +62,7 @@ class IoTAPI {
            threadPool.scheduleAtFixedRate({ deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), "hest", seedTEST, tangleController) }, 0, 20, TimeUnit.SECONDS)*/
 
         Spark.exception(Exception::class.java) { e, _, _ -> logger.error(e.toString()) }
-        Spark.after("/*") { request, _ -> logger.info(request.requestMethod());logger.info(request.pathInfo());logger.info(request.body()); logger.info(request.params().toString());logger.info(request.uri()) }
+        Spark.after("/*") { request, _ -> logger.info(request.requestMethod() + " " + request.uri() + " " + request.body() + " " + request.params().toString()) }
 
         options("/*") { request, response ->
             val accessControlRequestHeaders = request.headers("Access-Control-Request-Headers")
@@ -285,11 +285,13 @@ class IoTAPI {
         tangleController.attachTransactionToTangle(seed, toJson + "__" + signBase64, Tag.MC, addressTo)
     }
 
+    //todo: maybe not broadcast
     private fun respondToProcuration(procuration: Procuration, accepted: Boolean, seed: String, tangle: TangleController, privateKey: PrivateKey) {
         val procurationAck = ProcurationAck(procuration.messageChainID, accepted)
         val json = gson.toJson(procurationAck)
         val signBase64 = EncryptionHelper.signBase64(privateKey, json)
         tangle.attachBroadcastToTangle(seed, json + "__" + signBase64, Tag.PROACK)
+        procurations.saveProcuration(procuration)
     }
 
     private fun requestProcuration(procuration: Procuration, addressTo: String, tangle: TangleController, privateKey: PrivateKey) {

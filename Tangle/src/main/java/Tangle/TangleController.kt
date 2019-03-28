@@ -99,12 +99,14 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
         val transfer =
             Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, tagTrytes)
         return try {
-            pt.saveHash(transfer.hash)
-            iotaAPI.sendTransfer(
+            val r = iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(),
                 false, false, null
             )
+            r?.let { it.transactions.forEach { pt.saveHash(it.hash) } }
+            r
         } catch (e: Exception) {
+            logger.error(e.toString())
             when (e) {
                 is ArgumentException -> {
                     logger.error("Invalid parameters supplied for sendTransfer");null
