@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
 class IoTAPI {
     private val hs = HouseRules()
     private val ruleManager = RuleManager()
-    private val seed = "TESER9999999999999999999999999999999999999999999999999999999999999999999999999999"
+    private val seed = "TEEER9999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val seedTEST = "TESTQT999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val logger = SimpleLoggerFactory().getLogger("IoTAPI")
     private val deviceManger = DeviceManager()
@@ -208,14 +208,13 @@ class IoTAPI {
 
         get("/tangle/unpermissioned/devices") { _, _ ->
             val map = tangleController.getBroadcastsUnchecked(Tag.DSPEC).map {
-                gson.fromJson(it.substringBefore("__"), TangleDeviceSpecification::class.java)
+                Pair(gson.fromJson(it.first.substringBefore("__"), TangleDeviceSpecification::class.java),it.second)
             }
-            println(map)
-            ClientResponse(map).let { gson.toJson(it) }.apply { println() }
+            ClientResponse(map).let { gson.toJson(it) }
         }
 
         //TODO: OVERVEJ MESSAGE DESIGN HER + navnet recipientPublicKey + !!
-        post("/tangle/unpermissioned/devices/procuration") { request, response ->
+        post("/tangle/unpermissioned/devices/procuration") { request, _ ->
             val params = getParameterMap(request.body()) as? Map<String, String>
                 ?: throw RuntimeException("invalid params")
             println(params)
