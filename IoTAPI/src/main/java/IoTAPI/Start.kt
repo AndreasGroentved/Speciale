@@ -96,7 +96,6 @@ class IoTAPI {
         }
 
         get("/device") { request, response ->
-            println("devices")
             response.type("application/json")
             val params = request.queryString()
             val ret = deviceManger.getDevices(params)
@@ -192,7 +191,6 @@ class IoTAPI {
         }
 
         put("/device/:id") { request, _ ->
-            println("put")
             val id = request.params(":id")
             deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), id, seed, tangleController)
         }
