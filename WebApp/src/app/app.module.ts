@@ -20,7 +20,7 @@ import {RuleComponent} from './rule/rule.component';
 import {TangleDevicesComponent} from './tangle-devices/tangle-devices.component';
 import {ProcurationComponent} from './procuration/procuration.component';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
-import {RequestDeviceComponent} from "./request-device/request-device.component";
+import {RequestDeviceComponent} from './request-device/request-device.component';
 
 
 const appRoutes: Routes = [
