@@ -10,6 +10,7 @@ import org.eclipse.californium.core.network.config.NetworkConfig
 import org.eclipse.californium.core.server.resources.CoapExchange
 import java.net.Inet4Address
 import java.net.InetSocketAddress
+import java.util.*
 
 val COAP_PORT = NetworkConfig.getStandard().getInt(NetworkConfig.Keys.COAP_PORT)
 
@@ -18,7 +19,7 @@ fun main() {
     pump.start()
 }
 
-class HeatPump : IoTDevice("hest") {
+class HeatPump : IoTDevice(UUID.randomUUID().toString()) {
     init {
         addEndpoints()
         add(
