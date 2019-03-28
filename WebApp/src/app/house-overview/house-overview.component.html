@@ -1,7 +1,15 @@
-<p>House overview</p>
-<iotdevices></iotdevices>
-
-<app-rule></app-rule>
-<app-savings></app-savings>
-
-<a routerLink="/tangle" routerLinkActive="active">Other Devices</a>
+<div style="background-color: aliceblue">
+  <p class="text-center"><b class="display-1">House overview</b></p>
+  <table class="container h-100 d-flex justify-content-center">
+    <td class="col">
+      <iotdevices></iotdevices>
+    </td>
+    <td class="col">
+      <app-procuration></app-procuration>
+    </td>
+    <tr><a routerLink="/tangle" routerLinkActive="active">Other Devices</a></tr>
+  </table>
+  <div class="container d-flex justify-content-center">
+    <app-rule></app-rule>
+  </div>
+</div>

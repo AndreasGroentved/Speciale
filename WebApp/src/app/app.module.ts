@@ -33,7 +33,6 @@ const appRoutes: Routes = [
     redirectTo: '/house_overview',
     pathMatch: 'full'
   },
-  {path: 'procurations/:status', component: ProcurationComponent},
   {path: 'tangle/:id', component: RequestDeviceComponent},
   {path: '**', component: PageNotFoundComponent}
 ];

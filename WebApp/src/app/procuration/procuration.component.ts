@@ -21,9 +21,9 @@ export class ProcurationComponent implements OnInit {
   private expired: Array<Procuration>;
   private pending: Array<Procuration>;
 
-  private acceptedCollapsed = false;
-  private expiredCollapsed = false;
-  private pendingCollapsed = false;
+  private acceptedCollapsed = true;
+  private expiredCollapsed = true;
+  private pendingCollapsed = true;
 
 
   ngOnInit() {

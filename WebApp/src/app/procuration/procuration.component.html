@@ -1,20 +1,18 @@
-<p>
-  {{name}}
-</p>
-<div (click)="acceptedCollapsed = !acceptedCollapsed">
-  <b>accepted</b>
+<div><b>accepted</b>
+  <button (click)="acceptedCollapsed = !acceptedCollapsed">{{acceptedCollapsed ? "←" : "↓"}}</button>
   <div [ngbCollapse]="acceptedCollapsed">
-  <br>
-  <div *ngFor="let proc of accepted">
-    <div>DeviceID: {{proc.deviceID}}</div>
-    <div>Requestee Public Key: {{proc.recipientPublicKey}}</div>
-    <div>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</div>
     <br>
+    <div *ngFor="let proc of accepted">
+      <div>DeviceID: {{proc.deviceID}}</div>
+      <div>Requestee Public Key: {{proc.recipientPublicKey}}</div>
+      <div>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</div>
+      <br>
+    </div>
   </div>
 </div>
-</div>
-<div (click)="pendingCollapsed = !pendingCollapsed">
+<div>
   <b>pending</b>
+  <button (click)="pendingCollapsed = !pendingCollapsed">{{pendingCollapsed ? "←" : "↓"}}</button>
   <div [ngbCollapse]="pendingCollapsed">
     <br>
     <div *ngFor="let proc of pending">
@@ -29,7 +27,8 @@
     </div>
   </div>
 </div>
-<div (click)="expiredCollapsed = !expiredCollapsed"><b>expired</b>
+<div><b>expired</b>
+  <button (click)="expiredCollapsed = !expiredCollapsed">{{expiredCollapsed ? "←" : "↓"}}</button>
   <div [ngbCollapse]="expiredCollapsed">
     <br>
     <div *ngFor="let proc of expired">
