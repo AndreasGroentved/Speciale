@@ -59,9 +59,9 @@ class DeviceManager {
             val toJson = gson.toJson(it.value.specification)
             val signed = EncryptionHelper.signBase64(privateKey, toJson)
             tangle.attachBroadcastToTangle(seed, toJson + "__" + signed, Tag.XDSPEC)
-            return "{\"unRegister\" :" + "\"successful\"}"
+            return "{\"result\" :" + "\"successful\"}"
         }
-        return "{\"unRegister\" :" + "\"unsuccessful\"}"
+        return "{\"result\" :" + "\"unsuccessful\"}"
 
     }
 
@@ -82,10 +82,12 @@ class DeviceManager {
 
     private fun getDeviceKeyFromId(id: String) = devicesIdIpToSpecification.filter { it.key.id == id }.map { it.key }.firstOrNull()
 
+/*
     fun getAllSavings(from: Long, to: Long, tangle: TangleController) =
         devicesIdIpToSpecification.keys.map { getSavingsForDevice(from, to, it.id, tangle) }.fold(BigDecimal(0)) { a, b -> a + b }.toString()
 
     fun getSavingsForDevice(from: Long, to: Long, deviceId: String, tangle: TangleController): BigDecimal = tangle.getDevicePriceSavings(from, to, deviceId)
+*/
 
     fun get(postMessage: PostMessage): String { //todo, noget retry logik måske?
         logger.info("attempting to call get with message: $postMessage")
@@ -100,8 +102,6 @@ class DeviceManager {
         logger.info("attempting to call post with message: $postMessage")
         val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return "{\"error\":\"Invalid device id\"}"
         val client = CoapClient("${mapKey.ip}:5683/${postMessage.path}") //todo resource på port
-        println(gson.toJson(postMessage.params))
-        println("yo")
         val a = client.post(gson.toJson(postMessage), MediaTypeRegistry.APPLICATION_JSON)?.responseText
             ?: "{\"error\":\"No result received\"}"
         return a
@@ -109,8 +109,8 @@ class DeviceManager {
 
     fun post(id: String, path: String, params: String): String {
         val mapKey = getDeviceKeyFromId(id) ?: return "{\"error\":\"Invalid device id\"}"
-        val client = CoapClient("${mapKey.ip}:5683/${path}") //todo resource på port
-        return client.post(gson.toJson(params), MediaTypeRegistry.APPLICATION_JSON)?.responseText //todo to json på JSON?
+        val client = CoapClient("${mapKey.ip}:5683/$path") //todo resource på port
+        return client.post(params, MediaTypeRegistry.APPLICATION_JSON)?.responseText //todo to json på JSON?
             ?: "{\"error\":\"No result received\"}"
     }
 

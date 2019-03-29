@@ -4,13 +4,14 @@ import hest.HestParser
 import hest.HestParserBaseListener
 import org.antlr.v4.runtime.tree.ErrorNode
 
+//TODO double qoutes i grammar
 
 data class TimeDefinition(var fromDate: String? = null, var fromTime: String? = null, var toDate: String? = null, var toTime: String? = null)
 data class Time(var pattern: String = "once", var count: Int = 0, var unit: String = "seconds", var timeDefinition: TimeDefinition = TimeDefinition())
-data class Rule(var steps: MutableList<Expression> = mutableListOf(), var time: Time = Time(), var dassignmentsFromDevice: MutableList<Pair<String, OutPut>> = mutableListOf(), var deviceCalls: MutableList<OutPut> = mutableListOf())
+data class Rule(var steps: MutableList<Expression> = mutableListOf(), var time: Time = Time(), var assignmentsFromDevice: MutableList<Pair<String, OutPut>> = mutableListOf(), var deviceCalls: MutableList<OutPut> = mutableListOf())
 data class Content(val rules: MutableList<Rule> = mutableListOf(), val dataSets: MutableList<DataSet> = mutableListOf())
 data class DataSet(var name: String = "", var tag: String = "", var format: String = "", var vars: MutableMap<String, Expression> = mutableMapOf(), var publicKey: String = "")
-data class OutPut(var deviceID: String = "", var path: String = "", var method: String = "", val params: MutableList<Pair<String, String>> = mutableListOf())
+data class OutPut(var deviceID: String = "", var path: String = "", var method: String = "", var params: MutableList<Pair<String, String>> = mutableListOf())
 
 class ParseDsl : HestParserBaseListener() {
 
@@ -40,6 +41,7 @@ class ParseDsl : HestParserBaseListener() {
     override fun enterTime(ctx: HestParser.TimeContext) {
         currentTime = Time()
         currentRule.time = currentTime
+        println(ctx.text)
         currentTime.pattern = ctx.EVERY()?.text ?: ctx.ONCE()?.text
                 ?: throw NotImplementedError("time interval not supported")
     }
@@ -54,8 +56,9 @@ class ParseDsl : HestParserBaseListener() {
         currentTime.timeDefinition.run { fromTime = ctx.fromTime.text; fromDate = ctx.fromDate.text; toTime = ctx.toTime.text; toDate = ctx.toDate.text }
     }
 
-    override fun enterOutput(ctx: HestParser.OutputContext?) {
+    override fun enterOutput(ctx: HestParser.OutputContext) {
         currentOutPut = OutPut()
+        currentOutPut.method = ctx.method.text
     }
 
     override fun exitOutput(ctx: HestParser.OutputContext) {
@@ -68,15 +71,15 @@ class ParseDsl : HestParserBaseListener() {
     }
 
     override fun enterPath(ctx: HestParser.PathContext) {
-        currentOutPut.deviceID = ctx.ID().text
+        currentOutPut.path = ctx.ID().text
     }
 
     override fun enterParameter(ctx: HestParser.ParameterContext) {
-        currentOutPut.params.add(Pair(ctx.parName.text, ctx.parValue.text))
+        currentOutPut.params.add(Pair(ctx.parName.text.replace("\"", ""), ctx.parValue.text.replace("\"", "")))
     }
 
     override fun exitVarpath(ctx: HestParser.VarpathContext) {
-        currentRule.dassignmentsFromDevice.add(Pair(ctx.varName.text, currentOutPut))
+        currentRule.assignmentsFromDevice.add(Pair(ctx.varName.text, currentOutPut))
     }
 
     override fun enterDataset(ctx: HestParser.DatasetContext) {
@@ -89,7 +92,7 @@ class ParseDsl : HestParserBaseListener() {
     }
 
     override fun enterTag(ctx: HestParser.TagContext) {
-        currentDataSet.tag = ctx.tagName.text
+        currentDataSet.tag = ctx.tagName.text.replace("\"","")
     }
 
     override fun enterName(ctx: HestParser.NameContext) {
@@ -136,6 +139,7 @@ class ParseDsl : HestParserBaseListener() {
     }
 
     override fun visitErrorNode(node: ErrorNode) {
+        println("swole")
         println("error $node")
     }
 

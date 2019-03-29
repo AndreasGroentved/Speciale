@@ -6,8 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import datatypes.iotdevices.*
 import datatypes.tangle.Tag
-import helpers.EncryptionHelper
-import helpers.PropertiesLoader
+import helpers.*
 import org.slf4j.simple.SimpleLoggerFactory
 import repositories.*
 import spark.Filter
@@ -27,7 +26,7 @@ class IoTAPI {
     private val ruleManager = RuleManager()
     private val seed = "TESEA9999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val seedTEST = "TESTQT999999999999999999999999999999999999999999999999999999999999999999999999999"
-    private val logger = SimpleLoggerFactory().getLogger("IoTAPI")
+    private val log = SimpleLoggerFactory().getLogger("IoTAPI")
     private val deviceManger = DeviceManager()
     private val gson = Gson()
     private val procurations = AcceptedProcurations()
@@ -42,6 +41,7 @@ class IoTAPI {
     private val deviceIdsToMessageChainId = DeviceIDsToMessageChainID()
     private val sentProcurations = SentProcurations()
 
+    //TODO alle metoder skal altid returnere valid JSON
     fun start() {
         deviceManger.startDiscovery()
         threadPool.scheduleAtFixedRate({ methodTask() }, 0, 20, TimeUnit.SECONDS)
@@ -64,8 +64,8 @@ class IoTAPI {
            }, 0, 20, TimeUnit.SECONDS)
            threadPool.scheduleAtFixedRate({ deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), "hest", seedTEST, tangleController) }, 0, 20, TimeUnit.SECONDS)*/
 
-        Spark.exception(Exception::class.java) { e, _, _ -> logger.error(e.toString()) }
-        Spark.after("/*") { request, _ -> logger.info(request.requestMethod() + " " + request.uri() + " " + request.body() + " " + request.params().toString()) }
+        Spark.exception(Exception::class.java) { e, _, _ -> log.e(e) }
+        Spark.after("/*") { request, _ -> LogI(request.requestMethod() + " " + request.uri() + " " + request.body() + " " + request.params().toString()) }
 
         options("/*") { request, response ->
             val accessControlRequestHeaders = request.headers("Access-Control-Request-Headers")
@@ -104,7 +104,6 @@ class IoTAPI {
         }
 
         get("/device") { request, response ->
-            println("devices")
             response.type("application/json")
             val params = request.queryString()
             val ret = deviceManger.getDevices(params)
@@ -112,6 +111,7 @@ class IoTAPI {
         }
 
         get("/device/procurations/pending") { _, response ->
+            //TODO wrap i ClientResponse
             response.type("application/json")
             val toJson = gson.toJson(getActivePendingProcurations(procurations.getAllProcurations()))
             toJson
@@ -151,14 +151,11 @@ class IoTAPI {
 
 
         get("/device/:id/:path") { request, response ->
-            println("path")
             val id = request.params(":id")
             val path = request.params(":path")
             val params = if (request.queryParams().isNotEmpty()) "?" + request.queryParams().map { request.params(it) } else ""
             response.type("application/json")
-            val ret = deviceManger.get(PostMessage("this", deviceID = id, path = path + params))
-            println(ret)
-            ret
+            deviceManger.get(PostMessage("this", deviceID = id, path = path + params))
         }
 
         post("/device/:id/:path")
@@ -166,15 +163,6 @@ class IoTAPI {
             val id = request.params(":id")
             val path = request.params(":path")
             deviceManger.post(PostMessage("this", id, "POST", path, getParameterMap(request.body()) as Map<String, String>))
-        }
-
-        get("/device/:id/price")
-        { request, _ ->
-            //TODO
-            val from = request.params(":from").toLong()
-            val to = request.params(":to").toLong()
-            val id = request.params(":id").toString()
-            deviceManger.getSavingsForDevice(from, to, id, tangleController)
         }
 
         get("/device/:id/time")
@@ -187,26 +175,17 @@ class IoTAPI {
             deviceManger.post(postMessage)
         }
 
-        get("/price") { request, _ ->
-            //todo
-            val from = request.params(":from").toLong()
-            val to = request.params(":to").toLong()
-            deviceManger.getAllSavings(from, to, tangleController)
-        }
-
         delete("/device/:id") { request, _ ->
             val id = request.params(":id")
             deviceManger.unregisterDevice(privateKey, seed, id, tangleController)
         }
 
         put("/device/:id") { request, _ ->
-            println("put")
             val id = request.params(":id")
             deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), id, seed, tangleController)
         }
 
         post("/tangle/permissioned/devices") { request, _ ->
-            // val params = getParameterMap(request.body())
             val postMessage = request.body().let {
                 gson.fromJson(it, PostMessage::class.java)
             }
@@ -229,6 +208,8 @@ class IoTAPI {
 
             }.let { ClientResponse(it) }.let { gson.toJson(it) }
         }
+
+
 
         get("/tangle/unpermissioned/devices") { _, _ ->
             val map = tangleController.getBroadcastsUnchecked(Tag.DSPEC).map {
@@ -258,6 +239,7 @@ class IoTAPI {
         get("/tangle/messages/:deviceID") { request, _ ->
             request.params("deviceID")?.let { gson.toJson(messageRepo.getMessages(it).sortedByDescending { m -> m.timestamp }) }
         }
+
         get("/tangle/messagechainid/:deviceID") { request, _ ->
             logger.info("AAA")
             request.params("deviceID")?.let { gson.toJson(sentProcurations.getProcurationDeviceID(it).messageChainID) }
@@ -267,11 +249,13 @@ class IoTAPI {
 
     private fun methodTask() {
         pendingMethodCalls += tangleController.getPendingMethodCalls(seed, procurations.getAllProcurations())
-        logger.info("$pendingMethodCalls")
+        log.i(pendingMethodCalls)
         pendingMethodCalls.forEach { handleMethodType(it) }
     }
 
+
     private fun methodResponseTask() {
+        //todo: definitely change to check signatures..
         val messagesUnchecked = tangleController.getMessagesUnchecked(seed, Tag.MR)
         messagesUnchecked.forEach {
             val responseWithDeviceID = gson.fromJson(it.substringBefore("__"), ResponseWithDeviceID::class.java)
@@ -339,7 +323,6 @@ class IoTAPI {
 
     private fun getParameterMap(body: String): Map<String, Any> {
         val mapType = object : TypeToken<Map<String, Any>>() {}.type
-        println(body)
         return gson.fromJson(body, mapType)
     }
 

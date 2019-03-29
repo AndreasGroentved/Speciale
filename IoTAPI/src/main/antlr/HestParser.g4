@@ -5,12 +5,12 @@ content: (dataset | rulee)* ;
 
 rulee: 'rule' '{' (config|variable|device|/*output*/ varpath|run)* '}';
 config: 'config' time;
-time: 'every' timeDefinition | 'once' timeDefinition | interval;
+time: ('every' timeDefinition | 'once' timeDefinition) interval?;
 timeDefinition: INTLIT unit='day' | INTLIT unit='hour' | INTLIT unit='min' | INTLIT unit='seconds' ;
-interval: 'from' fromDate = DATELIT fromTime = TIMELIT 'to' toDate=DATELIT toTime=TIMELIT 'every' timeDefinition; //TODO fra 'every' er tilføjet men ikke håndteret
+interval: 'from' fromDate = DATELIT fromTime = TIMELIT 'to' toDate=DATELIT toTime=TIMELIT; //TODO fra 'every' er tilføjet men ikke håndteret
 run: 'run' '{' condition=expression? output* /*varpath* */'}';
 eqOperator: '<' | '==' | '!=' | '<=' | '>' | '=>';
-output:  device path  ('post' | 'get') parameter*;
+output:  device path  method=('post' | 'get') parameter*;
 device: 'device' deviceName=ID;
 path: 'path' ID;
 parameter: parName=STRINGLIT parValue=varTypes;

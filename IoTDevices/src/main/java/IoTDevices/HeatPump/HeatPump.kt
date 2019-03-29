@@ -1,8 +1,11 @@
 package IoTDevices.HeatPump
 
+import IoTDevices.Discovery
 import IoTDevices.IoTDevice
 import datatypes.iotdevices.PostMessage
 import datatypes.iotdevices.ResourceMethod
+import helpers.LogE
+import helpers.LogI
 import org.eclipse.californium.core.CoapResource
 import org.eclipse.californium.core.network.CoapEndpoint
 import org.eclipse.californium.core.network.EndpointManager
@@ -15,11 +18,12 @@ import java.util.*
 val COAP_PORT = NetworkConfig.getStandard().getInt(NetworkConfig.Keys.COAP_PORT)
 
 fun main() {
-    val pump = HeatPump()
+    val pump = HeatPump("hest")
     pump.start()
+    Discovery(pump).startDiscovery()
 }
 
-class HeatPump : IoTDevice(UUID.randomUUID().toString()) {
+class HeatPump(id: String = UUID.randomUUID().toString()) : IoTDevice(id) {
     init {
         addEndpoints()
         add(
@@ -50,27 +54,27 @@ class HeatPump : IoTDevice(UUID.randomUUID().toString()) {
         }
 
         override fun handleGET(exchange: CoapExchange?) {
+            LogI("get temperature $temperature")
             exchange?.respond("{\"result\": $temperature}")
         }
 
         override fun handlePOST(exchange: CoapExchange?) {
+            LogI("posting temperature")
             try {
                 exchange?.let {
-                    println(exchange.requestText)
                     val fromJson = this@HeatPump.gson.fromJson(exchange.requestText, PostMessage::class.java)
-                    println(fromJson)
                     val temp = fromJson.params["temperature"]
-                    println(temp)
-                    temperature = Integer.parseInt(temp) ?: temperature
-                    exchange.respond("{\"result\":{\"temperature\": $temperature}}")
+                    LogI("new temperature $temp, old $temperature")
+                    temperature = Math.round(temp!!.toDouble()).toInt() ?: temperature
+                    exchange.respond("{\"result\": $temperature}")
                 }
             } catch (e: Exception) {
+                LogE(e.message)
                 when (e) {
                     is NumberFormatException -> exchange?.respond("{\"error\":\"Parameter is not a real number\"")
                     is IndexOutOfBoundsException -> exchange?.respond("{\"error\":\"Missing parameter diff\"")
                 }
                 exchange?.respond("{\"error\":\"Parameter is not a real number\"}")
-                e.printStackTrace()
             }
         }
     }

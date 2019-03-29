@@ -5,6 +5,7 @@ import {TangleDeviceSpecification} from "../TangleDeviceSpecification";
 import {Router} from "@angular/router";
 import {DeviceDataService} from "../device-data.service";
 import {DeviceSpecificationToAddressPair} from "../DeviceSpecificationToAddressPair";
+import {TangleDeviceSpecificationPairToMessageId} from "../TangleDeviceSpecificationPairToMessageId";
 
 @Component({
   selector: 'app-tangle-devices',
@@ -18,7 +19,7 @@ export class TangleDevicesComponent implements OnInit {
   }
 
   unPermissionedDevices: Array<DeviceSpecificationToAddressPair> = [];
-  permissionedDevices: Array<DeviceSpecificationToAddressPair> = [];
+  permissionedDevices: Array<TangleDeviceSpecificationPairToMessageId > = [];
 
 
   ngOnInit() {
@@ -35,8 +36,8 @@ export class TangleDevicesComponent implements OnInit {
     return device.deviceResources.map(value => ' ' + value.path.toString()).toString()
   }
 
-  navigateToStrangerDevice(deviceId, deviceSpecification: TangleDeviceSpecification, addressTo) {
-    this.deviceService.deviceSpecification = deviceSpecification;
+  navigateToStrangerDevice(deviceId, deviceSpecification: TangleDeviceSpecificationPairToMessageId , addressTo) {
+    this.deviceService.tangleDeviceSpecificationPairToMessageId  = deviceSpecification;
     this.deviceService.addressTo = addressTo;
     this.deviceService.id = deviceId;
     this.router.navigateByUrl('/stranger');
