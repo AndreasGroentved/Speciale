@@ -1,5 +1,5 @@
-<p class="text-center">
-  Rules<button (click)="collapsed = !collapsed">{{collapsed ? "←" : "↓"}}</button></p>
+<p style="font-size: 30px" class="text-center">
+  Rules<button class="btn btn-link" style="font-size: 30px" (click)="collapsed = !collapsed">{{collapsed ? "←" : "↓"}}</button></p>
 
 <div [ngbCollapse]="collapsed">
 <textarea class="text area-series" style="height: 1000px; width: 1000px"

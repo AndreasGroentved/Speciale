@@ -32,7 +32,7 @@ export class TangleDevicesComponent implements OnInit {
   }
 
   getCapabilities(device: DeviceSpecification) {
-    return device.deviceResources.map(value => value.path.toString()).toString()
+    return device.deviceResources.map(value => ' ' + value.path.toString()).toString()
   }
 
   navigateToStrangerDevice(deviceId, deviceSpecification: TangleDeviceSpecification, addressTo) {

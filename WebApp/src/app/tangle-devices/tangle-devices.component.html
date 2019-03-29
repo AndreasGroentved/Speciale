@@ -1,18 +1,21 @@
-<h1>Accessible devices</h1>
-<div *ngFor="let device of permissionedDevices; let i = index">
-  Id: {{device.first.deviceSpecification.id  }}
-  Capabilities
-  {{getCapabilities(device.first.deviceSpecification) }}
-  <button (click)="navigateToStrangerDevice(device.first.deviceSpecification.id,device.first,device.second)">More info
-  </button>
-</div>
-
+<div align="center">
+  <h1>Accessible devices</h1>
+  <table style="width: 50%" class="table text-center table-bordered table-info" *ngFor="let device of permissionedDevices; let i = index">
+  <tr>Id: {{device.first.deviceSpecification.id  }}</tr>
+  <tr>Capabilities: {{getCapabilities(device.first.deviceSpecification)}}</tr>
+  <button class="btn btn-primary" (click)="navigateToStrangerDevice(device.first.deviceSpecification.id,device.first,device.second)">More info</button>
+</table>
 <h1>Available devices</h1>
-<div *ngFor="let device of unPermissionedDevices; let i = index">
+<table style="width: 50%" class="table text-center table-bordered table-info" *ngFor="let device of unPermissionedDevices; let i = index">
+  <tr>Id: {{device.first.deviceSpecification.id  }}</tr>
+  <tr>Capabilities: {{getCapabilities(device.first.deviceSpecification)}}</tr>
+  <button class="btn btn-primary" (click)="navigateToInfo(device.first.deviceSpecification.id,device.first,device.second)">Request Access</button>
+</table>
+</div>
+<!--<div *ngFor="let device of unPermissionedDevices; let i = index">
   Id: {{device.first.deviceSpecification.id }}
   Capabilities
   {{getCapabilities(device.first.deviceSpecification) }}
-  <!--<a [routerLink]="('/tangle/'+device.deviceSpecification.id)" [state]="{ device: device }">More info</a>
-  -->
+  <a [routerLink]="('/tangle/'+device.deviceSpecification.id)" [state]="{ device: device }">More info</a>
   <button (click)="navigateToInfo(device.first.deviceSpecification.id,device.first,device.second)">More info</button>
-</div>
+</div> -->

@@ -223,14 +223,14 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
         }
     }
 
-    fun getPendingMethodCalls(seed: String, procurations: List<Procuration>): List<PostMessage> {
+    fun getPendingMethodCalls(seed: String, procurations: List<Procuration>): List<PostMessageHack> {
         logger.info("getting Pending Method Calls, seed: $seed procurations: $procurations")
         val transactions = getTransactions(seed, Tag.MC)
         val postMessages = transactions.mapNotNull { transaction ->
             getASCIIFromTrytes(transaction.signatureFragments)?.let { ascii ->
                 val signature = ascii.substringAfter("__")
                 val message = ascii.substringBefore("__")
-                Pair(PostMessageHack(gson.fromJson(message, PostMessage::class.java), ascii), signature)
+                Pair(PostMessageHack(gson.fromJson(message, PostMessage::class.java), ascii, transaction.address), signature)
             }
         }
         val verifiedMessages = postMessages.filter { m ->
@@ -238,6 +238,6 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
                 parseAndVerifyMessageStringKey(m.first.json, it)
             }
         }
-        return verifiedMessages.map { it.first.postMessage }
+        return verifiedMessages.map { it.first}
     }
 }

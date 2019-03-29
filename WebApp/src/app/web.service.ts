@@ -6,6 +6,7 @@ import {Procuration} from './Procuration';
 import {DeviceSpecificationToAddressPair} from "./DeviceSpecificationToAddressPair";
 import {TangleDeviceSpecification} from "./TangleDeviceSpecification";
 import {DeviceDataService} from "./device-data.service";
+import {DeviceMessage} from './DeviceMessage';
 
 @Injectable({
   providedIn: 'root'
@@ -167,6 +168,13 @@ export class WebService {
   rejectProcuration(messageChainID: string) {
     this.http.put(this.serverUrl + '/device/procuration/' + messageChainID + '/reject', '').subscribe(value => {
       console.log(value);
+    });
+  }
+
+  getMessages(deviceID: string, callback: ([Message]) => (void)) {
+    this.http.get(this.serverUrl + '/tangle/messages/' + deviceID).subscribe(value => {
+      console.log(value)
+      callback(value as [DeviceMessage]);
     });
   }
 

@@ -5,5 +5,5 @@ data class PostMessage(
 )
 
 data class PostMessageHack(
-    val postMessage: PostMessage, val json: String
+    val postMessage: PostMessage, val json: String, val addressFrom: String = ""
 )

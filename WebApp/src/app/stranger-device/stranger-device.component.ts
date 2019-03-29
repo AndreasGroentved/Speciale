@@ -1,6 +1,9 @@
 import {Component, OnInit} from '@angular/core';
 import {DeviceDataService} from "../device-data.service";
 import {DeviceResource} from "../DeviceResource";
+import {DeviceMessage} from '../DeviceMessage';
+import {WebService} from '../web.service';
+import {id} from '@swimlane/ngx-charts/release/utils';
 
 @Component({
   selector: 'app-stranger-device',
@@ -12,19 +15,23 @@ export class StrangerDeviceComponent implements OnInit {
 
   id: string;
   modules: Array<DeviceResource>;
+  messages: Array<DeviceMessage>;
+  collapsed = true;
 
-  constructor(private ds: DeviceDataService) {
+  constructor(private ds: DeviceDataService, private webservice: WebService) {
   }
 
   ngOnInit() {
     this.id = this.ds.id;
     console.log(this.ds.deviceSpecification);
-    let a = this.ds.deviceSpecification.deviceSpecification.deviceResources;
+    const a = this.ds.deviceSpecification.deviceSpecification.deviceResources;
     a.forEach(value =>
-      value.resourceMethods = value.resourceMethods.filter(value1 => value1.methodType != "GET")
+      value.resourceMethods = value.resourceMethods.filter(value1 => value1.methodType !== 'GET')
     );
     this.modules = this.ds.deviceSpecification.deviceSpecification.deviceResources;
-
+    this.webservice.getMessages(this.id, (messages => {
+      this.messages = messages;
+    }));
   }
 
 

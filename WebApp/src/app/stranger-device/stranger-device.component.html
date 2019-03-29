@@ -1,7 +1,20 @@
 <p class="text-center"><b class="display-3">{{id}}</b></p>
-<table class="table container h-100 d-flex justify-content-center" style="table-layout: fixed">
-  <tr class="row"><app-power [deviceId]=id></app-power></tr>
+<table class="table container d-flex justify-content-center" style="table-layout: fixed">
+  <tr class="row">
+    <app-power [deviceId]=id></app-power>
+  </tr>
   <tr class="row" *ngFor="let module of modules; let i = index">
     <app-iot-module [deviceResource]=module [ownedDevice]=false [deviceId]=id></app-iot-module>
   </tr>
 </table>
+<br>
+<div class="text-center">
+  <button class="btn btn-link" (click)="collapsed = !collapsed"><h1>Messages</h1></button>
+  <div [ngbCollapse]="collapsed">
+    <table style="word-break: break-all; white-space: normal" class="table container  align-items-center"
+           *ngFor="let message of messages">
+      <tr align="left" class="row">Timestamp: {{message.timestamp}}</tr>
+      <tr align="left" class="row">Message: {{message.text}}</tr>
+    </table>
+  </div>
+</div>
