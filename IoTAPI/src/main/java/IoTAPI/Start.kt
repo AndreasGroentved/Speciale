@@ -241,7 +241,6 @@ class IoTAPI {
         }
 
         get("/tangle/messagechainid/:deviceID") { request, _ ->
-            logger.info("AAA")
             request.params("deviceID")?.let { gson.toJson(sentProcurations.getProcurationDeviceID(it).messageChainID) }
         }
 
@@ -269,12 +268,12 @@ class IoTAPI {
 
     private fun procurationTask() {
         tangleController.getMessagesUnchecked(seed, Tag.PROACK)
-        logger.info("$pendingMethodCalls")
+        LogI("$pendingMethodCalls")
         pendingMethodCalls.forEach { handleMethodType(it) }
     }
 
     private fun handleMethodType(message: PostMessageHack) {
-        logger.info("handling messsage: $message")
+        LogI("handling messsage: $message")
         val procuration = procurations.getProcuration(message.postMessage.messageChainID)
         val verifiedSignature = procuration?.let {
             EncryptionHelper.verifySignatureBase64(
@@ -283,7 +282,7 @@ class IoTAPI {
             )
         }
         if(verifiedSignature == null || !verifiedSignature) {
-            logger.info("cannt verify message")
+            LogI("cannt verify message")
             return
         }
         val result = when (message.postMessage.type.toLowerCase()) {
