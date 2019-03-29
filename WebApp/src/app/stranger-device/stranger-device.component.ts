@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
-import {DeviceDataService} from "../device-data.service";
-import {DeviceResource} from "../DeviceResource";
+import {DeviceDataService} from '../device-data.service';
+import {DeviceResource} from '../DeviceResource';
 import {DeviceMessage} from '../DeviceMessage';
 import {WebService} from '../web.service';
 import {id} from '@swimlane/ngx-charts/release/utils';
@@ -14,6 +14,7 @@ import {id} from '@swimlane/ngx-charts/release/utils';
 export class StrangerDeviceComponent implements OnInit {
 
   id: string;
+  messageChainID: string;
   modules: Array<DeviceResource>;
   messages: Array<DeviceMessage>;
   collapsed = true;
@@ -32,6 +33,10 @@ export class StrangerDeviceComponent implements OnInit {
     this.webservice.getMessages(this.id, (messages => {
       this.messages = messages;
     }));
+    this.webservice.getMessageChainID(this.id, (value) => {
+      this.messageChainID = value;
+    });
+
   }
 
 

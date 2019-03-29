@@ -3,9 +3,9 @@ import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Device} from './Device';
 import {DeviceSpecification} from './DeviceSpecification';
 import {Procuration} from './Procuration';
-import {DeviceSpecificationToAddressPair} from "./DeviceSpecificationToAddressPair";
-import {TangleDeviceSpecification} from "./TangleDeviceSpecification";
-import {DeviceDataService} from "./device-data.service";
+import {DeviceSpecificationToAddressPair} from './DeviceSpecificationToAddressPair';
+import {TangleDeviceSpecification} from './TangleDeviceSpecification';
+import {DeviceDataService} from './device-data.service';
 import {DeviceMessage} from './DeviceMessage';
 
 @Injectable({
@@ -58,7 +58,7 @@ export class WebService {
     });
   }
 
-  postDeviceValue(deviceId: string, isOwned: boolean = true, path: string, postValue, callback: (val) => (void)) {
+  postDeviceValue(deviceId: string, isOwned: boolean = true, path: string, messageChainID: string = '', postValue, callback: (val) => (void)) {
     for (var key in postValue) {
       postValue[key] = postValue[key].toString();
     }
@@ -68,15 +68,18 @@ export class WebService {
         callback(results['result']);
       });
     } else {
+      console.log("aaaaaa");
+      console.log(messageChainID);
       let post = {
         deviceID: deviceId,
-        type: "POST",
+        type: 'POST',
         path: path,
         addressTo: this.ds.addressTo,
-        params: postValue
+        params: postValue,
+        messageChainID: messageChainID
       };
       console.log(JSON.stringify(post));
-      this.http.post(this.serverUrl + "/tangle/permissioned/devices", JSON.stringify(post)).subscribe(results => {
+      this.http.post(this.serverUrl + '/tangle/permissioned/devices', JSON.stringify(post)).subscribe(results => {
         callback(results['result']);
       });
     }
@@ -120,14 +123,14 @@ export class WebService {
       console.log(value);
       if (value == null) return;
       callback(value['result'] as [DeviceSpecificationToAddressPair]);
-    })
+    });
   }
 
   getPermissionedTangleDevices(callback: (devices: [DeviceSpecificationToAddressPair]) => (void)) {
     this.http.get(this.serverUrl + '/tangle/permissioned/devices').subscribe(value => {
       console.log(value);
       callback(value['result'] as [DeviceSpecificationToAddressPair]);
-    })
+    });
   }
 
 
@@ -173,9 +176,15 @@ export class WebService {
 
   getMessages(deviceID: string, callback: ([Message]) => (void)) {
     this.http.get(this.serverUrl + '/tangle/messages/' + deviceID).subscribe(value => {
-      console.log(value)
+      console.log(value);
       callback(value as [DeviceMessage]);
     });
   }
 
+  getMessageChainID(deviceID: string, callback: (string) => (void)) {
+    this.http.get(this.serverUrl + '/tangle/messagechainid/' + deviceID).subscribe(value => {
+      console.log(value);
+      callback(value as string);
+    });
+  }
 }

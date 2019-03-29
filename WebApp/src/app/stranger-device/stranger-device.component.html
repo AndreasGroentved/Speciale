@@ -4,7 +4,7 @@
     <app-power [deviceId]=id></app-power>
   </tr>
   <tr class="row" *ngFor="let module of modules; let i = index">
-    <app-iot-module [deviceResource]=module [ownedDevice]=false [deviceId]=id></app-iot-module>
+    <app-iot-module [deviceResource]=module [ownedDevice]=false [deviceId]=id [messageChainID]="messageChainID"></app-iot-module>
   </tr>
 </table>
 <br>
