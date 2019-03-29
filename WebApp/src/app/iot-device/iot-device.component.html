@@ -1,11 +1,7 @@
-<div>
-  {{id}}
-
-
-  <app-power [deviceId]=id></app-power>
-  <ul>
-    <li *ngFor="let module of modules; let i = index">
+<p class="text-center"><b class="display-3">{{id}}</b></p>
+<table class="table container h-100 d-flex justify-content-center" style="table-layout: fixed">
+  <tr class="row"><app-power [deviceId]=id></app-power></tr>
+  <tr class="row" *ngFor="let module of modules; let i = index">
       <app-iot-module [deviceResource]=module [deviceId]=id></app-iot-module>
-    </li>
-  </ul>
-</div>
+  </tr>
+</table>

@@ -153,9 +153,7 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
         return try {
             iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null,
-                iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), false, false, null
-
-            )
+                null, false, false, null)
         } catch (e: Exception) {
             logger.error(e.toString())
             when (e) {

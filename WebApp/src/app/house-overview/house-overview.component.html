@@ -1,17 +1,22 @@
-<div class="jumbotron" style="height: 100%; width:100%">
+<div style="height: 100%">
   <p class="text-center"><b class="display-1">House </b></p>
-  <table class="table container h-100 d-flex justify-content-center">
-    <tbody>
-    <td class="col">
-      <iotdevices></iotdevices>
-    </td>
-    <td class="col">
-      <app-procuration></app-procuration>
-    </td>
-    <tr><a routerLink="/tangle" routerLinkActive="active">Other Devices</a></tr>
+  <table class="table container h-100 d-flex justify-content-center" style="table-layout: fixed">
+    <tbody style="min-width: 100%">
+    <tr class="row">
+      <td class="col-lg" align="left">
+        <iotdevices></iotdevices>
+        <a style="font-size: 30px" routerLink="/tangle" routerLinkActive="active">Other Devices</a>
+      </td>
+      <td class="col-lg" align="right">
+        <p style="font-size: 30px">Procurations</p>
+        <app-procuration></app-procuration>
+      </td>
+    </tr>
+    <tr class="row">
+      <td class="col-lg" align="middle">
+        <app-rule></app-rule>
+      </td>
+    </tr>
     </tbody>
   </table>
-  <div class="container h-100 d-flex justify-content-center">
-    <app-rule></app-rule>
-  </div>
 </div>

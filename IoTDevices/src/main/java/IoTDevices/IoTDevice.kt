@@ -29,7 +29,7 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
             )
         )
         add(
-            TimeResource(), listOf(ResourceMethod("GET", mapOf("time" to "List<String, String>"), "Gets time in map of hour to on time"))
+            //TimeResource(), listOf(ResourceMethod("GET", mapOf("time" to "List<String, String>"), "Gets time in map of hour to on time"))
             //TODO
         )
     }

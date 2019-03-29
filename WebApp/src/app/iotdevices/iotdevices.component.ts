@@ -22,11 +22,15 @@ export class IotdevicesComponent implements OnInit {
 
   updateDeviceList() {
     this.webService.getDevices(true, devices => {
-      this.registeredDevices = devices
+      this.registeredDevices = devices;
+      console.log(this.registeredDevices)
+
     });
     this.webService.getDevices(false, devices => {
-      this.unregisteredDevices = devices
-    })
+      this.unregisteredDevices = devices;
+      console.log(this.unregisteredDevices)
+
+    });
   }
 
   registerDevice(id: string) {

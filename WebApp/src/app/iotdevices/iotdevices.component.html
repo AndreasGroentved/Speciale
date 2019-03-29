@@ -1,20 +1,17 @@
-<p>
-  Devices
-</p>
-<p>
+<p style="font-size: 30px">
   Registered devices
 </p>
 <ul>
   <li *ngFor="let device of registeredDevices; let i = index">
     <a routerLink="/device/{{device.id}}" routerLinkActive="active">{{device.id}}</a>
-    <button class="btn btn-success" (click)="unregisterDevice(device.id)">Unregister</button>
+    <button style="margin-left: 1vw" class="btn btn-success" (click)="unregisterDevice(device.id)">Unregister</button>
   </li>
 </ul>
 
-<p>Unregistered devices</p>
+<p style="font-size: 30px">Unregistered devices</p>
 <ul>
   <li *ngFor="let device of unregisteredDevices; let i = index">
     <a routerLink="/device/{{device.id}}" routerLinkActive="active">{{device.id}}</a>
-    <button class="btn btn-success" (click)="registerDevice(device.id)">Register</button>
+    <button style="margin-left: 1vw" class="btn btn-success" (click)="registerDevice(device.id)">Register</button>
   </li>
 </ul>

@@ -1,41 +1,45 @@
-<div><b>accepted</b>
-  <button (click)="acceptedCollapsed = !acceptedCollapsed">{{acceptedCollapsed ? "←" : "↓"}}</button>
+<div><a style="font-size: 30px">accepted
+  <button style="font-size: 30px" class="btn btn-link"
+          (click)="acceptedCollapsed = !acceptedCollapsed">{{acceptedCollapsed ? "←" : "↓"}}</button>
+</a>
   <div [ngbCollapse]="acceptedCollapsed">
-    <br>
-    <div *ngFor="let proc of accepted">
-      <div>DeviceID: {{proc.deviceID}}</div>
-      <div>Requestee Public Key: {{proc.recipientPublicKey}}</div>
-      <div>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</div>
-      <br>
-    </div>
+    <table class="table table-bordered table-hover" style=" border: 2px solid #ff947f; background-color: #ff7faa"
+           *ngFor="let proc of accepted">
+      <tr>DeviceID: {{proc.deviceID}}</tr>
+      <tr>Requestee Public Key: {{proc.recipientPublicKey}}</tr>
+      <tr>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</tr>
+    </table>
   </div>
 </div>
 <div>
-  <b>pending</b>
-  <button (click)="pendingCollapsed = !pendingCollapsed">{{pendingCollapsed ? "←" : "↓"}}</button>
+  <a style="font-size: 30px;">pending
+    <button style="font-size: 30px" class="btn btn-link"
+            (click)="pendingCollapsed = !pendingCollapsed">{{pendingCollapsed ? "←" : "↓"}}</button>
+  </a>
   <div [ngbCollapse]="pendingCollapsed">
-    <br>
-    <div *ngFor="let proc of pending">
-      <div>{{proc.deviceID}}</div>
-      <div>{{proc.recipientPublicKey}}</div>
-      <div>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</div>
-      <div>
+    <table class="table table-bordered table-hover" style=" border: 2px solid #ff947f; background-color: #ff7faa"
+           *ngFor="let proc of pending">
+      <tr>DeviceID: {{proc.deviceID}}</tr>
+      <tr>Requestee Public Key: {{proc.recipientPublicKey}}</tr>
+      <tr>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</tr>
+      <tr>
         <button class="btn btn-success" (click)="this.acceptProc(proc.messageChainID)">ACCEPT</button>
-        <button class="btn btn-reject" (click)="this.rejectProc(proc.messageChainID)">REJECT</button>
-      </div>
-      <br>
-    </div>
+        <button class="btn btn-danger" (click)="this.rejectProc(proc.messageChainID)">REJECT</button>
+      </tr>
+    </table>
   </div>
 </div>
-<div><b>expired</b>
-  <button (click)="expiredCollapsed = !expiredCollapsed">{{expiredCollapsed ? "←" : "↓"}}</button>
+<div><a style="font-size: 30px">expired
+  <button style="font-size: 30px" class="btn btn-link"
+          (click)="expiredCollapsed = !expiredCollapsed">{{expiredCollapsed ? "←" : "↓"}}</button>
+</a>
   <div [ngbCollapse]="expiredCollapsed">
     <br>
-    <div *ngFor="let proc of expired">
-      <div>{{proc.deviceID}}</div>
-      <div>{{proc.recipientPublicKey}}</div>
-      <div>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</div>
-      <br>
-    </div>
+    <table class="table table-bordered table-hover" style=" border: 2px solid #ff947f; background-color: #ff7faa"
+           *ngFor="let proc of expired">
+      <tr>DeviceID: {{proc.deviceID}}</tr>
+      <tr>Requestee Public Key: {{proc.recipientPublicKey}}</tr>
+      <tr>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</tr>
+    </table>
   </div>
 </div>
