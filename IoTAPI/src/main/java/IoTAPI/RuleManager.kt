@@ -84,6 +84,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
             override fun syntaxError(recognizer: Recognizer<*, *>, offendingSymbol: Any, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException) {
                 error = msg
                 LogE("error occured")
+                LogE(msg)
             }
 
             override fun reportAmbiguity(recognizer: Parser, dfa: DFA, startIndex: Int, stopIndex: Int, exact: Boolean, ambigAlts: BitSet, configs: ATNConfigSet) {}
@@ -101,8 +102,10 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
             content.rules.forEach { scheduleTask(it) }
             ClientResponse("success")
         } catch (e: Exception) {
+            e.printStackTrace()
+            println(hParse.numberOfSyntaxErrors)
             LogE(e)
-            ErrorResponse(error)
+            ErrorResponse(e.message ?: "unknown error")
         }
     }
 
