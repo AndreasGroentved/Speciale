@@ -7,7 +7,6 @@ import {AppComponent} from './app.component';
 import {IotdevicesComponent} from './iotdevices/iotdevices.component';
 import {SavingsComponent} from './savings/savings.component';
 import {PowerComponent} from './power/power.component';
-import {PriceComponent} from './price/price.component';
 import {IotDeviceModuleComponent} from './iotdevice-module/iot-device-module.component';
 import {RouterModule, Routes} from '@angular/router';
 import {IotDeviceComponent} from './iot-device/iot-device.component';
@@ -43,7 +42,6 @@ const appRoutes: Routes = [
     IotdevicesComponent,
     SavingsComponent,
     PowerComponent,
-    PriceComponent,
     IotDeviceModuleComponent,
     IotDeviceComponent,
     HouseOverviewComponent,
