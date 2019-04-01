@@ -114,7 +114,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
             val publicKey = if (dataSet.tag == "EN") "energinetPublicKey" else "nordPoolPublicKey"
             val a = tangleController.getNewestBroadcast(dataSet.tag, publicKey)!!
             val value = getDataFromPathAndDataSet(
-                tangleController.getASCIIFromTrytes(a.signatureFragments)!!.substringBefore("__"), (it.value as? StringType)?.stringVal?.replace("\"", "")
+                a, (it.value as? StringType)?.stringVal?.replace("\"", "")
                     ?: throw RuntimeException("invalid path")
             )
             variables[it.key] = getExpressionFromAnyValue(value)

@@ -4,7 +4,7 @@ import org.dizitart.no2.Nitrite
 import org.dizitart.no2.objects.ObjectRepository
 import org.dizitart.no2.objects.filters.ObjectFilters
 
-class ProcessedTransactions {
+object ProcessedTransactions {
     private val ptHashRepo: ObjectRepository<Hash>
 
     init {

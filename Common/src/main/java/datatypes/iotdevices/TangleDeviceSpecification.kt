@@ -1,4 +1,3 @@
 package datatypes.iotdevices
 
-data class TangleDeviceSpecification(val publicKey: String, val deviceSpecification: DeviceSpecification
-)
+data class TangleDeviceSpecification(val publicKey: String = "", val deviceSpecification: DeviceSpecification = DeviceSpecification())

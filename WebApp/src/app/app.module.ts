@@ -20,6 +20,7 @@ import {ProcurationComponent} from './procuration/procuration.component';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 import {RequestDeviceComponent} from './request-device/request-device.component';
 import {StrangerDeviceComponent} from './stranger-device/stranger-device.component';
+import { NavbarComponent } from './navbar/navbar.component';
 
 
 const appRoutes: Routes = [
@@ -51,7 +52,8 @@ const appRoutes: Routes = [
     RuleComponent,
     TangleDevicesComponent,
     RequestDeviceComponent,
-    StrangerDeviceComponent
+    StrangerDeviceComponent,
+    NavbarComponent
   ],
   imports: [
     NgbModule,

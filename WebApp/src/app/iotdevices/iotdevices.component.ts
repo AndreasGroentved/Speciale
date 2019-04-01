@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
-import {WebService} from "../web.service";
-import {Device} from "../Device";
+import {WebService} from '../web.service';
+import {Device} from '../Device';
 
 @Component({
   selector: 'iotdevices',
@@ -17,42 +17,38 @@ export class IotdevicesComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.updateDeviceList()
+    this.updateDeviceList();
   }
 
   updateDeviceList() {
     this.webService.getDevices(true, devices => {
       this.registeredDevices = devices;
-      console.log(this.registeredDevices)
+      console.log(this.registeredDevices);
 
     });
     this.webService.getDevices(false, devices => {
       this.unregisteredDevices = devices;
-      console.log(this.unregisteredDevices)
+      console.log(this.unregisteredDevices);
 
     });
   }
 
   registerDevice(id: string) {
     this.webService.addRemoveDevice(id, true, val => {
-      if (!val.hasOwnProperty("error")) {
-        console.log("device registered");
+        console.log('device registered');
         this.updateDeviceList();
-      } else {
-        console.log("error registering device")
-      }
-    })
+    });
   }
 
   unregisterDevice(id: string) {
     this.webService.addRemoveDevice(id, false, val => {
-      if (!val.hasOwnProperty("error")) {
-        console.log("device unregistered");
+      if (!val.hasOwnProperty('error')) {
+        console.log('device unregistered');
         this.updateDeviceList();
       } else {
-        console.log("error unregistering device")
+        console.log('error unregistering device');
       }
-    })
+    });
   }
 
 }

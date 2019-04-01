@@ -9,7 +9,6 @@ import datatypes.ErrorResponse
 import datatypes.iotdevices.*
 import datatypes.tangle.Tag
 import helpers.*
-import org.slf4j.simple.SimpleLoggerFactory
 import repositories.*
 import spark.*
 import spark.Spark.*
@@ -24,9 +23,8 @@ import java.util.concurrent.TimeUnit
 class IoTAPI {
     private val hs = HouseRules()
     private val ruleManager = RuleManager()
-    private val seed = "TESEA9999999999999999999999999999999999999999999999999999999999999999999999999999"
+    private val seed = "TEEEA9999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val seedTEST = "TESTQT999999999999999999999999999999999999999999999999999999999999999999999999999"
-    private val log = SimpleLoggerFactory().getLogger("IoTAPI")
     private val deviceManger = DeviceManager()
     private val gson = Gson()
     private val procurations = AcceptedProcurations()
@@ -42,8 +40,6 @@ class IoTAPI {
 
     //TODO alle metoder skal altid returnere valid JSON
 
-
-    val requests = mutableMapOf<String, Pair<TangleDeviceSpecification, String>>()
     val transformer = JsonTransformer()
 
 
@@ -81,12 +77,8 @@ class IoTAPI {
             privateKey = EncryptionHelper.loadPrivateECKeyFromProperties("householdPrivateKey")
             publicKey = EncryptionHelper.loadPublicECKeyFromProperties("householdPublicKey")
         }
-        /*   threadPool.scheduleAtFixedRate({
-               requestProcuration(Procuration(UUID.randomUUID().toString(), "hest", BigInteger(publicKey.encoded), Date(), Date(1654523307558)), tangleController.getTestAddress(seed), tangleController, privateKey)
-           }, 0, 20, TimeUnit.SECONDS)
-           threadPool.scheduleAtFixedRate({ deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), "hest", seedTEST, tangleController) }, 0, 20, TimeUnit.SECONDS)*/
 
-        Spark.exception(Exception::class.java) { e, _, _ -> log.e(e) }
+        Spark.exception(Exception::class.java) { e, _, _ -> LogE(e) }
         Spark.after("/*") { request, filter ->
             LogI(request.requestMethod() + " " + request.uri() + " " + request.body() + " " + request.params().toString())
         }
@@ -123,8 +115,6 @@ class IoTAPI {
             val rule = (getParameterMap(request.body())as? Map<String, String>?)?.get("rules")
                 ?: return@Route ErrorResponse("invalid json")
             hs.saveRules(rule)
-            println("rule yo")
-            println(rule)
             ruleManager.updateDsl(rule)
         })
 
@@ -135,7 +125,6 @@ class IoTAPI {
         })
 
         get("/device/procurations/pending", Route { _, response ->
-            //TODO wrap i ClientResponse
             getActivePendingProcurations(procurations.getAllProcurations())
         })
 
@@ -154,11 +143,11 @@ class IoTAPI {
         })
 
         get("/device/procurations/accepted", Route { _, response ->
-            procurations.getAllProcurations()
+            procurations.getAcceptedProcurations()
         })
 
         get("/device/procurations/expired", Route { _, response ->
-            getExpiredProcurations()
+            procurations.getExpiredProcurations()
         })
 
 
@@ -191,7 +180,7 @@ class IoTAPI {
 
         delete("/device/:id", Route { request, _ ->
             val id = request.params(":id")
-            deviceManger.unregisterDevice(privateKey, seed, id, tangleController)
+            deviceManger.unregisterDevice(privateKey, BigInteger(publicKey.encoded).toString(), seed, id, tangleController)
         })
 
         put("/device/:id", Route { request, _ ->
@@ -207,6 +196,7 @@ class IoTAPI {
             ClientResponse("success")
         })
 
+        val requests = mutableMapOf<String, Pair<TangleDeviceSpecification, String>>()
 
         get("/tangle/permissioned/devices", Route { request: Request, response: Response ->
             tangleController.getBroadcastsUnchecked(Tag.PROACK).mapNotNull {
@@ -217,16 +207,24 @@ class IoTAPI {
             }.let { ClientResponse(it) }
         })
 
-
-
-
-
-
+        //TODO: lav repository på kendte devices og implementer hash igen, ellers bliver det her sløvt
         get("/tangle/unpermissioned/devices", Route { _, _ ->
-            val map = tangleController.getBroadcastsUnchecked(Tag.DSPEC).map {
+            val registered = tangleController.getBroadcastsUnchecked(Tag.DSPEC).mapNotNull {
                 Pair(gson.fromJson(it.first.substringBefore("__"), TangleDeviceSpecification::class.java), it.second)
             }
-            ClientResponse(map)
+            val unregistered = tangleController.getBroadcastsUnchecked(Tag.XDSPEC).mapNotNull {
+                Triple(gson.fromJson(it.first.substringBefore("__"), TangleDeviceSpecification::class.java), it.first.substringBefore("__"), it.first.substringAfter("__"))
+            }
+            val filtered = registered.filter { r ->
+                !unregistered.filter { u ->
+                    r.first.deviceSpecification.id == u.first.deviceSpecification.id && r.first.publicKey == u.first.publicKey
+                }.any {
+                    EncryptionHelper.verifySignatureBase64(
+                        EncryptionHelper.loadPublicECKeyFromBigInteger(BigInteger(r.first.publicKey)), it.second, it.third
+                    )
+                }
+            }
+            ClientResponse(filtered)
         })
 
 
@@ -241,7 +239,7 @@ class IoTAPI {
             requestProcuration(
                 Procuration(
                     messageId, params.getValue("deviceId"), BigInteger(publicKey.encoded),
-                    Date(dateTo), Date(dateFrom)
+                    Date(dateFrom), Date(dateTo)
                 ), params.getValue("addressTo"), tangleController, privateKey
             ).let { ClientResponse("yolo") }
         })
@@ -260,13 +258,12 @@ class IoTAPI {
 
     private fun methodTask() {
         pendingMethodCalls += tangleController.getPendingMethodCalls(seed, procurations.getAllProcurations())
-        log.i(pendingMethodCalls)
+        LogI(pendingMethodCalls)
         pendingMethodCalls.forEach { handleMethodType(it) }
     }
 
 
     private fun methodResponseTask() {
-        //todo: definitely change to check signatures..
         val messagesUnchecked = tangleController.getMessagesUnchecked(seed, Tag.MR)
         messagesUnchecked.forEach {
             val responseWithDeviceID = gson.fromJson(it.substringBefore("__"), ResponseWithDeviceID::class.java)
@@ -280,8 +277,7 @@ class IoTAPI {
 
     private fun procurationTask() {
         tangleController.getMessagesUnchecked(seed, Tag.PROACK)
-        LogI("$pendingMethodCalls")
-        pendingMethodCalls.forEach { handleMethodType(it) }
+        //todo?
     }
 
     private fun handleMethodType(message: PostMessageHack) {
@@ -294,7 +290,7 @@ class IoTAPI {
             )
         }
         if (verifiedSignature == null || !verifiedSignature) {
-            LogE("cannot verify message")
+            LogW("cannot verify message")
             return
         }
         val result = when (message.postMessage.type.toLowerCase()) {
@@ -346,23 +342,9 @@ class IoTAPI {
                 null
             }
         }
-        pendingProcurations.addAll(procurations.filter { p -> accepted.firstOrNull { a -> p.messageChainID == a.messageChainID } == null }.filter { p -> p.dateTo >= Date() })
+        pendingProcurations.addAll(procurations.filter { p -> accepted.firstOrNull { a -> p.messageChainID == a.messageChainID } == null })
         return pendingProcurations
     }
-
-    private fun getExpiredProcurations(): List<Procuration> {
-        /*
-        val messages = tangleController.getMessagesUnchecked(seed, Tag.PROACK)
-        return messages.mapNotNull { m ->
-            try {
-                gson.fromJson(m, Procuration::class.java)
-            } catch (e: Exception) {
-                null
-            }
-        }.filter { p -> p.dateTo <= Date() } */
-        return procurations.getAllProcurations().filter { p -> p.dateTo <= Date() }
-    }
-
 }
 
 class JsonTransformer : ResponseTransformer {

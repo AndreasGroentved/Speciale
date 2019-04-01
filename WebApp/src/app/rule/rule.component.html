@@ -6,7 +6,8 @@
 
 <div [ngbCollapse]="collapsed">
   <div style="width: 1000px" class="alert alert-danger alert-dismissible" [hidden]="errorText === ''" role="alert">{{errorText}}</div>
-  <textarea class="text area-series" style="height: 1000px; width: 1000px"
+  <textarea onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}"
+            class="text area-series" style="height: 1000px; width: 1000px"
             [(ngModel)]="inputText"></textarea>
   <br>
   <button class="btn btn-success" (click)="update()">Update</button>

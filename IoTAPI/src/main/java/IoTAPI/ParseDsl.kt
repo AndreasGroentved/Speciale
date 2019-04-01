@@ -4,8 +4,6 @@ import hest.HestParser
 import hest.HestParserBaseListener
 import org.antlr.v4.runtime.tree.ErrorNode
 
-//TODO double qoutes i grammar
-
 data class TimeDefinition(var fromDate: String? = null, var fromTime: String? = null, var toDate: String? = null, var toTime: String? = null)
 data class Time(var pattern: String = "once", var count: Int = 0, var unit: String = "seconds", var timeDefinition: TimeDefinition = TimeDefinition())
 data class Rule(var steps: MutableList<Expression> = mutableListOf(), var time: Time = Time(), var assignmentsFromDevice: MutableList<Pair<String, OutPut>> = mutableListOf(), var deviceCalls: MutableList<OutPut> = mutableListOf())

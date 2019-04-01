@@ -7,19 +7,18 @@ import datatypes.iotdevices.Procuration
 import datatypes.tangle.Tag
 import helpers.EncryptionHelper
 import helpers.LogE
+import helpers.LogI
 import helpers.PropertiesLoader
-import helpers.i
 import jota.IotaAPI
 import jota.dto.response.SendTransferResponse
 import jota.error.ArgumentException
 import jota.model.Transaction
 import jota.model.Transfer
 import jota.utils.TrytesConverter
-import org.slf4j.Logger
-import org.slf4j.simple.SimpleLoggerFactory
+import repositories.ProcessedTransactions
 import java.math.BigInteger
 
-class TangleController(private val logger: Logger = SimpleLoggerFactory().getLogger("TangleController")) {
+class TangleController {
 
     private lateinit var nodeAddress: String
     private lateinit var nodePort: String
@@ -27,14 +26,14 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
     private var nodeMinWeightMagnitude = 14
     private lateinit var iotaAPI: IotaAPI
     private val gson = Gson()
-    // private val pt = ProcessedTransactions()
+    private val pt = ProcessedTransactions
 
     init {
         initIotaAPI(loadProperties())
     }
 
     private fun loadProperties(): Boolean {
-        logger.info("Loading properties")
+        LogI("Loading properties")
         val properties = PropertiesLoader.instance
         nodeAddress = properties.getProperty("nodeAddress")
         nodePort = properties.getProperty("nodePort")
@@ -45,23 +44,21 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
 
     private fun initIotaAPI(isDefault: Boolean) {
         if (!isDefault) {
-            logger.info("Building Iota API wrapper with custom properties")
+            LogI("Building Iota API wrapper with custom properties")
             iotaAPI = IotaAPI.Builder().host(nodeAddress).port(nodePort).protocol("http").build() //whatever is in the config
         } else {
-            logger.info("Building Iota API wrapper with default values")
+            LogI("Building Iota API wrapper with default values")
             IotaAPI.Builder().build() //https://nodes.devnet.iota.org:443
         }
 
     }
 
-    fun getTestAddress(seed: String) = iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first()
-
     fun getTransactions(seed: String, tag: Tag?): List<Transaction> {
-        logger.info("getTransactions for seed: $seed")
+        LogI("getTransactions for seed: $seed")
         val transferResponse = try {
             iotaAPI.getTransfers(seed, nodeSecurity, 0, 99, false)
         } catch (e: ArgumentException) {
-            logger.error("Invalid parameters supplied for getTransactions, likely invalid seed", e)
+            LogE("Invalid parameters supplied for getTransactions, likely invalid seed \n$e")
             null
         }
         var transactions = transferResponse?.transfers?.flatMap { it.transactions } ?: listOf()
@@ -70,8 +67,8 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
                 getASCIIFromTrytes(it.tag) == tag.name
             }
         }
-        /*     transactions = transactions.filter { !pt.hashStoredInDB(it.hash) }
-             transactions.forEach { pt.saveHash(it.hash) }*/
+        transactions = transactions.filter { !pt.hashStoredInDB(it.hash) }
+        transactions.forEach { pt.saveHash(it.hash) }
         return transactions
     }
 
@@ -80,18 +77,11 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
         return transactions.mapNotNull { getASCIIFromTrytes(it.signatureFragments) }
     }
 
-    fun getNewestMessageSortedByTimeStamp(seed: String, tag: Tag?): String {
-        val transactions = getTransactions(seed, tag)
-        return transactions
-            .sortedBy { it.timestamp }
-            .mapNotNull { getASCIIFromTrytes(it.signatureFragments) }.first()
-    }
-
     fun attachBroadcastToTangle(seed: String, message: String, tag: Tag): SendTransferResponse? = attachBroadcastToTangle(seed, message, tag.name)
 
 
     fun attachBroadcastToTangle(seed: String, message: String, tag: String): SendTransferResponse? {
-        logger.info("Attaching transaction to tangle, seed: $seed\nmessage: $message\ntag:$tag")
+        LogI("Attaching transaction to tangle, seed: $seed\nmessage: $message\ntag:$tag")
         val messageTrytes = TrytesConverter.asciiToTrytes(message)
         val tagTrytes = TrytesConverter.asciiToTrytes(tag)
         val transfer =
@@ -104,13 +94,13 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
 /*            r?.let { it.transactions.forEach { pt.saveHash(it.hash) } }*/
             r
         } catch (e: Exception) {
-            logger.error(e.toString())
+            LogE(e.toString())
             when (e) {
                 is ArgumentException -> {
-                    logger.error("Invalid parameters supplied for sendTransfer");null
+                    LogE("Invalid parameters supplied for sendTransfer");null
                 }
                 is IllegalStateException -> {
-                    logger.error("Cannot attach message to Tangle"); null
+                    LogE("Cannot attach message to Tangle"); null
                 }
                 else -> throw e
             }
@@ -118,7 +108,7 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
     }
 
     fun attachTransactionToTangle(seed: String, message: String, tag: Tag, addressTo: String): SendTransferResponse? {
-        logger.i("Attaching transaction to tangle, seed: $seed\nmessage: $message\ntag:$tag")
+        LogI("Attaching transaction to tangle, seed: $seed\nmessage: $message\ntag:$tag")
         val messageTrytes = TrytesConverter.asciiToTrytes(message)
         val tagTrytes = TrytesConverter.asciiToTrytes(tag.name)
         val transfer =
@@ -132,10 +122,10 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
         } catch (e: Exception) {
             when (e) {
                 is ArgumentException -> {
-                    logger.error("Invalid parameters supplied for sendTransfer");null
+                    LogE("Invalid parameters supplied for sendTransfer");null
                 }
                 is IllegalStateException -> {
-                    logger.error("Cannot attach message to Tangle"); null
+                    LogE("Cannot attach message to Tangle"); null
                 }
                 else -> throw e
             }
@@ -143,35 +133,37 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
     }
 
     fun attachDeviceToTangle(seed: String, tangleDeviceSpecification: String): SendTransferResponse? {
-        logger.info("Attaching device to tangle, seed: $seed\ndeviceSpecification: $tangleDeviceSpecification")
+        LogI("Attaching device to tangle, seed: $seed\ndeviceSpecification: $tangleDeviceSpecification")
         val messageTrytes = TrytesConverter.asciiToTrytes(tangleDeviceSpecification)
         val deviceSpecificationTagTrytes = TrytesConverter.asciiToTrytes(Tag.DSPEC.name)
         val transfer = Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, deviceSpecificationTagTrytes)
         return try {
             iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null,
-                null, false, false, null)
+                null, false, false, null
+            )
         } catch (e: Exception) {
-            logger.error(e.toString())
+            LogE(e.toString())
             when (e) {
                 is ArgumentException -> {
-                    logger.error("Invalid parameters supplied for sendTransfer");null
+                    LogE("Invalid parameters supplied for sendTransfer");null
                 }
                 is IllegalStateException -> {
-                    logger.error("Cannot attach message to Tangle"); null
+                    LogE("Cannot attach message to Tangle"); null
                 }
                 else -> throw e
             }
         }
     }
 
-    fun getNewestBroadcast(entityName: String, publicKey: String): Transaction? {
-        logger.info("getNewestBroadcast entityName: $entityName publicKey: $publicKey")
+    fun getNewestBroadcast(entityName: String, publicKey: String): String?{
+        LogI("getNewestBroadcast entityName: $entityName publicKey: $publicKey")
         return try {
             val transactions =
                 iotaAPI.findTransactionObjectsByTag(arrayOf(TrytesConverter.asciiToTrytes(entityName)))
             val sorted = transactions.sortedByDescending { it.timestamp }.toList()
-            sorted.firstOrNull { transaction -> parseAndVerifyMessage(getASCIIFromTrytes(transaction.signatureFragments)!!, publicKey) }
+            val firstOrNull = sorted.firstOrNull { transaction -> parseAndVerifyMessage(getASCIIFromTrytes(transaction.signatureFragments)!!, publicKey) }
+            getASCIIFromTrytes(firstOrNull?.signatureFragments!!.substringBefore("__"))
 
         } catch (e: Exception) {
             LogE(e.message)
@@ -180,21 +172,23 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
     }
 
     fun getBroadcastsUnchecked(tag: Tag): List<Pair<String, String>> {
-        logger.info("getNewestBroadcast tag: $tag")
+        LogI("getNewestBroadcast tag: $tag")
         val transactions =
             iotaAPI.findTransactionObjectsByTag(arrayOf(TrytesConverter.asciiToTrytes(tag.name)))
-        return transactions.mapNotNull { t -> getASCIIFromTrytes(t.signatureFragments)?.let { Pair(it, t.address) } }
+        val filter = transactions.filter { pt.hashStoredInDB(it.hash) }
+        filter.forEach { pt.saveHash(it.hash) }
+        return filter.mapNotNull { t -> getASCIIFromTrytes(t.signatureFragments)?.let { Pair(it, t.address) } }
     }
 
     fun getNewestBroadcasts(entityName: String, publicKey: String): List<Transaction>? {
-        logger.info("getNewestBroadcasts entityName: $entityName publicKey: $publicKey")
+        LogI("getNewestBroadcasts entityName: $entityName publicKey: $publicKey")
         val transactions =
             iotaAPI.findTransactionObjectsByTag(arrayOf(entityName))
         return transactions.sortedByDescending { it.timestamp }.toList().filter { transaction -> parseAndVerifyMessage(getASCIIFromTrytes(transaction.signatureFragments)!!, publicKey) }
     }
 
     private fun parseAndVerifyMessage(messageASCII: String, publicKey: String): Boolean {
-        logger.info("parsing and verifying message : $messageASCII $publicKey")
+        LogI("parsing and verifying message : $messageASCII $publicKey")
         val signature = messageASCII.substringAfter("__")
         val message = messageASCII.substringBefore("__")
         val publicECKey = EncryptionHelper.loadPublicECKeyFromProperties(publicKey)
@@ -202,25 +196,25 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
     }
 
     private fun parseAndVerifyMessageStringKey(messageASCII: String, publicKey: String): Boolean {
-        logger.info("parsing and verifying message : $messageASCII $publicKey")
+        LogI("parsing and verifying message : $messageASCII $publicKey")
         val signature = messageASCII.substringAfter("__")
         val message = messageASCII.substringBefore("__")
         val publicECKey = EncryptionHelper.loadPublicECKeyFromBigInteger(BigInteger(publicKey))
         return EncryptionHelper.verifySignatureBase64(publicECKey, message, signature)
     }
 
-    /*private*/ fun getASCIIFromTrytes(trytes: String): String? {
+    private fun getASCIIFromTrytes(trytes: String): String? {
         val paddedTrytes = (trytes.length % 2).let { if (it == 1) trytes + "9" else trytes }
         return try {
             TrytesConverter.trytesToAscii(paddedTrytes).trim((0).toChar())
         } catch (e: ArgumentException) {
-            logger.error("Unable to convert - invalid trytes: $trytes")
+            LogE("Unable to convert - invalid trytes: $trytes")
             null
         }
     }
 
     fun getPendingMethodCalls(seed: String, procurations: List<Procuration>): List<PostMessageHack> {
-        logger.info("getting Pending Method Calls, seed: $seed procurations: $procurations")
+        LogI("getting Pending Method Calls, seed: $seed procurations: $procurations")
         val transactions = getTransactions(seed, Tag.MC)
         val postMessages = transactions.mapNotNull { transaction ->
             getASCIIFromTrytes(transaction.signatureFragments)?.let { ascii ->
@@ -234,6 +228,6 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
                 parseAndVerifyMessageStringKey(m.first.json, it)
             }
         }
-        return verifiedMessages.map { it.first}
+        return verifiedMessages.map { it.first }
     }
 }

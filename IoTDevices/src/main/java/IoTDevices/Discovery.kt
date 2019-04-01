@@ -30,7 +30,7 @@ class Discovery(val ioTDevice: IoTDevice) : ReceiverAdapter() {
 
     override fun viewAccepted(new_view: View) {
         val device = Device(IdIp(ioTDevice.id, ip), ioTDevice.deviceSpecification)
-        val simpleDeviceString = gson.toJson(device) //TODO maybe revisit this again
+        val simpleDeviceString = gson.toJson(device)
         channel.send(Message(null, simpleDeviceString.toByteArray()))
     }
 }
