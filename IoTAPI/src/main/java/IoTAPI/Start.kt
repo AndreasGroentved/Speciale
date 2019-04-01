@@ -37,6 +37,7 @@ class IoTAPI {
     private val messageRepo = MessageRepo()
     private val procurationAcks = ProcurationAcks()
     private val sentProcurations = SentProcurations()
+    private val deviceSpecifications = TangleDeviceSpecifications()
 
     //TODO alle metoder skal altid returnere valid JSON
 
@@ -207,24 +208,26 @@ class IoTAPI {
             }.let { ClientResponse(it) }
         })
 
-        //TODO: lav repository på kendte devices og implementer hash igen, ellers bliver det her sløvt
+        //TODO:check at følgende er lavet rigtigt:  lav repository på kendte devices og implementer hash igen, ellers bliver det her sløvt
         get("/tangle/unpermissioned/devices", Route { _, _ ->
             val registered = tangleController.getBroadcastsUnchecked(Tag.DSPEC).mapNotNull {
-                Pair(gson.fromJson(it.first.substringBefore("__"), TangleDeviceSpecification::class.java), it.second)
+                TDSA(gson.fromJson(it.first.substringBefore("__"), TangleDeviceSpecification::class.java), it.second)
             }
+            registered.forEach { deviceSpecifications.saveTDSA(it) }
             val unregistered = tangleController.getBroadcastsUnchecked(Tag.XDSPEC).mapNotNull {
                 Triple(gson.fromJson(it.first.substringBefore("__"), TangleDeviceSpecification::class.java), it.first.substringBefore("__"), it.first.substringAfter("__"))
             }
-            val filtered = registered.filter { r ->
-                !unregistered.filter { u ->
-                    r.first.deviceSpecification.id == u.first.deviceSpecification.id && r.first.publicKey == u.first.publicKey
+            val filtered = deviceSpecifications.getSpecs().filter { r ->
+                unregistered.filter { u ->
+                    r.tangleDeviceSpecification.deviceSpecification.id == u.first.deviceSpecification.id && r.tangleDeviceSpecification.publicKey == u.first.publicKey
                 }.any {
                     EncryptionHelper.verifySignatureBase64(
-                        EncryptionHelper.loadPublicECKeyFromBigInteger(BigInteger(r.first.publicKey)), it.second, it.third
+                        EncryptionHelper.loadPublicECKeyFromBigInteger(BigInteger(r.tangleDeviceSpecification.publicKey)), it.second, it.third
                     )
                 }
             }
-            ClientResponse(filtered)
+            filtered.forEach { deviceSpecifications.removeTDSA(it) }
+            ClientResponse(deviceSpecifications.getSpecs())
         })
 
 

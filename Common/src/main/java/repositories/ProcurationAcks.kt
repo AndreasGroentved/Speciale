@@ -15,6 +15,7 @@ class ProcurationAcks {
         procRep = db.getRepository(ProcurationAck::class.java)
     }
 
+    //todo use this
     fun getProAck(): ProcurationAck {
         val find = procRep.find(ObjectFilters.ALL)
         return find.first()

@@ -1,6 +1,6 @@
 import {TangleDeviceSpecification} from "./TangleDeviceSpecification";
 
 export class DeviceSpecificationToAddressPair {
-  first: TangleDeviceSpecification;
-  second: string;
+  tangleDeviceSpecification: TangleDeviceSpecification;
+  address: string;
 }

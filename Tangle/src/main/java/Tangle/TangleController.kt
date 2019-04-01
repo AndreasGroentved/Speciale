@@ -175,7 +175,7 @@ class TangleController {
         LogI("getNewestBroadcast tag: $tag")
         val transactions =
             iotaAPI.findTransactionObjectsByTag(arrayOf(TrytesConverter.asciiToTrytes(tag.name)))
-        val filter = transactions.filter { pt.hashStoredInDB(it.hash) }
+        val filter = transactions.filter { !pt.hashStoredInDB(it.hash) }
         filter.forEach { pt.saveHash(it.hash) }
         return filter.mapNotNull { t -> getASCIIFromTrytes(t.signatureFragments)?.let { Pair(it, t.address) } }
     }
