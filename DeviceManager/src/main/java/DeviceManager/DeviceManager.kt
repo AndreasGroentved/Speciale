@@ -2,6 +2,9 @@ package DeviceManager
 
 import Tangle.TangleController
 import com.google.gson.Gson
+import datatypes.ClientResponse
+import datatypes.ErrorResponse
+import datatypes.Response
 import datatypes.iotdevices.Device
 import datatypes.iotdevices.IdIp
 import datatypes.iotdevices.PostMessage
@@ -11,7 +14,6 @@ import helpers.EncryptionHelper
 import org.eclipse.californium.core.CoapClient
 import org.eclipse.californium.core.coap.MediaTypeRegistry
 import org.slf4j.simple.SimpleLoggerFactory
-import java.math.BigDecimal
 import java.security.PrivateKey
 
 
@@ -47,7 +49,8 @@ class DeviceManager {
             val toJson = gson.toJson(deviceSpecification)
             val signedJson = toJson + "__" + EncryptionHelper.signBase64(privateKey, toJson)
             tangle.attachDeviceToTangle(seed, signedJson)?.let {
-                registeredDevices.add(e.key) }
+                registeredDevices.add(e.key)
+            }
         }
         return "{\"result\" :" +
                 (spec?.let { "\"successful\"}" } ?: "\"unsuccessful\"}")
@@ -68,13 +71,13 @@ class DeviceManager {
     private fun getDeviceSpecificationFromId(id: String) = devicesIdIpToSpecification.filter { it.key.id == id }.map { it.value }.firstOrNull()
 
 
-    fun getDevices(parameter: String = "all") = "{\"result\":" + gson.toJson(
+    fun getDevices(parameter: String = "all") = ClientResponse(
         when (parameter.trim()) {
             "registered=true" -> getRegisteredDevices()
             "registered=false" -> getNotRegisteredDevices()
             else -> getAllDevices()
         }.keys
-    ) + "}"
+    )
 
 
     private fun getAllDevices() = devicesIdIpToSpecification
@@ -89,29 +92,30 @@ class DeviceManager {
     fun getSavingsForDevice(from: Long, to: Long, deviceId: String, tangle: TangleController): BigDecimal = tangle.getDevicePriceSavings(from, to, deviceId)
 */
 
-    fun get(postMessage: PostMessage): String { //todo, noget retry logik måske?
+    fun get(postMessage: PostMessage): Response { //todo, noget retry logik måske?
         logger.info("attempting to call get with message: $postMessage")
-        val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return "{\"error\":\"Invalid device id\"}"
+        val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return ErrorResponse("Invalid device id")
         println("${mapKey.ip}:5683/${postMessage.path}?${postMessage.params["queryString"]}")
         val client = CoapClient("${mapKey.ip}:5683/${postMessage.path}?${postMessage.params["queryString"]}")
 
-        return client.get()?.responseText ?: "{\"error\":\"No result received\"}"
+        return client.get()?.responseText?.let { ClientResponse(it) }
+            ?: ErrorResponse("No result received")
     }
 
-    fun post(postMessage: PostMessage): String {
+    fun post(postMessage: PostMessage): Response {
         logger.info("attempting to call post with message: $postMessage")
-        val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return "{\"error\":\"Invalid device id\"}"
+        val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return ErrorResponse("Invalid device id")
         val client = CoapClient("${mapKey.ip}:5683/${postMessage.path}") //todo resource på port
         val a = client.post(gson.toJson(postMessage), MediaTypeRegistry.APPLICATION_JSON)?.responseText
             ?: "{\"error\":\"No result received\"}"
-        return a
+        return ClientResponse(a)
     }
 
-    fun post(id: String, path: String, params: String): String {
-        val mapKey = getDeviceKeyFromId(id) ?: return "{\"error\":\"Invalid device id\"}"
+    fun post(id: String, path: String, params: String): Response {
+        val mapKey = getDeviceKeyFromId(id) ?: return ErrorResponse("Invalid device id")
         val client = CoapClient("${mapKey.ip}:5683/$path") //todo resource på port
-        return client.post(params, MediaTypeRegistry.APPLICATION_JSON)?.responseText //todo to json på JSON?
-            ?: "{\"error\":\"No result received\"}"
+        return client.post(params, MediaTypeRegistry.APPLICATION_JSON)?.responseText?.let { ClientResponse(it) } //todo to json på JSON?
+            ?: ErrorResponse("No result received")
     }
 
 }

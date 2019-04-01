@@ -4,14 +4,18 @@ import DeviceManager.DeviceManager
 import Tangle.TangleController
 import com.google.gson.Gson
 import com.jayway.jsonpath.JsonPath
+import datatypes.ClientResponse
+import datatypes.ErrorResponse
+import datatypes.Response
 import datatypes.iotdevices.PostMessage
 import datatypes.iotdevices.ResponseToClient
 import helpers.LogE
 import helpers.LogI
 import hest.HestLexer
 import hest.HestParser
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.*
+import org.antlr.v4.runtime.atn.ATNConfigSet
+import org.antlr.v4.runtime.dfa.DFA
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import java.util.*
 import java.util.concurrent.ScheduledFuture
@@ -33,16 +37,16 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
     private var threadPoolExecutor = ScheduledThreadPoolExecutor(10)
     private lateinit var content: Content
     private val tangleController = TangleController()
+    var parse = ParseDsl()
+    val variables = mutableMapOf<String, Expression>()
 
 
     companion object {
-        val variables = mutableMapOf<String, Expression>()
-
         val energiNetPath = "\$.result.records[0].CO2Emission"
         val nordPolPath = "\$.PublicationTimeSeries.Period.Interval[0].Price._v"
 
         val sampleDsl = "dataset{\n" +
-                "    tag = \"EN\"\n" +
+                "    ta = \"EN\"\n" +
                 "    key = 1234 \n" +
                 "    name = \"Din mor\"\n" +
                 "    format = JSON\n" +
@@ -57,13 +61,6 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
                 "        device hest path temperature post \"temperature\" 27.0 \n" +
                 "    }\n" +
                 "}\n"
-
-        val nordPolMock = "{\n  \"PublicationTimeSeries\": {\n    \"Currency\": {\n      \"_v\": \"EUR\"\n    },\n    \"MeasureUnitPrice\": {\n      \"_v\": \"MWH\"\n    },\n    \"Period\": {\n      \"TimeInterval\": {\n        \"_v\": \"2019-03-27T22:00Z/2019-03-28T22:00Z\"\n      },\n      \"Resolution\": {\n        \"_v\": \"PT1H\"\n      },\n      \"Interval\": [\n        {\n          \"Pos\": {\n            \"_v\": \"1\"\n          },\n          \"Price\": {\n            \"_v\": \"18.43\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"2\"\n          },\n          \"Price\": {\n            \"_v\": \"18.43\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"3\"\n          },\n          \"Price\": {\n            \"_v\": \"18.43\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"4\"\n          },\n          \"Price\": {\n            \"_v\": \"19.38\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"5\"\n          },\n          \"Price\": {\n            \"_v\": \"19.35\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"6\"\n          },\n          \"Price\": {\n            \"_v\": \"19.41\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"7\"\n          },\n          \"Price\": {\n            \"_v\": \"20.63\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"8\"\n          },\n          \"Price\": {\n            \"_v\": \"23.19\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"9\"\n          },\n          \"Price\": {\n            \"_v\": \"23.28\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"10\"\n          },\n          \"Price\": {\n            \"_v\": \"23.97\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"11\"\n          },\n          \"Price\": {\n            \"_v\": \"25.97\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"12\"\n          },\n          \"Price\": {\n            \"_v\": \"26.02\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"13\"\n          },\n          \"Price\": {\n            \"_v\": \"25.9\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"14\"\n          },\n          \"Price\": {\n            \"_v\": \"26.02\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"15\"\n          },\n          \"Price\": {\n            \"_v\": \"22.16\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"16\"\n          },\n          \"Price\": {\n            \"_v\": \"20.93\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"17\"\n          },\n          \"Price\": {\n            \"_v\": \"21.04\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"18\"\n          },\n          \"Price\": {\n            \"_v\": \"20.02\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"19\"\n          },\n          \"Price\": {\n            \"_v\": \"19.85\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"20\"\n          },\n          \"Price\": {\n            \"_v\": \"19.82\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"21\"\n          },\n          \"Price\": {\n            \"_v\": \"19.42\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"22\"\n          },\n          \"Price\": {\n            \"_v\": \"19.34\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"23\"\n          },\n          \"Price\": {\n            \"_v\": \"19.34\"\n          }\n        },\n        {\n          \"Pos\": {\n            \"_v\": \"24\"\n          },\n          \"Price\": {\n            \"_v\": \"19.41\"\n          }\n        }\n      ]\n    }\n  }\n}"
-    }
-
-
-    init {
-
     }
 
 
@@ -72,20 +69,36 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         return a.toString()
     }
 
-    var parse = ParseDsl()
 
-    fun updateDsl(dslString: String) { //TODO for nu, er det bare forkast gammel DSL
+    fun updateDsl(dslString: String): Response { //TODO for nu, er det bare forkast gammel DSL
         threadPoolExecutor.shutdownNow() //Boom
         threadPoolExecutor = ScheduledThreadPoolExecutor(10)
         val hParse = HestParser(CommonTokenStream(HestLexer(CharStreams.fromStream(dslString.byteInputStream()))))
         val pWalker = ParseTreeWalker()
         parse = ParseDsl()
-        pWalker.walk(parse, hParse.content())
-        content = parse.content
-        println(content)
-        assignDataSets(content.dataSets)
-        content.rules.forEach { scheduleTask(it) }
+        var error = ""
+        hParse.addErrorListener(object : ANTLRErrorListener {
+            override fun reportAttemptingFullContext(recognizer: Parser, dfa: DFA, startIndex: Int, stopIndex: Int, conflictingAlts: BitSet, configs: ATNConfigSet) {}
 
+            override fun syntaxError(recognizer: Recognizer<*, *>, offendingSymbol: Any, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException) {
+                error = msg
+            }
+
+            override fun reportAmbiguity(recognizer: Parser, dfa: DFA, startIndex: Int, stopIndex: Int, exact: Boolean, ambigAlts: BitSet, configs: ATNConfigSet) {}
+            override fun reportContextSensitivity(recognizer: Parser, dfa: DFA, startIndex: Int, stopIndex: Int, prediction: Int, configs: ATNConfigSet) {
+            }
+        })
+
+        return try {
+            pWalker.walk(parse, hParse.content())
+            content = parse.content
+            assignDataSets(content.dataSets)
+            content.rules.forEach { scheduleTask(it) }
+            ClientResponse("success")
+        } catch (e: Exception) {
+            println(error)
+            ClientResponse(error)
+        }
     }
 
 
@@ -136,9 +149,9 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
 
     private inner class ThreadContext(private val rule: Rule) : Runnable {
         override fun run() {
-            LogI("run")
+            LogI("run rule")
+            LogI(rule)
             try {
-                LogE(RuleManager.variables)
                 validateConditionAndRun(rule)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -196,12 +209,12 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         //TODO set path parametre?
         if (outPut.method.toLowerCase() == "post") {
             LogI("posting")
-            deviceManager.post(outPut.deviceID, outPut.path, gson.toJson(PostMessage(params = outPut.params.toMap())))
+            (deviceManager.post(outPut.deviceID, outPut.path, gson.toJson(PostMessage(params = outPut.params.toMap()))) as ClientResponse).result.toString()
         } else {
             LogI("getting")
             val resp = deviceManager.get(PostMessage(deviceID = outPut.deviceID, path = outPut.path))
-            if (resp.contains("error")) null
-            else resp
+            if (resp is ErrorResponse) null
+            else (resp as ClientResponse).result.toString()
         }
     )
 
@@ -266,29 +279,31 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
                 timeInMillis
             } else null
         }
-}
 
-private fun evaluateReferenceType(ref: ReferenceType): Expression = RuleManager.variables[ref.referenceName]!!
-
-
-infix fun Expression.and(other: Expression): Expression = BooleanType((this as? BooleanType)?.let {
-    (other as? BooleanType)?.let { this.booleanVal && other.booleanVal }
-} ?: throw RuntimeException("invalid \"and\" comparison"))
-
-infix fun Expression.or(other: Expression): Expression = BooleanType((this as? BooleanType)?.let {
-    (other as? BooleanType)?.let { this.booleanVal || other.booleanVal }
-} ?: throw RuntimeException("invalid \"or\" comparison"))
+    private fun evaluateReferenceType(ref: ReferenceType): Expression = variables[ref.referenceName]!!
 
 
-operator fun Expression.compareTo(other: Expression): Int = when {
-    this is BooleanType && other is BooleanType -> this.booleanVal.compareTo(other.booleanVal)
-    this is ReferenceType -> evaluateReferenceType(this).compareTo(other)
-    other is ReferenceType -> this.compareTo(evaluateReferenceType(other))
-    this is NumberType && other is NumberType -> this.doubleVal.compareTo(other.doubleVal)
-    else -> {
-        if (this as? StringType != null && other as? StringType != null) {
-            this.stringVal.compareTo(other.stringVal)
-        } else throw RuntimeException("invalid comparison")
+    infix fun Expression.and(other: Expression): Expression = BooleanType((this as? BooleanType)?.let {
+        (other as? BooleanType)?.let { this.booleanVal && other.booleanVal }
+    } ?: throw RuntimeException("invalid \"and\" comparison"))
 
+    infix fun Expression.or(other: Expression): Expression = BooleanType((this as? BooleanType)?.let {
+        (other as? BooleanType)?.let { this.booleanVal || other.booleanVal }
+    } ?: throw RuntimeException("invalid \"or\" comparison"))
+
+
+    operator fun Expression.compareTo(other: Expression): Int = when {
+        this is BooleanType && other is BooleanType -> this.booleanVal.compareTo(other.booleanVal)
+        this is ReferenceType -> evaluateReferenceType(this).compareTo(other)
+        other is ReferenceType -> this.compareTo(evaluateReferenceType(other))
+        this is NumberType && other is NumberType -> this.doubleVal.compareTo(other.doubleVal)
+        else -> {
+            if (this as? StringType != null && other as? StringType != null) {
+                this.stringVal.compareTo(other.stringVal)
+            } else throw RuntimeException("invalid comparison")
+
+        }
     }
+
 }
+
