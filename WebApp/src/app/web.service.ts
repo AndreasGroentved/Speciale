@@ -102,7 +102,7 @@ export class WebService {
 
   updateRules(rules: string, callback: (string) => (void)) {
     this.http.post(this.serverUrl + '/rule', JSON.stringify({rules: rules})).subscribe(results => {
-      callback(results['result']);
+      callback(results['errors']);
     });
   }
 

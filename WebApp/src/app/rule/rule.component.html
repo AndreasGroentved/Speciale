@@ -1,9 +1,13 @@
 <p style="font-size: 30px" class="text-center">
-  Rules<button class="btn btn-link" style="font-size: 30px" (click)="collapsed = !collapsed">{{collapsed ? "←" : "↓"}}</button></p>
+  Rules
+  <button class="btn btn-link" style="font-size: 30px"
+          (click)="collapsed = !collapsed">{{collapsed ? "←" : "↓"}}</button>
+</p>
 
 <div [ngbCollapse]="collapsed">
-<textarea class="text area-series" style="height: 1000px; width: 1000px"
-          [(ngModel)]="inputText"></textarea>
-<br>
-<button class="btn btn-success" (click)="update()">Update</button>
+  <div style="width: 1000px" class="alert alert-danger alert-dismissible" [hidden]="errorText === ''" role="alert">{{errorText}}</div>
+  <textarea class="text area-series" style="height: 1000px; width: 1000px"
+            [(ngModel)]="inputText"></textarea>
+  <br>
+  <button class="btn btn-success" (click)="update()">Update</button>
 </div>

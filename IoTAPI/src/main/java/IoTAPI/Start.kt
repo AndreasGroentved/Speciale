@@ -20,7 +20,7 @@ import java.security.PublicKey
 import java.util.*
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-
+//todo: random location i know, men husk lige at man skulle kunne kalde get på tangle devices
 class IoTAPI {
     private val hs = HouseRules()
     private val ruleManager = RuleManager()
@@ -38,7 +38,6 @@ class IoTAPI {
     private lateinit var publicKey: PublicKey
     private val messageRepo = MessageRepo()
     private val procurationAcks = ProcurationAcks()
-    private val deviceIdsToMessageChainId = DeviceIDsToMessageChainID()
     private val sentProcurations = SentProcurations()
 
     //TODO alle metoder skal altid returnere valid JSON

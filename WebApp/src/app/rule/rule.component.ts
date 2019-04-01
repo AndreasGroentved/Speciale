@@ -1,5 +1,5 @@
-import {Component, OnInit} from '@angular/core';
-import {WebService} from "../web.service";
+import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {WebService} from '../web.service';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
@@ -8,8 +8,9 @@ import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./rule.component.css']
 })
 export class RuleComponent implements OnInit {
-  inputText = "";
+  inputText = '';
   collapsed = true;
+  errorText = '';
 
   constructor(private ws: WebService) {
   }
@@ -21,6 +22,8 @@ export class RuleComponent implements OnInit {
   }
 
   update() {
-    this.ws.updateRules(this.inputText, val => console.log("yolo"));
+    this.ws.updateRules(this.inputText, val => {
+      this.errorText = val;
+    });
   }
 }
