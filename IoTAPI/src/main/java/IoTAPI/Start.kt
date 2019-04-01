@@ -46,19 +46,19 @@ class IoTAPI {
     val requests = mutableMapOf<String, Pair<TangleDeviceSpecification, String>>()
 
 
-    fun get2(path: String, route: Route) {
+    fun get(path: String, route: Route) {
         get(path, route, ResponseTransformer { p: Any -> transformer.render(p) })
     }
 
-    fun post2(path: String, route: Route) {
+    fun post(path: String, route: Route) {
         post(path, route, ResponseTransformer { p: Any -> transformer.render(p) })
     }
 
-    fun put2(path: String, route: Route) {
+    fun put(path: String, route: Route) {
         put(path, route, ResponseTransformer { p: Any -> transformer.render(p) })
     }
 
-    fun delete2(path: String, route: Route) {
+    fun delete(path: String, route: Route) {
         delete(path, route, ResponseTransformer { p: Any -> transformer.render(p) })
     }
 
@@ -115,72 +115,72 @@ class IoTAPI {
             response.header("Access-Control-Allow-Origin", "*")
         })
 
-        get2("rule", Route { _: Request, response: Response ->
+        get("rule", Route { _: Request, response: Response ->
             ClientResponse(hs.getRules().rule)
         })
 
 
 
-        post2("rule", Route { request, _ ->
+        post("rule", Route { request, _ ->
             val rule = (getParameterMap(request.body())as? Map<String, String>?)?.get("rules")
                 ?: return@Route ErrorResponse("invalid json")
             hs.saveRules(rule)
             ruleManager.updateDsl(rule)
         })
 
-        get2("/device", Route { request, response ->
+        get("/device", Route { request, response ->
             response.type("application/json")
             val params = request.queryString()
             deviceManger.getDevices(params)
         })
 
-        get2("/device/procurations/pending", Route { _, response ->
+        get("/device/procurations/pending", Route { _, response ->
             //TODO wrap i ClientResponse
             getActivePendingProcurations(procurations.getAllProcurations())
         })
 
-        put2("/device/procuration/:id/accept", Route { request, response ->
+        put("/device/procuration/:id/accept", Route { request, response ->
             val id = request.params()[":id"]
             id?.let { pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, true, seed, tangleController, privateKey) } }?.let { pendingProcurations.removeIf { p -> p.messageChainID == id } }
                 ?: ""
         })
 
         //TODO: REVISIT DE HER, PATH ER LIDT WANK
-        put2("/device/procuration/:id/reject", Route { request, response ->
+        put("/device/procuration/:id/reject", Route { request, response ->
             response.type("application/json")
             val id = request.params()[":id"]
             id?.let { pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, false, seed, tangleController, privateKey) } }?.let { pendingProcurations.removeIf { p -> p.messageChainID == id } }
                 ?: ""
         })
 
-        get2("/device/procurations/accepted", Route { _, response ->
+        get("/device/procurations/accepted", Route { _, response ->
             procurations.getAllProcurations()
         })
 
-        get2("/device/procurations/expired", Route { _, response ->
+        get("/device/procurations/expired", Route { _, response ->
             getExpiredProcurations()
         })
 
 
-        get2("/device/:id", Route { request, _ ->
+        get("/device/:id", Route { request, _ ->
             ClientResponse(deviceManger.getDevice(request!!.params(":id"))!!.specification)
         })
 
 
-        get2("/device/:id/:path", Route { request, response ->
+        get("/device/:id/:path", Route { request, response ->
             val id = request.params(":id")
             val path = request.params(":path")
             val params = if (request.queryParams().isNotEmpty()) "?" + request.queryParams().map { request.params(it) } else ""
             deviceManger.get(PostMessage("this", deviceID = id, path = path + params))
         })
 
-        post2("/device/:id/:path", Route { request, _ ->
+        post("/device/:id/:path", Route { request, _ ->
             val id = request.params(":id")
             val path = request.params(":path")
             deviceManger.post(PostMessage("this", id, "POST", path, getParameterMap(request.body())))
         })
 
-        get2("/device/:id/time", Route { request, _ ->
+        get("/device/:id/time", Route { request, _ ->
             //TODO ????? skal der laves noget her?
             val from = request.queryParams(":from") as String
             val toTime = request.queryParams(":to") as String
@@ -189,17 +189,17 @@ class IoTAPI {
             deviceManger.post(postMessage)
         })
 
-        delete2("/device/:id", Route { request, _ ->
+        delete("/device/:id", Route { request, _ ->
             val id = request.params(":id")
             deviceManger.unregisterDevice(privateKey, seed, id, tangleController)
         })
 
-        put2("/device/:id", Route { request, _ ->
+        put("/device/:id", Route { request, _ ->
             val id = request.params(":id")
             deviceManger.registerDevice(privateKey, BigInteger(publicKey.encoded).toString(), id, seed, tangleController)
         })
 
-        post2("/tangle/permissioned/devices", Route { request, _ ->
+        post("/tangle/permissioned/devices", Route { request, _ ->
             val postMessage = request.body().let {
                 gson.fromJson(it, PostMessage::class.java)
             } ?: throw RuntimeException("invalid postMessage")
@@ -208,7 +208,7 @@ class IoTAPI {
         })
 
 
-        get2("/tangle/permissioned/devices", Route { request: Request, response: Response ->
+        get("/tangle/permissioned/devices", Route { request: Request, response: Response ->
             tangleController.getBroadcastsUnchecked(Tag.PROACK).mapNotNull {
                 val proAck = gson.fromJson(it.first.substringBefore("__"), ProcurationAck::class.java)
                 procurationAcks.saveProcuration(proAck)
@@ -222,7 +222,7 @@ class IoTAPI {
 
 
 
-        get2("/tangle/unpermissioned/devices", Route { _, _ ->
+        get("/tangle/unpermissioned/devices", Route { _, _ ->
             val map = tangleController.getBroadcastsUnchecked(Tag.DSPEC).map {
                 Pair(gson.fromJson(it.first.substringBefore("__"), TangleDeviceSpecification::class.java), it.second)
             }
@@ -231,7 +231,7 @@ class IoTAPI {
 
 
         //TODO: OVERVEJ MESSAGE DESIGN HER + navnet recipientPublicKey + !!
-        post2("/tangle/unpermissioned/devices/procuration", Route { request, _ ->
+        post("/tangle/unpermissioned/devices/procuration", Route { request, _ ->
             val params = getParameterMap(request.body())
             val specification = params["specification"].let { gson.fromJson(it, TangleDeviceSpecification::class.java) }
             val dateFrom = params["dateFrom"]?.toLongOrNull() ?: throw RuntimeException("Invalid from date")
@@ -248,11 +248,11 @@ class IoTAPI {
 
 
 
-        get2("/tangle/messages/:deviceID", Route { request, _ ->
+        get("/tangle/messages/:deviceID", Route { request, _ ->
             request.params("deviceID")?.let { messageRepo.getMessages(it).sortedByDescending { m -> m.timestamp } }
         })
 
-        get2("/tangle/messagechainid/:deviceID", Route { request, _ ->
+        get("/tangle/messagechainid/:deviceID", Route { request, _ ->
             request.params("deviceID")?.let { sentProcurations.getProcurationDeviceID(it).messageChainID }
         })
 
