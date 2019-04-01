@@ -93,14 +93,13 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
 
         return try {
             pWalker.walk(parse, hParse.content())
+            if (!error.isBlank()) {
+                return ErrorResponse(error)
+            }
             content = parse.content
             assignDataSets(content.dataSets)
             content.rules.forEach { scheduleTask(it) }
-            if (!error.isBlank()) {
-                ErrorResponse(error)
-            } else {
-                ClientResponse("success")
-            }
+            ClientResponse("success")
         } catch (e: Exception) {
             LogE(e)
             ErrorResponse(error)
@@ -113,8 +112,6 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
     private fun assignDataSetVariables(dataSet: DataSet) {
         dataSet.vars.forEach {
             val publicKey = if (dataSet.tag == "EN") "energinetPublicKey" else "nordPoolPublicKey"
-            println("yo non")
-            println(dataSet.tag)
             val a = tangleController.getNewestBroadcast(dataSet.tag, publicKey)!!
             val value = getDataFromPathAndDataSet(
                 tangleController.getASCIIFromTrytes(a.signatureFragments)!!.substringBefore("__"), (it.value as? StringType)?.stringVal?.replace("\"", "")

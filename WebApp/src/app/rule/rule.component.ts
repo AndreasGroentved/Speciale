@@ -24,6 +24,8 @@ export class RuleComponent implements OnInit {
     this.ws.updateRules(this.inputText, val => {
       if (val.hasOwnProperty("error")) {
         this.errorText = val["error"];
+      } else {
+        this.errorText = "";
       }
     });
   }

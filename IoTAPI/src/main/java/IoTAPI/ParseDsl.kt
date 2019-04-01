@@ -43,7 +43,7 @@ class ParseDsl : HestParserBaseListener() {
         currentRule.time = currentTime
         println(ctx.text)
         currentTime.pattern = ctx.EVERY()?.text ?: ctx.ONCE()?.text
-                ?: throw NotImplementedError("time interval not supported")
+                ?: throw RuntimeException("time interval not supported")
     }
 
 
@@ -92,7 +92,7 @@ class ParseDsl : HestParserBaseListener() {
     }
 
     override fun enterTag(ctx: HestParser.TagContext) {
-        currentDataSet.tag = ctx.tagName.text.replace("\"","")
+        currentDataSet.tag = ctx.tagName.text.replace("\"", "")
     }
 
     override fun enterName(ctx: HestParser.NameContext) {
@@ -108,7 +108,7 @@ class ParseDsl : HestParserBaseListener() {
         currentDataSet.format = when {
             ctx.JSON() != null -> ctx.JSON().text
             ctx.XML() != null -> ctx.XML().text
-            else -> throw NotImplementedError("Format not supported")
+            else -> throw RuntimeException("Format not supported")
         }
     }
 
