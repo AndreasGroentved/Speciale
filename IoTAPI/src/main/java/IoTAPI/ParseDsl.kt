@@ -39,7 +39,6 @@ class ParseDsl : HestParserBaseListener() {
     override fun enterTime(ctx: HestParser.TimeContext) {
         currentTime = Time()
         currentRule.time = currentTime
-        println(ctx.text)
         currentTime.pattern = ctx.EVERY()?.text ?: ctx.ONCE()?.text
                 ?: throw RuntimeException("time interval not supported")
     }
@@ -119,7 +118,12 @@ class ParseDsl : HestParserBaseListener() {
 
 
     override fun enterRun(ctx: HestParser.RunContext) {
-        currentRule.steps.add(buildExpressionTree(ctx.expression())) /*= ctx.condition *//*ctx..map { buildExpressionTree(it) }.toMutableList()*/
+        val exp = try {
+            ctx.expression()
+        } catch (e: Exception) {
+            return
+        }
+        currentRule.steps.add(buildExpressionTree(exp)) /*= ctx.condition *//*ctx..map { buildExpressionTree(it) }.toMutableList()*/
     }
 
 

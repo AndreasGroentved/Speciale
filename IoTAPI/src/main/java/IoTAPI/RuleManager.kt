@@ -81,9 +81,12 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         var error = ""
         hParse.addErrorListener(object : ANTLRErrorListener {
             override fun reportAttemptingFullContext(recognizer: Parser, dfa: DFA, startIndex: Int, stopIndex: Int, conflictingAlts: BitSet, configs: ATNConfigSet) {}
-            override fun syntaxError(recognizer: Recognizer<*, *>, offendingSymbol: Any, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException) {
-                error = msg
-                LogE("error occured")
+
+
+            override fun syntaxError(recognizer: Recognizer<*, *>?, offendingSymbol: Any?, line: Int, charPositionInLine: Int, msg: String?, e: RecognitionException?) {
+                error = msg ?: ""
+                LogE("error occurred")
+                LogE(msg)
             }
 
             override fun reportAmbiguity(recognizer: Parser, dfa: DFA, startIndex: Int, stopIndex: Int, exact: Boolean, ambigAlts: BitSet, configs: ATNConfigSet) {}
@@ -101,13 +104,14 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
             content.rules.forEach { scheduleTask(it) }
             ClientResponse("success")
         } catch (e: Exception) {
+            e.printStackTrace()
             LogE(e)
-            ErrorResponse(error)
+            ErrorResponse(e.message ?: "unknown error")
         }
     }
 
 
-    private fun assignDataSets(dataSets: List<DataSet>) = dataSets.forEach { assignDataSetVariables(it) }
+    private fun assignDataSets(dataSets: List<DataSet>): Unit = dataSets.forEach { assignDataSetVariables(it) }
 
     private fun assignDataSetVariables(dataSet: DataSet) {
         dataSet.vars.forEach {
@@ -208,7 +212,12 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         //TODO set path parametre?
         if (outPut.method.toLowerCase() == "post") {
             LogI("posting")
-            (deviceManager.post(outPut.deviceID, outPut.path, gson.toJson(PostMessage(params = outPut.params.toMap()))) as ClientResponse).result.toString()
+            try {
+                (deviceManager.post(outPut.deviceID, outPut.path, gson.toJson(PostMessage(params = outPut.params.toMap()))) as ClientResponse).result.toString()
+            } catch (e: Exception) {
+                LogE(e.message)
+                null
+            }
         } else {
             LogI("getting")
             val resp = deviceManager.get(PostMessage(deviceID = outPut.deviceID, path = outPut.path))
