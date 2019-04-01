@@ -120,12 +120,12 @@ class ParseDsl : HestParserBaseListener() {
 
 
     override fun enterRun(ctx: HestParser.RunContext) {
-        try {
+        val exp = try {
             ctx.expression()
         } catch (e: Exception) {
             return
         }
-        currentRule.steps.add(buildExpressionTree(ctx.expression())) /*= ctx.condition *//*ctx..map { buildExpressionTree(it) }.toMutableList()*/
+        currentRule.steps.add(buildExpressionTree(exp)) /*= ctx.condition *//*ctx..map { buildExpressionTree(it) }.toMutableList()*/
     }
 
 

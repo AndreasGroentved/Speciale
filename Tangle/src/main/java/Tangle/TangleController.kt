@@ -27,7 +27,7 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
     private var nodeMinWeightMagnitude = 14
     private lateinit var iotaAPI: IotaAPI
     private val gson = Gson()
-    // private val pt = ProcessedTransactions()
+    //private val pt = ProcessedTransactions()
 
     init {
         initIotaAPI(loadProperties())
@@ -150,7 +150,8 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
         return try {
             iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null,
-                null, false, false, null)
+                null, false, false, null
+            )
         } catch (e: Exception) {
             logger.error(e.toString())
             when (e) {
@@ -234,6 +235,6 @@ class TangleController(private val logger: Logger = SimpleLoggerFactory().getLog
                 parseAndVerifyMessageStringKey(m.first.json, it)
             }
         }
-        return verifiedMessages.map { it.first}
+        return verifiedMessages.map { it.first }
     }
 }
