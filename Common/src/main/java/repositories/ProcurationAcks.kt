@@ -1,5 +1,6 @@
 package repositories
 
+import datatypes.iotdevices.Procuration
 import datatypes.iotdevices.ProcurationAck
 import org.dizitart.no2.Nitrite
 import org.dizitart.no2.objects.ObjectRepository
@@ -15,13 +16,17 @@ class ProcurationAcks {
         procRep = db.getRepository(ProcurationAck::class.java)
     }
 
-    //todo use this
-    fun getProAck(): ProcurationAck {
-        val find = procRep.find(ObjectFilters.ALL)
-        return find.first()
+    fun getAllProAck(): List<ProcurationAck> {
+        return procRep.find().toList()
     }
 
-    fun saveProcuration(procurationAck: ProcurationAck) {
+    fun saveProAck(procurationAck: ProcurationAck) {
         procRep.insert(procurationAck)
+    }
+
+    fun removeProAcks(procurations: List<Procuration>) {
+        procurations.forEach {
+            procRep.remove(ObjectFilters.eq("messageChainId", it.messageChainID))
+        }
     }
 }

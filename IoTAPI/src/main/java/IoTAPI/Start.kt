@@ -202,10 +202,12 @@ class IoTAPI {
         get("/tangle/permissioned/devices", Route { request: Request, response: Response ->
             tangleController.getBroadcastsUnchecked(Tag.PROACK).mapNotNull {
                 val proAck = gson.fromJson(it.first.substringBefore("__"), ProcurationAck::class.java)
-                procurationAcks.saveProcuration(proAck)
+                procurationAcks.saveProAck(proAck)
                 val mId = proAck.messageChainID
                 requests[mId]
-            }.let { ClientResponse(it) }
+            }
+            procurationAcks.removeProAcks(procurations.getExpiredProcurations())
+            ClientResponse(procurationAcks.getAllProAck())
         })
 
         //TODO:check at følgende er lavet rigtigt:  lav repository på kendte devices og implementer hash igen, ellers bliver det her sløvt

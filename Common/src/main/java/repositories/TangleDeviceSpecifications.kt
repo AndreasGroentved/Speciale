@@ -21,7 +21,6 @@ class TangleDeviceSpecifications {
 
     fun saveTDSA(tdsa: TDSA) {
         tdsaRep.insert(tdsa)
-
     }
 
     fun removeTDSA(tdsa: TDSA) {
