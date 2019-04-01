@@ -44,6 +44,7 @@ class IoTAPI {
 
 
     val requests = mutableMapOf<String, Pair<TangleDeviceSpecification, String>>()
+    val transformer = JsonTransformer()
 
 
     fun get(path: String, route: Route) {
@@ -87,9 +88,7 @@ class IoTAPI {
 
         Spark.exception(Exception::class.java) { e, _, _ -> log.e(e) }
         Spark.after("/*") { request, filter ->
-            LogI(
-                request.requestMethod() + " " + request.uri() + " " + request.body() + " " + request.params().toString()
-            )
+            LogI(request.requestMethod() + " " + request.uri() + " " + request.body() + " " + request.params().toString())
         }
 
         options("/*") { request, response ->
@@ -120,11 +119,12 @@ class IoTAPI {
         })
 
 
-
         post("rule", Route { request, _ ->
             val rule = (getParameterMap(request.body())as? Map<String, String>?)?.get("rules")
                 ?: return@Route ErrorResponse("invalid json")
             hs.saveRules(rule)
+            println("rule yo")
+            println(rule)
             ruleManager.updateDsl(rule)
         })
 
@@ -363,26 +363,11 @@ class IoTAPI {
         return procurations.getAllProcurations().filter { p -> p.dateTo <= Date() }
     }
 
-    companion object {
-        val transformer = JsonTransformer()
-
-
-/*
-        fun Spark.get(path: String, route: Route): Unit {
-            get(path,{
-                route.
-            })
-        }*/
-    }
 }
 
 class JsonTransformer : ResponseTransformer {
-
     private val gson = Gson()
-
     override fun render(model: Any) = gson.toJson(model)
-
-
 }
 
 

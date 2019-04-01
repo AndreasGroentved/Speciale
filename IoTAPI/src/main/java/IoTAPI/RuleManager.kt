@@ -15,6 +15,7 @@ import hest.HestLexer
 import hest.HestParser
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.atn.ATNConfigSet
+import org.antlr.v4.runtime.atn.PredictionMode
 import org.antlr.v4.runtime.dfa.DFA
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import java.util.*
@@ -76,12 +77,13 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         val hParse = HestParser(CommonTokenStream(HestLexer(CharStreams.fromStream(dslString.byteInputStream()))))
         val pWalker = ParseTreeWalker()
         parse = ParseDsl()
+        hParse.interpreter.predictionMode = PredictionMode.LL_EXACT_AMBIG_DETECTION;
         var error = ""
         hParse.addErrorListener(object : ANTLRErrorListener {
             override fun reportAttemptingFullContext(recognizer: Parser, dfa: DFA, startIndex: Int, stopIndex: Int, conflictingAlts: BitSet, configs: ATNConfigSet) {}
-
             override fun syntaxError(recognizer: Recognizer<*, *>, offendingSymbol: Any, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException) {
                 error = msg
+                LogE("error occured")
             }
 
             override fun reportAmbiguity(recognizer: Parser, dfa: DFA, startIndex: Int, stopIndex: Int, exact: Boolean, ambigAlts: BitSet, configs: ATNConfigSet) {}
@@ -94,10 +96,14 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
             content = parse.content
             assignDataSets(content.dataSets)
             content.rules.forEach { scheduleTask(it) }
-            ClientResponse("success")
+            if (!error.isBlank()) {
+                ErrorResponse(error)
+            } else {
+                ClientResponse("success")
+            }
         } catch (e: Exception) {
-            println(error)
-            ClientResponse(error)
+            LogE(e)
+            ErrorResponse(error)
         }
     }
 
@@ -109,12 +115,9 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
             val publicKey = if (dataSet.tag == "EN") "energinetPublicKey" else "nordPoolPublicKey"
             println("yo non")
             println(dataSet.tag)
-            val a = tangleController.getNewestBroadcast(dataSet.tag, publicKey)
-            println(tangleController.getASCIIFromTrytes(a!!.signatureFragments)!!.substringBefore("__"))
-
-            println((it.value as? StringType)?.stringVal)
+            val a = tangleController.getNewestBroadcast(dataSet.tag, publicKey)!!
             val value = getDataFromPathAndDataSet(
-                tangleController.getASCIIFromTrytes(a.signatureFragments)!!.substringBefore("__"), (it.value as? StringType)?.stringVal?.replace("\"", "")/*?.dropLast(1)?.removeRange(0, 1)*/
+                tangleController.getASCIIFromTrytes(a.signatureFragments)!!.substringBefore("__"), (it.value as? StringType)?.stringVal?.replace("\"", "")
                     ?: throw RuntimeException("invalid path")
             )
             variables[it.key] = getExpressionFromAnyValue(value)
@@ -123,7 +126,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
 
     private fun getExpressionFromAnyValue(value: String) = when {
         value.toIntOrNull() != null -> NumberType(value.toDouble())
-        value == "false" || value == "true" -> BooleanType(value.toBoolean())
+        value.toLowerCase() == "false" || value.toLowerCase() == "true" -> BooleanType(value.toBoolean())
         value.toDoubleOrNull() != null -> NumberType(value.toDouble())
         else -> StringType(value)
     }
@@ -145,7 +148,6 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
             else -> throw NotImplementedError("Pattern not supported")
         }
     }
-
 
     private inner class ThreadContext(private val rule: Rule) : Runnable {
         override fun run() {

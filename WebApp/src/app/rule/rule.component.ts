@@ -1,6 +1,5 @@
-import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {WebService} from '../web.service';
-import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-rule',
@@ -23,7 +22,9 @@ export class RuleComponent implements OnInit {
 
   update() {
     this.ws.updateRules(this.inputText, val => {
-      this.errorText = val;
+      if (val.hasOwnProperty("error")) {
+        this.errorText = val["error"];
+      }
     });
   }
 }

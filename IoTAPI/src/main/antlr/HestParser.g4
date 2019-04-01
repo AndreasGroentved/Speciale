@@ -1,7 +1,8 @@
 parser grammar HestParser;
 
 options { tokenVocab=HestLexer; }
-content: (dataset | rulee)* ;
+
+content: dataset* | rulee+ ;
 
 rulee: 'rule' '{' (config|variable|device|/*output*/ varpath|run)* '}';
 config: 'config' time;
