@@ -28,7 +28,6 @@ class ProcurationAcks {
         procRep.insert(procurationAck)
     }
 
-    //todo: overvej optimisering if forhold til forevigt voksende expired liste
     fun removeProAcks(procurations: List<Procuration>) {
         procurations.forEach {
             procRep.remove(ObjectFilters.eq("messageChainId", it.messageChainID))

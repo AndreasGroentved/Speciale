@@ -29,7 +29,7 @@ class HeatPump(id: String = UUID.randomUUID().toString()) : IoTDevice(id) {
     init {
         addEndpoints()
         add(
-            HeatPumpResource(), listOf(
+            HeatPumpResource("temperature"), listOf(
                 ResourceMethod("GET", mapOf("temperature" to "Integer"), "Gets the target temperature of the heat pump"),
                 ResourceMethod("POST", mapOf("temperature" to "Integer"), "Adjusts target temperature of the heat pump by diff")
             )
@@ -44,7 +44,7 @@ class HeatPump(id: String = UUID.randomUUID().toString()) : IoTDevice(id) {
             }
     }
 
-    inner class HeatPumpResource : CoapResource("temperature") {
+    inner class HeatPumpResource(name: String) : CoapResource(name) {
         private var temperature: Int = 20
 
         private fun adjustTemperature(diff: Int) {

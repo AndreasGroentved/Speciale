@@ -186,13 +186,13 @@ export class WebService {
   }
 
   acceptProcuration(messageChainID: string) {
-    this.http.put(this.serverUrl + '/device/procuration/' + messageChainID + '/accept', '').subscribe(value => {
+    this.http.put(this.serverUrl + '/device/procuration/received/' + messageChainID + '/accept', '').subscribe(value => {
       console.log(value);
     });
   }
 
   rejectProcuration(messageChainID: string) {
-    this.http.put(this.serverUrl + '/device/procuration/' + messageChainID + '/reject', '').subscribe(value => {
+    this.http.put(this.serverUrl + '/device/procuration/received/' + messageChainID + '/reject', '').subscribe(value => {
       console.log(value);
     });
   }

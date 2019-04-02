@@ -4,7 +4,7 @@ package IoTDevices
 import IoTDevices.HeatPump.HeatPump
 
 fun main() {
-    val heatPump = HeatPump("hest2")
+    val heatPump = HeatPump()
     heatPump.start()
     Discovery(heatPump).startDiscovery()
 }
