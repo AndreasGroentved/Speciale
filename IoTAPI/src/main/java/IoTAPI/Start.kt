@@ -41,23 +41,23 @@ class IoTAPI {
 
     //TODO alle metoder skal altid returnere valid JSON
 
-    val transformer = JsonTransformer()
-
+    private val transformer = JsonTransformer()
+    private val lambda = ResponseTransformer { a: Any -> transformer.render(a) }
 
     fun get(path: String, route: Route) {
-        get(path, route, ResponseTransformer { p: Any -> transformer.render(p) })
+        get(path, route, lambda)
     }
 
     fun post(path: String, route: Route) {
-        post(path, route, ResponseTransformer { p: Any -> transformer.render(p) })
+        post(path, route, lambda)
     }
 
     fun put(path: String, route: Route) {
-        put(path, route, ResponseTransformer { p: Any -> transformer.render(p) })
+        put(path, route, lambda)
     }
 
     fun delete(path: String, route: Route) {
-        delete(path, route, ResponseTransformer { p: Any -> transformer.render(p) })
+        delete(path, route, lambda)
     }
 
 
@@ -113,7 +113,7 @@ class IoTAPI {
 
 
         post("rule", Route { request, _ ->
-            val rule = (getParameterMap(request.body())as? Map<String, String>?)?.get("rules")
+            val rule = (getParameterMap(request.body())).get("rules")
                 ?: return@Route ErrorResponse("invalid json")
             hs.saveRules(rule)
             ruleManager.updateDsl(rule)
@@ -211,16 +211,22 @@ class IoTAPI {
             ClientResponse("success")
         })
 
-        //todo check signature
-        get("/tangle/permissioned/devices", Route { _, _ ->
+
+        fun getPermissionedDevices(): ClientResponse {
             tangleController.getBroadcastsUnchecked(Tag.PROACK).mapNotNull {
                 val proAck = gson.fromJson(it.first.substringBefore("__"), ProcurationAck::class.java)
                 procurationAcks.saveProAck(proAck)
             }
             procurationAcks.removeProAcks(procurations.getExpiredProcurationsLessThan7DaysOld())
             val procs = procurationAcks.getAllProAck().map { sentProcurations.getProcurationMessageChainID(it.messageChainID).deviceID }
-            ClientResponse(deviceSpecifications.getAllPermissionedSpecs(procs))
+            return ClientResponse(deviceSpecifications.getAllPermissionedSpecs(procs))
+        }
+
+        //todo check signature
+        get("/tangle/permissioned/devices", Route { _, _ ->
+            getPermissionedDevices()
         })
+
 
         //TODO:check at følgende er lavet rigtigt:  lav repository på kendte devices og implementer hash igen, ellers bliver det her sløvt
         get("/tangle/unpermissioned/devices", Route { _, _ ->
@@ -256,7 +262,8 @@ class IoTAPI {
                     messageId, params.getValue("deviceId"), BigInteger(publicKey.encoded),
                     Date(dateFrom), Date(dateTo)
                 ), params.getValue("addressTo"), tangleController, privateKey
-            ).let { ClientResponse("success") }
+            )
+            ClientResponse("success")
         })
 
 
@@ -312,14 +319,21 @@ class IoTAPI {
         val result = when (message.postMessage.type.toLowerCase()) {
             "get" -> deviceManger.get(message.postMessage)
             "post" -> deviceManger.post(message.postMessage)
-            else -> gson.toJson(ErrorResponse("ERROR method type not supported: ${message.postMessage.type}"))
+            else -> ErrorResponse("ERROR method type not supported: ${message.postMessage.type}")
         }
         val response = gson.toJson(result)
         val signature = EncryptionHelper.signBase64(privateKey, response)
         tangleController.attachTransactionToTangle(seed, response + "__" + signature, Tag.MR, message.addressFrom)
     }
 
-    private fun sendMethodCall(postMessage: PostMessage, privateKey: PrivateKey, addressTo: String) {
+
+    val tangleDeviceCallback: (postMessage: PostMessage, uuid: String) -> (Unit) = { pM: PostMessage, id: String ->
+
+        /*sendMethodCall(pM, privateKey,)*/
+    }
+
+
+    fun sendMethodCall(postMessage: PostMessage, privateKey: PrivateKey, addressTo: String) {
         val toJson = gson.toJson(postMessage)
         val signBase64 = EncryptionHelper.signBase64(privateKey, toJson)
         tangleController.attachTransactionToTangle(seed, toJson + "__" + signBase64, Tag.MC, addressTo)

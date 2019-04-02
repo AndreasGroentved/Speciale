@@ -38,9 +38,6 @@ export class PowerComponent implements OnInit {
       title: {
         text: "On time for device"
       },
-      subtitles: [{
-        text: "Try Zooming and Panning"
-      }],
       data: [{
         type: "line",
         dataPoints: dataPoints
@@ -54,7 +51,7 @@ export class PowerComponent implements OnInit {
           return date.getHours() + ":" + out;
         }
       },
-    }); 
+    });
 
     chart.render();
   }

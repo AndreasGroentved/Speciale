@@ -93,8 +93,6 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
         timeMap.forEach {
             timeRep.insert(TimePair(it.key, it.value))
         }
-        println("adsdaasasdsasdasdasdasdsadsadasda")
-        println(timeRep.find().toList())
     }
 
     private fun updateHour(hour: Long, elapsedTime: Long) {
