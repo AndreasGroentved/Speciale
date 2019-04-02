@@ -87,7 +87,7 @@ class DeviceManager {
     fun get(postMessage: PostMessage): Response { //todo, noget retry logik måske?
         logger.info("attempting to call get with message: $postMessage")
         val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return ErrorResponse("Invalid device id")
-        val client = CoapClient("${mapKey.ip}:$port/${postMessage.path}?${postMessage.params["queryString"]}")
+        val client = CoapClient("${mapKey.ip}:$port/${postMessage.path}?${postMessage.params.entries.map { it.key + "=" + it.value }.joinToString("&")}")
 
         return client.get()?.let { gson.fromJson(it.responseText, ClientResponse::class.java) }
             ?: ErrorResponse("No result received")

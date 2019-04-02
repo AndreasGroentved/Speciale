@@ -62,11 +62,11 @@ class HeatPump(id: String = UUID.randomUUID().toString()) : IoTDevice(id) {
             exchange?.respond(gson.toJson(ClientResponse(temperature)))
         }
 
-        override fun handlePOST(exchange: CoapExchange?) {
+        override fun handlePOST(exchange: CoapExchange) {
             LogI("posting temperature")
             try {
-                exchange?.let {
-                    val fromJson = gson.fromJson(exchange.requestText, PostMessage::class.java)
+                exchange.apply {
+                    val fromJson = this@HeatPump.gson.fromJson(requestText, PostMessage::class.java)
                     val temp = fromJson.params["temperature"]
                     LogI("new temperature $temp, old $temperature")
                     temperature = Math.round(temp!!.toDouble()).toInt()
@@ -75,10 +75,10 @@ class HeatPump(id: String = UUID.randomUUID().toString()) : IoTDevice(id) {
             } catch (e: Exception) {
                 LogE(e.message)
                 when (e) {
-                    is NumberFormatException -> exchange?.respond(gson.toJson(ErrorResponse("Parameter is not a real number")))
-                    is IndexOutOfBoundsException -> exchange?.respond(gson.toJson(ErrorResponse("Missing parameter diff")))
+                    is NumberFormatException -> exchange.respond(gson.toJson(ErrorResponse("Parameter is not a real number")))
+                    is IndexOutOfBoundsException -> exchange.respond(gson.toJson(ErrorResponse("Missing parameter diff")))
                 }
-                exchange?.respond(gson.toJson(ErrorResponse("Parameter is not a real number")))
+                exchange.respond(gson.toJson(ErrorResponse("Parameter is not a real number")))
             }
         }
     }

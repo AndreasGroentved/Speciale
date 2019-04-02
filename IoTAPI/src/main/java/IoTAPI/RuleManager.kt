@@ -226,7 +226,6 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         }
     )
 
-
     private fun runResponseToExpression(value: String?): Expression? = value?.let {
         getExpressionFromAnyValue(gson.fromJson(value, ResponseToClient::class.java).result)
     }

@@ -120,7 +120,6 @@ class IoTAPI {
         })
 
         get("/device", Route { request, response ->
-            response.type("application/json")
             val params = request.queryString()
             deviceManger.getDevices(params)
         })
@@ -183,13 +182,15 @@ class IoTAPI {
             deviceManger.post(PostMessage("this", id, "POST", path, getParameterMap(request.body())))
         })
 
-        get("/device/:id/time", Route { request, _ ->
+        get("/time/:id", Route { request, _ ->
+            LogI(request.queryParams())
             //TODO ????? skal der laves noget her?
-            val from = request.queryParams(":from") as String
-            val toTime = request.queryParams(":to") as String
+            val from = request.queryParams("from") as String
+            val toTime = request.queryParams("to") as String
+            println(from + ", " + toTime)
             val id = request.params(":id") as String
             val postMessage = PostMessage("this", id, "get", "time", mapOf("from" to from, "to" to toTime))
-            deviceManger.post(postMessage)
+            deviceManger.get(postMessage)
         })
 
         delete("/device/:id", Route { request, _ ->

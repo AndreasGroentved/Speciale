@@ -52,9 +52,10 @@ export class WebService {
     });
   }
 
-  getOnTime(from: string = '0', to: string = Date.now() + '', id: string, callback: (val: Map<string, string>) => (void)) {
-    this.http.get(this.serverUrl + '/device/' + id + '/time ? from=' + from + '&to=' + to).subscribe(results => {
-      callback(results['result'] as Map<string, string>);
+  getOnTime( id: string, callback: (val) => (void),from: string = '0', to: string = (Date.now() + '')) {
+    console.log("get time");
+    this.http.get(this.serverUrl + '/time/'+id + '?from=' + from + '&to=' + to).subscribe(results => {
+      callback(results);
     });
   }
 

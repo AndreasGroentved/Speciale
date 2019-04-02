@@ -1,6 +1,8 @@
 import {Component, Input, OnInit} from '@angular/core';
-import {DeviceResource} from "../DeviceResource";
 import * as CanvasJS from "../../assets/canvasjs.min.js";
+import {WebService} from "../web.service";
+import {ClientResponse} from "../ClientResponse";
+import {TimeUsage} from "../TimeUsage";
 
 @Component({
   selector: 'app-power',
@@ -10,32 +12,49 @@ import * as CanvasJS from "../../assets/canvasjs.min.js";
 export class PowerComponent implements OnInit {
   @Input() deviceId: string;
 
-  constructor() {
+  constructor(private ws: WebService) {
   }
 
   ngOnInit() {
+    this.ws.getOnTime(this.deviceId, map => {
+      console.log(map);
+      console.log((map as ClientResponse).result);
+      this.setChart((map as ClientResponse).result);
+    })
+  }
+
+
+  setChart(valueMap: Array<TimeUsage>) {
     let dataPoints = [];
-    let y = 0;
-    for ( var i = 0; i < 100; i++ ) {
-      y = Math.round(5 + Math.random() * (-5 - 5));
-      dataPoints.push({x:i, y: y});
-    }
+    valueMap.forEach(val => {
+      let y = (val.usage / 1000) / 60;
+      dataPoints.push({x: val.time, y: y});
+    });
+
     let chart = new CanvasJS.Chart("chartContainer", {
       zoomEnabled: true,
       animationEnabled: true,
       exportEnabled: true,
       title: {
-        text: "Performance Demo - 10000 DataPoints"
+        text: "On time for device"
       },
-      subtitles:[{
+      subtitles: [{
         text: "Try Zooming and Panning"
       }],
-      data: [
-        {
-          type: "line",
-          dataPoints: dataPoints
-        }]
-    });
+      data: [{
+        type: "line",
+        dataPoints: dataPoints
+      }],
+      axisX: {
+        labelFormatter: function (e) {
+          let date = new Date(e.value);
+          let min = date.getMinutes();
+          let out = min.toString();
+          if (min < 10) out = "0" + out;
+          return date.getHours() + ":" + out;
+        }
+      },
+    }); 
 
     chart.render();
   }

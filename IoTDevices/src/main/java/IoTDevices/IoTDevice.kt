@@ -1,8 +1,12 @@
 package IoTDevices
 
 import com.google.gson.Gson
+import datatypes.TimePair
 import datatypes.iotdevices.*
+import helpers.LogI
 import helpers.PropertiesLoader
+import org.dizitart.no2.Nitrite
+import org.dizitart.no2.objects.ObjectRepository
 import org.eclipse.californium.core.CoapResource
 import org.eclipse.californium.core.CoapServer
 import org.eclipse.californium.core.coap.MediaTypeRegistry
@@ -17,9 +21,16 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
     private val timeMap = mutableMapOf<Long, Long>()//TODO gem i db
     private var lastCalculateTime = -1L
     protected val gson = Gson()
-
+    private var timeRep: ObjectRepository<TimePair>
+    private val db: Nitrite
 
     init {
+        db = Nitrite.builder()
+            .filePath("time.db")
+            .openOrCreate()
+        timeRep = db.getRepository(TimePair::class.java)
+        timeRep.find().forEach { timeMap[it.hour] = it.amount }
+
         loadProperties()
         lastCalculateTime = System.currentTimeMillis()
         add(
@@ -57,18 +68,33 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
             return
         }
 
-        val endOfCurrentHour = getStartOfHour(System.currentTimeMillis() + lengthOfHour)
-        while (lastCalculateTime < endOfCurrentHour) {
-            getStartOfHour(lastCalculateTime)
-            val elapsedTime = System.currentTimeMillis() - lastCalculateTime
+        var endOfCurrentHour = getStartOfHour(System.currentTimeMillis() + lengthOfHour)
+        var lastCalcHour = getStartOfHour(lastCalculateTime)
+        val now = System.currentTimeMillis()
+        while (lastCalcHour < now) {
+            val elapsedTime = if (now > endOfCurrentHour) endOfCurrentHour - lastCalculateTime
+            else now - lastCalculateTime
+
             val hourUsage = when {
                 !isOn -> 0
-                (elapsedTime > lengthOfHour) -> lengthOfHour
                 else -> elapsedTime
             }
-            updateHour(lastCalculateTime, hourUsage)
-            lastCalculateTime += lengthOfHour
+            updateHour(lastCalcHour, hourUsage)
+            endOfCurrentHour += lengthOfHour
+            lastCalcHour += lengthOfHour
         }
+        lastCalculateTime = now
+        updateDb()
+    }
+
+    private fun updateDb() {
+        timeRep.drop()
+        timeRep = db.getRepository(TimePair::class.java)
+        timeMap.forEach {
+            timeRep.insert(TimePair(it.key, it.value))
+        }
+        println("adsdaasasdsasdasdasdasdsadsadasda")
+        println(timeRep.find().toList())
     }
 
     private fun updateHour(hour: Long, elapsedTime: Long) {
@@ -80,9 +106,7 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
 
     private val lengthOfHour = 60 * 60 * 1000L
 
-
     fun getOnTimeFromTo(from: Long, to: Long) = timeMap.filter { it.key in from..to }
-
 
     fun add(resource: Resource, resourceMethods: List<ResourceMethod>): CoapServer {
         deviceSpecification.deviceResources.add(DeviceResource(resourceMethods, resource.uri, resource.attributes.title))
@@ -95,19 +119,23 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
 
     inner class TimeResource : CoapResource("time") {
         init {
-            attributes.title = "Time"
+            attributes.title = "time"
         }
 
         override fun handleGET(exchange: CoapExchange?) {
+            LogI("yo")
             updateTimeMap()
-            exchange?.let {
-                val from = exchange.requestOptions.uriQuery.getOrNull(0)?.let { it.split("=").getOrNull(1)?.toLong() }
+            exchange?.apply {
+                val from = requestOptions.uriQuery.getOrNull(0)?.let { it.split("=").getOrNull(1)?.toLong() }
                     ?: 0L
-                val to = exchange.requestOptions.uriQuery.getOrNull(1)?.let { it.split("=").getOrNull(1)?.toLong() }
+                val to = requestOptions.uriQuery.getOrNull(1)?.let { it.split("=").getOrNull(1)?.toLong() }
                     ?: 0L
+                println("from $from , to $to")
+                println(timeMap)
                 val timeFromTo = getOnTimeFromTo(from, to).map { TimeUsage(it.key, it.value) }
+                println(timeFromTo)
                 val hourOnList = "{\"result\":${gson.toJson(timeFromTo)}}"
-                exchange.respond(hourOnList)
+                respond(hourOnList)
             }
         }
     }
@@ -124,10 +152,10 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
 
         override fun handlePOST(exchange: CoapExchange?) {
             exchange?.apply {
-                if (!exchange.isValidJson(exchange.requestText)) {
-                    exchange.respond("{\"error\":\"invalid json\"}"); return@handlePOST
+                if (!isValidJson(requestText)) {
+                    respond("{\"error\":\"invalid json\"}"); return@handlePOST
                 }
-                val postMessage = gson.fromJson(exchange.requestText, PostMessage::class.java).params
+                val postMessage = gson.fromJson(requestText, PostMessage::class.java).params
                 val turnOn = postMessage["status"]?.toBoolean() ?: return@apply
                 if (turnOn) turnOn() else turnOff()
                 respond("{\"result\":{\"status\" :$turnOn }}")
