@@ -68,7 +68,6 @@ export class IotDeviceModuleComponent implements OnInit {
     this.webService.getDeviceValueFromPath(this.deviceId, this.deviceResource.path, val => {
       this.deviceResource.resourceMethods.filter(value => value.methodType === 'GET').map(value => {
         try {
-          const a = value.parameters[getMethod];
           this.getValues.set(getMethod, val);
         } catch (e) {
         }

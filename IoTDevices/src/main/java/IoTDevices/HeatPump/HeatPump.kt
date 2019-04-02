@@ -2,6 +2,8 @@ package IoTDevices.HeatPump
 
 import IoTDevices.Discovery
 import IoTDevices.IoTDevice
+import datatypes.ClientResponse
+import datatypes.ErrorResponse
 import datatypes.iotdevices.PostMessage
 import datatypes.iotdevices.ResourceMethod
 import helpers.LogE
@@ -53,28 +55,30 @@ class HeatPump(id: String = UUID.randomUUID().toString()) : IoTDevice(id) {
             attributes.title = "Heat pump resource"
         }
 
+        //todo: overvej formatet på det her + det skal passe med DSL
+
         override fun handleGET(exchange: CoapExchange?) {
             LogI("get temperature $temperature")
-            exchange?.respond("{\"result\": $temperature}")
+            exchange?.respond(gson.toJson(ClientResponse(temperature)))
         }
 
         override fun handlePOST(exchange: CoapExchange?) {
             LogI("posting temperature")
             try {
                 exchange?.let {
-                    val fromJson = this@HeatPump.gson.fromJson(exchange.requestText, PostMessage::class.java)
+                    val fromJson = gson.fromJson(exchange.requestText, PostMessage::class.java)
                     val temp = fromJson.params["temperature"]
                     LogI("new temperature $temp, old $temperature")
-                    temperature = Math.round(temp!!.toDouble()).toInt() ?: temperature
-                    exchange.respond("{\"result\": $temperature}")
+                    temperature = Math.round(temp!!.toDouble()).toInt()
+                    exchange.respond(gson.toJson(ClientResponse(temperature)))
                 }
             } catch (e: Exception) {
                 LogE(e.message)
                 when (e) {
-                    is NumberFormatException -> exchange?.respond("{\"error\":\"Parameter is not a real number\"")
-                    is IndexOutOfBoundsException -> exchange?.respond("{\"error\":\"Missing parameter diff\"")
+                    is NumberFormatException -> exchange?.respond(gson.toJson(ErrorResponse("Parameter is not a real number")))
+                    is IndexOutOfBoundsException -> exchange?.respond(gson.toJson(ErrorResponse("Missing parameter diff")))
                 }
-                exchange?.respond("{\"error\":\"Parameter is not a real number\"}")
+                exchange?.respond(gson.toJson(ErrorResponse("Parameter is not a real number")))
             }
         }
     }

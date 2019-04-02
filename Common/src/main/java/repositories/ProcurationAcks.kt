@@ -21,7 +21,7 @@ class ProcurationAcks {
     }
 
     fun getAllAcceptedProAck(): List<ProcurationAck> {
-        return procRep.find(ObjectFilters.eq("accepted",true)).toList()
+        return procRep.find(ObjectFilters.eq("accept",true)).toList()
     }
 
     fun saveProAck(procurationAck: ProcurationAck) {

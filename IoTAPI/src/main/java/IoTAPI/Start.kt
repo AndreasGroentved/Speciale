@@ -80,7 +80,7 @@ class IoTAPI {
         }
 
         Spark.exception(Exception::class.java) { e, _, _ -> LogE(e) }
-        Spark.after("/*") { request, filter ->
+        Spark.after("/*") { request, _ ->
             LogI(request.requestMethod() + " " + request.uri() + " " + request.body() + " " + request.params().toString())
         }
 
@@ -107,7 +107,7 @@ class IoTAPI {
             response.header("Access-Control-Allow-Origin", "*")
         })
 
-        get("rule", Route { _: Request, response: Response ->
+        get("rule", Route { _: Request, _: Response ->
             ClientResponse(hs.getRules().rule)
         })
 
@@ -149,7 +149,6 @@ class IoTAPI {
                 ?: ""
         })
 
-        //TODO: REVISIT DE HER, PATH ER LIDT WANK
         put("/device/received/procuration/:id/reject", Route { request, response ->
             response.type("application/json")
             val id = request.params()[":id"]
@@ -171,7 +170,7 @@ class IoTAPI {
         })
 
 
-        get("/device/:id/:path", Route { request, response ->
+        get("/device/:id/:path", Route { request, _ ->
             val id = request.params(":id")
             val path = request.params(":path")
             val params = if (request.queryParams().isNotEmpty()) "?" + request.queryParams().map { request.params(it) } else ""
@@ -212,7 +211,7 @@ class IoTAPI {
         })
 
         //todo check signature
-        get("/tangle/permissioned/devices", Route { request: Request, response: Response ->
+        get("/tangle/permissioned/devices", Route { _, _ ->
             tangleController.getBroadcastsUnchecked(Tag.PROACK).mapNotNull {
                 val proAck = gson.fromJson(it.first.substringBefore("__"), ProcurationAck::class.java)
                 procurationAcks.saveProAck(proAck)
@@ -248,7 +247,6 @@ class IoTAPI {
         //TODO: OVERVEJ MESSAGE DESIGN HER + navnet recipientPublicKey + !!
         post("/tangle/unpermissioned/devices/procuration", Route { request, _ ->
             val params = getParameterMap(request.body())
-            val specification = params["specification"].let { gson.fromJson(it, TangleDeviceSpecification::class.java) }
             val dateFrom = params["dateFrom"]?.toLongOrNull() ?: throw RuntimeException("Invalid from date")
             val dateTo = params["dateTo"]?.toLongOrNull() ?: throw RuntimeException("Invalid to date")
             val messageId = UUID.randomUUID().toString()
@@ -257,7 +255,7 @@ class IoTAPI {
                     messageId, params.getValue("deviceId"), BigInteger(publicKey.encoded),
                     Date(dateFrom), Date(dateTo)
                 ), params.getValue("addressTo"), tangleController, privateKey
-            ).let { ClientResponse("yolo") }
+            ).let { ClientResponse("success") }
         })
 
 
@@ -313,7 +311,7 @@ class IoTAPI {
         val result = when (message.postMessage.type.toLowerCase()) {
             "get" -> deviceManger.get(message.postMessage)
             "post" -> deviceManger.post(message.postMessage)
-            else -> ErrorResponse("ERROR method type not supported: ${message.postMessage.type}")
+            else -> gson.toJson(ErrorResponse("ERROR method type not supported: ${message.postMessage.type}"))
         }
         val response = gson.toJson(result)
         val signature = EncryptionHelper.signBase64(privateKey, response)

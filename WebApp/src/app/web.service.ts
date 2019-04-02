@@ -68,7 +68,6 @@ export class WebService {
         callback(results['result']);
       });
     } else {
-      console.log("aaaaaa");
       console.log(messageChainID);
       let post = {
         deviceID: deviceId,
@@ -88,6 +87,7 @@ export class WebService {
   getDeviceValueFromPath(deviceId: string, path: string, callback: (val) => (void)) {
     console.log(this.serverUrl + '/device/' + deviceId + '/' + path);
     this.http.get(this.serverUrl + '/device/' + deviceId + '/' + path).subscribe(results => {
+      console.log(results);
       callback(results['result']);
     });
   }

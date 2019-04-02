@@ -45,7 +45,6 @@ class DeviceManager {
         }.start()
     }
 
-
     fun registerDevice(privateKey: PrivateKey, publicKey: String, deviceID: String, seed: String, tangle: TangleController): Response {
         val spec = devicesIdIpToSpecification.entries.firstOrNull { it.value.idIp.id == deviceID }?.let { e ->
             val deviceSpecification = TangleDeviceSpecification(publicKey, e.value.specification)
@@ -55,7 +54,7 @@ class DeviceManager {
                 registeredDevices.add(e.key)
             }
         }
-        return spec?.let {ClientResponse("succesful")} ?: ErrorResponse("unsuccesful")
+        return spec?.let { ClientResponse("succesful") } ?: ErrorResponse("unsuccesful")
     }
 
     fun unregisterDevice(privateKey: PrivateKey, publicKey: String, seed: String, deviceID: String, tangle: TangleController): Response {
@@ -67,11 +66,10 @@ class DeviceManager {
                 registeredDevices.remove(e.key)
             }
         }
-        return spec?.let {ClientResponse("succesful")} ?: ErrorResponse("unsuccesful")
+        return spec?.let { ClientResponse("succesful") } ?: ErrorResponse("unsuccesful")
     }
 
     private fun getDeviceSpecificationFromId(id: String) = devicesIdIpToSpecification.filter { it.key.id == id }.map { it.value }.firstOrNull()
-
 
     fun getDevices(parameter: String = "all") = ClientResponse(
         when (parameter.trim()) {
@@ -81,25 +79,17 @@ class DeviceManager {
         }.keys
     )
 
-
     private fun getAllDevices() = devicesIdIpToSpecification
     fun getDevice(id: String): Device? = getDeviceSpecificationFromId(id)
 
     private fun getDeviceKeyFromId(id: String) = devicesIdIpToSpecification.filter { it.key.id == id }.map { it.key }.firstOrNull()
-
-/*
-    fun getAllSavings(from: Long, to: Long, tangle: TangleController) =
-        devicesIdIpToSpecification.keys.map { getSavingsForDevice(from, to, it.id, tangle) }.fold(BigDecimal(0)) { a, b -> a + b }.toString()
-
-    fun getSavingsForDevice(from: Long, to: Long, deviceId: String, tangle: TangleController): BigDecimal = tangle.getDevicePriceSavings(from, to, deviceId)
-*/
 
     fun get(postMessage: PostMessage): Response { //todo, noget retry logik måske?
         logger.info("attempting to call get with message: $postMessage")
         val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return ErrorResponse("Invalid device id")
         val client = CoapClient("${mapKey.ip}:$port/${postMessage.path}?${postMessage.params["queryString"]}")
 
-        return client.get()?.responseText?.let { ClientResponse(it) }
+        return client.get()?.let { gson.fromJson(it.responseText, ClientResponse::class.java) }
             ?: ErrorResponse("No result received")
     }
 
@@ -107,15 +97,14 @@ class DeviceManager {
         logger.info("attempting to call post with message: $postMessage")
         val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return ErrorResponse("Invalid device id")
         val client = CoapClient("${mapKey.ip}:$port/${postMessage.path}") //todo resource på port
-        val a = client.post(gson.toJson(postMessage), MediaTypeRegistry.APPLICATION_JSON)?.responseText
-            ?: "{\"error\":\"No result received\"}"
-        return ClientResponse(a)
+        val a = client.post(gson.toJson(postMessage), MediaTypeRegistry.APPLICATION_JSON)
+        return a?.let { gson.fromJson(it.responseText, ClientResponse::class.java) } ?: ErrorResponse("No result received")
     }
 
     fun post(id: String, path: String, params: String): Response {
         val mapKey = getDeviceKeyFromId(id) ?: return ErrorResponse("Invalid device id")
-        val client = CoapClient("${mapKey.ip}:$port/$path") //todo resource på port
-        return client.post(params, MediaTypeRegistry.APPLICATION_JSON)?.responseText?.let { ClientResponse(it) } //todo to json på JSON?
+        val client = CoapClient("${mapKey.ip}:$port/$path")
+        return client.post(params, MediaTypeRegistry.APPLICATION_JSON)?.let { gson.fromJson(it.responseText, ClientResponse::class.java) }
             ?: ErrorResponse("No result received")
     }
 

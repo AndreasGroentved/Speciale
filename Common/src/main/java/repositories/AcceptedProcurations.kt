@@ -38,18 +38,10 @@ class AcceptedProcurations {
         val calendar = Calendar.getInstance()
         calendar.add(Calendar.DAY_OF_MONTH, -7)
         return procRep.find(ObjectFilters.and(
-            ObjectFilters.lt("dateTo", Date()), ObjectFilters.gt("dateTo",calendar.time))
-        ).toList()
+            ObjectFilters.lt("dateTo", Date()), ObjectFilters.gt("dateTo",calendar.time))).toList()
     }
 
     fun saveProcuration(procuration: Procuration) {
         procRep.insert(procuration)
     }
-/*
-    fun deleteExpiredProcurations() {
-        val calendar = Calendar.getInstance()
-        calendar.add(Calendar.DAY_OF_MONTH, -7)
-        procRep.remove(ObjectFilters.lt("dateTo", calendar.time))
-    }
-    */
 }

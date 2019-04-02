@@ -4,7 +4,7 @@
           (click)="recievedAcceptedCollapsed = !recievedAcceptedCollapsed">{{recievedAcceptedCollapsed ? "←" : "↓"}}</button>
 </a>
   <div [ngbCollapse]="recievedAcceptedCollapsed">
-    <table class="table table-bordered table-hover" style=" border: 2px solid #ff947f; background-color: #ff7faa"
+    <table class="table table-bordered table-hover" style=" border: 2px solid #158000; background-color: lightgreen"
            *ngFor="let proc of recievedAccepted">
       <tr>DeviceID: {{proc.deviceID}}</tr>
       <tr>Requestee Public Key: {{proc.recipientPublicKey}}</tr>
@@ -18,7 +18,7 @@
             (click)="recievedPendingCollapsed = !recievedPendingCollapsed">{{recievedPendingCollapsed ? "←" : "↓"}}</button>
   </a>
   <div [ngbCollapse]="recievedPendingCollapsed">
-    <table class="table table-bordered table-hover" style=" border: 2px solid #ff947f; background-color: #ff7faa"
+    <table class="table table-bordered table-hover" style=" border: 2px #ffea00; background-color: #ffff00"
            *ngFor="let proc of recievedPending">
       <tr>DeviceID: {{proc.deviceID}}</tr>
       <tr>Requestee Public Key: {{proc.recipientPublicKey}}</tr>
@@ -50,7 +50,7 @@
           (click)="sentAcceptedCollapsed = !sentAcceptedCollapsed">{{sentAcceptedCollapsed ? "←" : "↓"}}</button>
 </a>
   <div [ngbCollapse]="sentAcceptedCollapsed">
-    <table class="table table-bordered table-hover" style=" border: 2px solid #ff947f; background-color: #ff7faa"
+    <table class="table table-bordered table-hover" style=" border: 2px solid #158000; background-color: lightgreen"
            *ngFor="let proc of sentAccepted">
       <tr>DeviceID: {{proc.deviceID}}</tr>
       <tr>Requestee Public Key: {{proc.recipientPublicKey}}</tr>
@@ -64,7 +64,7 @@
             (click)="sentPendingCollapsed = !sentPendingCollapsed">{{sentPendingCollapsed ? "←" : "↓"}}</button>
   </a>
   <div [ngbCollapse]="sentPendingCollapsed">
-    <table class="table table-bordered table-hover" style=" border: 2px solid #ff947f; background-color: #ff7faa"
+    <table class="table table-bordered table-hover" style=" border: 2px solid #ffea00; background-color: #ffff00"
            *ngFor="let proc of sentPending">
       <tr>DeviceID: {{proc.deviceID}}</tr>
       <tr>Requestee Public Key: {{proc.recipientPublicKey}}</tr>
