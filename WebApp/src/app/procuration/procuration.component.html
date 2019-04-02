@@ -1,10 +1,11 @@
+<p style="font-size: 30px">Recieved Procurations</p>
 <div><a style="font-size: 30px">accepted
   <button style="font-size: 30px" class="btn btn-link"
-          (click)="acceptedCollapsed = !acceptedCollapsed">{{acceptedCollapsed ? "←" : "↓"}}</button>
+          (click)="recievedAcceptedCollapsed = !recievedAcceptedCollapsed">{{recievedAcceptedCollapsed ? "←" : "↓"}}</button>
 </a>
-  <div [ngbCollapse]="acceptedCollapsed">
+  <div [ngbCollapse]="recievedAcceptedCollapsed">
     <table class="table table-bordered table-hover" style=" border: 2px solid #ff947f; background-color: #ff7faa"
-           *ngFor="let proc of accepted">
+           *ngFor="let proc of recievedAccepted">
       <tr>DeviceID: {{proc.deviceID}}</tr>
       <tr>Requestee Public Key: {{proc.recipientPublicKey}}</tr>
       <tr>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</tr>
@@ -14,11 +15,11 @@
 <div>
   <a style="font-size: 30px;">pending
     <button style="font-size: 30px" class="btn btn-link"
-            (click)="pendingCollapsed = !pendingCollapsed">{{pendingCollapsed ? "←" : "↓"}}</button>
+            (click)="recievedPendingCollapsed = !recievedPendingCollapsed">{{recievedPendingCollapsed ? "←" : "↓"}}</button>
   </a>
-  <div [ngbCollapse]="pendingCollapsed">
+  <div [ngbCollapse]="recievedPendingCollapsed">
     <table class="table table-bordered table-hover" style=" border: 2px solid #ff947f; background-color: #ff7faa"
-           *ngFor="let proc of pending">
+           *ngFor="let proc of recievedPending">
       <tr>DeviceID: {{proc.deviceID}}</tr>
       <tr>Requestee Public Key: {{proc.recipientPublicKey}}</tr>
       <tr>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</tr>
@@ -31,12 +32,54 @@
 </div>
 <div><a style="font-size: 30px">expired
   <button style="font-size: 30px" class="btn btn-link"
-          (click)="expiredCollapsed = !expiredCollapsed">{{expiredCollapsed ? "←" : "↓"}}</button>
+          (click)="recievedExpiredCollapsed = !recievedExpiredCollapsed">{{recievedExpiredCollapsed ? "←" : "↓"}}</button>
 </a>
-  <div [ngbCollapse]="expiredCollapsed">
+  <div [ngbCollapse]="recievedExpiredCollapsed">
     <br>
     <table class="table table-bordered table-hover" style=" border: 2px solid #ff947f; background-color: #ff7faa"
-           *ngFor="let proc of expired">
+           *ngFor="let proc of recievedExpired">
+      <tr>DeviceID: {{proc.deviceID}}</tr>
+      <tr>Requestee Public Key: {{proc.recipientPublicKey}}</tr>
+      <tr>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</tr>
+    </table>
+  </div>
+</div>
+<p style="font-size: 30px">Sent Procurations</p>
+<div><a style="font-size: 30px">accepted
+  <button style="font-size: 30px" class="btn btn-link"
+          (click)="sentAcceptedCollapsed = !sentAcceptedCollapsed">{{sentAcceptedCollapsed ? "←" : "↓"}}</button>
+</a>
+  <div [ngbCollapse]="sentAcceptedCollapsed">
+    <table class="table table-bordered table-hover" style=" border: 2px solid #ff947f; background-color: #ff7faa"
+           *ngFor="let proc of sentAccepted">
+      <tr>DeviceID: {{proc.deviceID}}</tr>
+      <tr>Requestee Public Key: {{proc.recipientPublicKey}}</tr>
+      <tr>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</tr>
+    </table>
+  </div>
+</div>
+<div>
+  <a style="font-size: 30px;">pending
+    <button style="font-size: 30px" class="btn btn-link"
+            (click)="sentPendingCollapsed = !sentPendingCollapsed">{{sentPendingCollapsed ? "←" : "↓"}}</button>
+  </a>
+  <div [ngbCollapse]="sentPendingCollapsed">
+    <table class="table table-bordered table-hover" style=" border: 2px solid #ff947f; background-color: #ff7faa"
+           *ngFor="let proc of sentPending">
+      <tr>DeviceID: {{proc.deviceID}}</tr>
+      <tr>Requestee Public Key: {{proc.recipientPublicKey}}</tr>
+      <tr>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</tr>
+    </table>
+  </div>
+</div>
+<div><a style="font-size: 30px">expired
+  <button style="font-size: 30px" class="btn btn-link"
+          (click)="sentExpiredCollapsed = !sentExpiredCollapsed">{{sentExpiredCollapsed ? "←" : "↓"}}</button>
+</a>
+  <div [ngbCollapse]="sentExpiredCollapsed">
+    <br>
+    <table class="table table-bordered table-hover" style=" border: 2px solid #ff947f; background-color: #ff7faa"
+           *ngFor="let proc of sentExpired">
       <tr>DeviceID: {{proc.deviceID}}</tr>
       <tr>Requestee Public Key: {{proc.recipientPublicKey}}</tr>
       <tr>Requested from: {{proc.dateFrom}} to {{proc.dateTo}}</tr>

@@ -20,6 +20,10 @@ class ProcurationAcks {
         return procRep.find().toList()
     }
 
+    fun getAllAcceptedProAck(): List<ProcurationAck> {
+        return procRep.find(ObjectFilters.eq("accepted",true)).toList()
+    }
+
     fun saveProAck(procurationAck: ProcurationAck) {
         procRep.insert(procurationAck)
     }

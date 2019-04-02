@@ -142,24 +142,45 @@ export class WebService {
     });
   }
 
-  getPendingProcurations(callback: (string) => (void)) {
-    this.http.get(this.serverUrl + '/device/procurations/pending').subscribe(value => {
+  getReceivedPendingProcurations(callback: (string) => (void)) {
+    this.http.get(this.serverUrl + '/device/procurations/received/pending').subscribe(value => {
       console.log(value);
-      callback(value as [Procuration]);
+      callback(value['result'] as [Procuration]);
     });
   }
 
-  getAcceptedProcurations(callback: (string) => (void)) {
-    this.http.get(this.serverUrl + '/device/procurations/accepted').subscribe(value => {
+  getReceivedAcceptedProcurations(callback: (string) => (void)) {
+    this.http.get(this.serverUrl + '/device/procurations/received/accepted').subscribe(value => {
       console.log(value as Procuration[]);
-      callback(value as Procuration[]);
+      callback(value['result'] as Procuration[]);
     });
   }
 
-  getExpiredProcurations(callback: (string) => (void)) {
-    this.http.get(this.serverUrl + '/device/procurations/expired').subscribe(value => {
+  getReceivedExpiredProcurations(callback: (string) => (void)) {
+    this.http.get(this.serverUrl + '/device/procurations/received/expired').subscribe(value => {
       console.log(value);
-      callback(value as [Procuration]);
+      callback(value['result'] as [Procuration]);
+    });
+  }
+
+  getSentPendingProcurations(callback: (string) => (void)) {
+    this.http.get(this.serverUrl + '/device/procurations/sent/pending').subscribe(value => {
+      console.log(value);
+      callback(value['result'] as [Procuration]);
+    });
+  }
+
+  getSentAcceptedProcurations(callback: (string) => (void)) {
+    this.http.get(this.serverUrl + '/device/procurations/sent/accepted').subscribe(value => {
+      console.log(value);
+      callback(value['result'] as [Procuration]);
+    });
+  }
+
+  getSentExpiredProcurations(callback: (string) => (void)) {
+    this.http.get(this.serverUrl + '/device/procurations/sent/expired').subscribe(value => {
+      console.log(value);
+      callback(value['result'] as [Procuration]);
     });
   }
 

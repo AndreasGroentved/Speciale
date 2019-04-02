@@ -17,31 +17,42 @@ export class ProcurationComponent implements OnInit {
 
   private status: string;
 
-  private accepted: Array<Procuration>;
-  private expired: Array<Procuration>;
-  private pending: Array<Procuration>;
+  private recievedAccepted: Array<Procuration>;
+  private recievedExpired: Array<Procuration>;
+  private recievedPending: Array<Procuration>;
 
-  private acceptedCollapsed = true;
-  private expiredCollapsed = true;
-  private pendingCollapsed = true;
+  private recievedAcceptedCollapsed = true;
+  private recievedExpiredCollapsed = true;
+  private recievedPendingCollapsed = true;
+
+  private sentAccepted: Array<Procuration>;
+  private sentExpired: Array<Procuration>;
+  private sentPending: Array<Procuration>;
+
+  private sentAcceptedCollapsed = true;
+  private sentExpiredCollapsed = true;
+  private sentPendingCollapsed = true;
 
 
   ngOnInit() {
     this.status = this.route.snapshot.paramMap.get('status');
-    this.webService.getPendingProcurations(val => this.pending = val);
-    this.webService.getAcceptedProcurations(val => this.accepted = val);
-    this.webService.getExpiredProcurations(val => this.expired = val);
+    this.webService.getReceivedPendingProcurations(val => this.recievedPending = val);
+    this.webService.getReceivedAcceptedProcurations(val => this.recievedAccepted = val);
+    this.webService.getReceivedExpiredProcurations(val => this.recievedExpired = val);
+    this.webService.getSentPendingProcurations(val => this.sentPending = val);
+    this.webService.getSentAcceptedProcurations(val => this.sentAccepted = val);
+    this.webService.getSentExpiredProcurations(val => this.sentExpired = val);
   }
 
   acceptProc(messageChainID: string) {
     this.webService.acceptProcuration(messageChainID);
-    this.webService.getAcceptedProcurations(val => this.accepted = val);
-    this.webService.getPendingProcurations(val => this.pending = val);
+    this.webService.getReceivedAcceptedProcurations(val => this.recievedAccepted = val);
+    this.webService.getReceivedPendingProcurations(val => this.recievedPending = val);
   }
 
   rejectProc(messageChainID: string) {
     this.webService.rejectProcuration(messageChainID);
-    this.webService.getPendingProcurations(val => this.pending = val);
-    this.webService.getAcceptedProcurations(val => this.accepted = val);
+    this.webService.getReceivedPendingProcurations(val => this.recievedPending = val);
+    this.webService.getReceivedAcceptedProcurations(val => this.recievedAccepted = val);
   }
 }

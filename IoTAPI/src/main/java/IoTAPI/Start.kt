@@ -125,30 +125,44 @@ class IoTAPI {
             deviceManger.getDevices(params)
         })
 
-        get("/device/procurations/pending", Route { _, response ->
-            getActivePendingProcurations(procurations.getAllProcurations())
+        get("/device/procurations/sent/accepted", Route { _, _ ->
+            val allSentProcurations = sentProcurations.getAllSentProcurations()
+            ClientResponse(allSentProcurations.filter { sent -> procurationAcks.getAllAcceptedProAck().firstOrNull { it.messageChainID == sent.messageChainID } != null })
         })
 
-        put("/device/procuration/:id/accept", Route { request, response ->
+        get("/device/procurations/sent/pending", Route { _, _ ->
+            val allSentProcurations = sentProcurations.getAllSentProcurations()
+            ClientResponse(allSentProcurations.filter { sent -> procurationAcks.getAllProAck().firstOrNull { it.messageChainID == sent.messageChainID } == null })
+        })
+
+        get("/device/procurations/sent/expired", Route { _, _ ->
+            ClientResponse(sentProcurations.getExpiredProcurations())
+        })
+
+        get("/device/procurations/received/pending", Route { _, _ ->
+            ClientResponse(getActivePendingProcurations(procurations.getAllProcurations()))
+        })
+
+        put("/device/procuration/received/:id/accept", Route { request, _ ->
             val id = request.params()[":id"]
             id?.let { pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, true, seed, tangleController, privateKey) } }?.let { pendingProcurations.removeIf { p -> p.messageChainID == id } }
                 ?: ""
         })
 
         //TODO: REVISIT DE HER, PATH ER LIDT WANK
-        put("/device/procuration/:id/reject", Route { request, response ->
+        put("/device/received/procuration/:id/reject", Route { request, response ->
             response.type("application/json")
             val id = request.params()[":id"]
             id?.let { pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, false, seed, tangleController, privateKey) } }?.let { pendingProcurations.removeIf { p -> p.messageChainID == id } }
                 ?: ""
         })
 
-        get("/device/procurations/accepted", Route { _, response ->
-            procurations.getAcceptedProcurations()
+        get("/device/procurations/received/accepted", Route { _, _ ->
+            ClientResponse(procurations.getAcceptedProcurations())
         })
 
-        get("/device/procurations/expired", Route { _, response ->
-            procurations.getExpiredProcurations()
+        get("/device/procurations/received/expired", Route { _, _ ->
+            ClientResponse(procurations.getExpiredProcurations())
         })
 
 
@@ -262,6 +276,7 @@ class IoTAPI {
         pendingMethodCalls += tangleController.getPendingMethodCalls(seed, procurations.getAllProcurations())
         LogI(pendingMethodCalls)
         pendingMethodCalls.forEach { handleMethodType(it) }
+        pendingMethodCalls.clear()
     }
 
 
