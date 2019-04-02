@@ -197,17 +197,15 @@ class IoTAPI {
             ClientResponse("success")
         })
 
-        val requests = mutableMapOf<String, Pair<TangleDeviceSpecification, String>>()
-
+        //todo check signature
         get("/tangle/permissioned/devices", Route { request: Request, response: Response ->
             tangleController.getBroadcastsUnchecked(Tag.PROACK).mapNotNull {
                 val proAck = gson.fromJson(it.first.substringBefore("__"), ProcurationAck::class.java)
                 procurationAcks.saveProAck(proAck)
-                val mId = proAck.messageChainID
-                requests[mId]
             }
-            procurationAcks.removeProAcks(procurations.getExpiredProcurations())
-            ClientResponse(procurationAcks.getAllProAck())
+            procurationAcks.removeProAcks(procurations.getExpiredProcurationsLessThan7DaysOld())
+            val procs = procurationAcks.getAllProAck().map { sentProcurations.getProcurationMessageChainID(it.messageChainID).deviceID }
+            ClientResponse(deviceSpecifications.getAllPermissionedSpecs(procs))
         })
 
         //TODO:check at følgende er lavet rigtigt:  lav repository på kendte devices og implementer hash igen, ellers bliver det her sløvt
@@ -219,7 +217,7 @@ class IoTAPI {
             val unregistered = tangleController.getBroadcastsUnchecked(Tag.XDSPEC).mapNotNull {
                 Triple(gson.fromJson(it.first.substringBefore("__"), TangleDeviceSpecification::class.java), it.first.substringBefore("__"), it.first.substringAfter("__"))
             }
-            val filtered = deviceSpecifications.getSpecs().filter { r ->
+            val filtered = deviceSpecifications.getAllSpecs().filter { r ->
                 unregistered.filter { u ->
                     r.tangleDeviceSpecification.deviceSpecification.id == u.first.deviceSpecification.id && r.tangleDeviceSpecification.publicKey == u.first.publicKey
                 }.any {
@@ -229,7 +227,7 @@ class IoTAPI {
                 }
             }
             filtered.forEach { deviceSpecifications.removeTDSA(it) }
-            ClientResponse(deviceSpecifications.getSpecs())
+            ClientResponse(deviceSpecifications.getAllSpecs())
         })
 
 
@@ -240,7 +238,6 @@ class IoTAPI {
             val dateFrom = params["dateFrom"]?.toLongOrNull() ?: throw RuntimeException("Invalid from date")
             val dateTo = params["dateTo"]?.toLongOrNull() ?: throw RuntimeException("Invalid to date")
             val messageId = UUID.randomUUID().toString()
-            requests[messageId] = Pair(specification, params.getValue("addressTo"))
             requestProcuration(
                 Procuration(
                     messageId, params.getValue("deviceId"), BigInteger(publicKey.encoded),

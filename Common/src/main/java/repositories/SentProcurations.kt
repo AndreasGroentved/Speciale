@@ -20,6 +20,11 @@ class SentProcurations {
         return find.first()
     }
 
+    fun getProcurationMessageChainID(messageChainID: String): Procuration {
+        val find = procRep.find(eq("messageChainID", messageChainID))
+        return find.first()
+    }
+
     fun saveProcuration(procuration: Procuration) {
         procRep.insert(procuration)
     }

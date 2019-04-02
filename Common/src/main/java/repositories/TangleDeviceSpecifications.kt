@@ -15,7 +15,15 @@ class TangleDeviceSpecifications {
         tdsaRep = db.getRepository(TDSA::class.java)
     }
 
-    fun getSpecs(): List<TDSA> {
+    fun getAllSpecs(): List<TDSA> {
+        return tdsaRep.find().toList()
+    }
+
+    fun getAllPermissionedSpecs(permissionedIDs: List<String>): List<TDSA> {
+        return tdsaRep.find().toList()
+    }
+
+    fun getAllUnpermissionedSpecs(unpermissionedIDs: List<String>): List<TDSA> {
         return tdsaRep.find().toList()
     }
 

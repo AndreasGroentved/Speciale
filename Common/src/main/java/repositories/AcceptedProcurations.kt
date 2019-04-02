@@ -17,9 +17,10 @@ class AcceptedProcurations {
     }
 
     fun getAcceptedProcurations(): List<Procuration> {
-        val find = procRep.find(ObjectFilters.and(ObjectFilters.lt("dateFrom",Date()), ObjectFilters.gt("dateTo", Date())))
+        val find = procRep.find(ObjectFilters.and(ObjectFilters.lt("dateFrom", Date()), ObjectFilters.gt("dateTo", Date())))
         return find.toList()
     }
+
     fun getAllProcurations(): List<Procuration> {
         return procRep.find(ObjectFilters.ALL).toList()
     }
@@ -33,7 +34,22 @@ class AcceptedProcurations {
         return procRep.find(ObjectFilters.lt("dateTo", Date())).toList()
     }
 
+    fun getExpiredProcurationsLessThan7DaysOld(): List<Procuration> {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_MONTH, -7)
+        return procRep.find(ObjectFilters.and(
+            ObjectFilters.lt("dateTo", Date()), ObjectFilters.gt("dateTo",calendar.time))
+        ).toList()
+    }
+
     fun saveProcuration(procuration: Procuration) {
         procRep.insert(procuration)
     }
+/*
+    fun deleteExpiredProcurations() {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_MONTH, -7)
+        procRep.remove(ObjectFilters.lt("dateTo", calendar.time))
+    }
+    */
 }
