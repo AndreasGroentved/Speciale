@@ -50,7 +50,6 @@ class TangleController {
             LogI("Building Iota API wrapper with default values")
             IotaAPI.Builder().build() //https://nodes.devnet.iota.org:443
         }
-
     }
 
     fun getTransactions(seed: String, tag: Tag?): List<Transaction> {
@@ -156,7 +155,7 @@ class TangleController {
         }
     }
 
-    fun getNewestBroadcast(entityName: String, publicKey: String): String?{
+    fun getNewestBroadcast(entityName: String, publicKey: String): String? {
         LogI("getNewestBroadcast entityName: $entityName publicKey: $publicKey")
         return try {
             val transactions =

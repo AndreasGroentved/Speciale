@@ -29,8 +29,7 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
             )
         )
         add(
-            //TimeResource(), listOf(ResourceMethod("GET", mapOf("time" to "List<String, String>"), "Gets time in map of hour to on time"))
-            //TODO
+            TimeResource(), listOf(ResourceMethod("GET", mapOf("time" to "List<String, String>"), "Gets time in map of hour to on time"))
         )
     }
 
@@ -102,15 +101,11 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
         override fun handleGET(exchange: CoapExchange?) {
             updateTimeMap()
             exchange?.let {
-                val map = exchange.requestOptions.uriQuery.map {
-                    it.split("=").let {
-                        mapOf(
-                            "from" to (it.getOrNull(0)?.toLong() ?: 0L), "to" to (it.getOrNull(0)?.toLong()
-                                ?: System.currentTimeMillis())
-                        )
-                    }
-                }.first() //TODO det er fedt -> lav om
-                val timeFromTo = getOnTimeFromTo(map["from"]!!.toLong(), map["to"]!!.toLong()).map { TimeUsage(it.key, it.value) }
+                val from = exchange.requestOptions.uriQuery.getOrNull(0)?.let { it.split("=").getOrNull(1)?.toLong() }
+                    ?: 0L
+                val to = exchange.requestOptions.uriQuery.getOrNull(1)?.let { it.split("=").getOrNull(1)?.toLong() }
+                    ?: 0L
+                val timeFromTo = getOnTimeFromTo(from, to).map { TimeUsage(it.key, it.value) }
                 val hourOnList = "{\"result\":${gson.toJson(timeFromTo)}}"
                 exchange.respond(hourOnList)
             }

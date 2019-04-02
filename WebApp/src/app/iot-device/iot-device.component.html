@@ -1,7 +1,8 @@
 <app-navbar></app-navbar>
 <p class="text-center"><b class="display-3">{{id}}</b></p>
+<app-power [deviceId]=id></app-power>
 <table class="table container d-flex justify-content-center" style="table-layout: fixed">
-  <tr class="row"><app-power [deviceId]=id></app-power></tr>
+
   <tr class="row" *ngFor="let module of modules; let i = index">
       <app-iot-module [deviceResource]=module [deviceId]=id></app-iot-module>
   </tr>
