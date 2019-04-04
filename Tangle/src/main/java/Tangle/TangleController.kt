@@ -75,10 +75,10 @@ class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK A
         return transactions
     }
 
-    fun getMessagesUnchecked(tag: Tag?): List<String> { //does not compare signatures
+    fun getMessagesUnchecked(tag: Tag?): List<Pair<String, String>> { //does not compare signatures
         LogI("getting messages unchecked tag: $tag")
         val transactions = getTransactions(tag)
-        return transactions.mapNotNull { getASCIIFromTrytes(it.signatureFragments) }
+        return transactions.mapNotNull { t -> getASCIIFromTrytes(t.signatureFragments)?.let { a -> Pair(a, t.address) } }
     }
 
     fun generateAddress(): String {
