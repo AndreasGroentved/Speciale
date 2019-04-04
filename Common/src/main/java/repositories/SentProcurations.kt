@@ -17,9 +17,9 @@ class SentProcurations {
         procRep = db.getRepository(Procuration::class.java)
     }
 
-    fun getProcurationDeviceID(deviceID: String): Procuration {
+    fun getProcurationDeviceID(deviceID: String): Procuration? {
         val find = procRep.find(eq("deviceID", deviceID))
-        return find.first()
+        return find.firstOrNull()
     }
 
     fun getProcurationMessageChainID(messageChainID: String): Procuration {

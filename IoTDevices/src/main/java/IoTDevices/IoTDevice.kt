@@ -68,8 +68,8 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
             return
         }
 
-        var endOfCurrentHour = getStartOfHour(System.currentTimeMillis() + lengthOfHour)
         var lastCalcHour = getStartOfHour(lastCalculateTime)
+        var endOfCurrentHour = getStartOfHour(lastCalcHour + lengthOfHour)
         val now = System.currentTimeMillis()
         while (lastCalcHour < now) {
             val elapsedTime = if (now > endOfCurrentHour) endOfCurrentHour - lastCalculateTime
@@ -156,7 +156,7 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
                 val postMessage = gson.fromJson(requestText, PostMessage::class.java).params
                 val turnOn = postMessage["status"]?.toBoolean() ?: return@apply
                 if (turnOn) turnOn() else turnOff()
-                respond("{\"result\":{\"status\" :$turnOn }}")
+                respond("{\"result\":{\"status\":$turnOn }}")
             }
         }
     }
