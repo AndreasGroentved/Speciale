@@ -24,7 +24,6 @@ export class IotDeviceModuleComponent implements OnInit {
   postValues: Map<string, string> = new Map();
   formData = {};
 
-
   constructor(private webService: WebService, private moduleService: ModuleService) {
   }
 
@@ -35,16 +34,19 @@ export class IotDeviceModuleComponent implements OnInit {
     this.name = this.deviceResource.path;
     this.getModules = ms.getModuleInputTypes(this.deviceResource, 'GET');
     this.postModules = ms.getModuleInputTypes(this.deviceResource, 'POST');
-    this.getModules = this.getModules.filter(m => {
-      this.checkForName(m.name);
-    });
     this.getModules.forEach(value => this.addGetValue(value.name));
     this.postModules.forEach(value => this.addPostValue(value));
+    console.log(this.getValues);
+    console.log(this.postValues);
+  }
+
+  getFilteredGetModules() {
+    return this.getModules.filter(m => this.checkForName(m.name));
   }
 
   checkForName(name: string) {
     return this.postModules.find(p =>
-      p.name === name) !== null;
+      p.name === name) == null;
   }
 
   postUpdate() {
@@ -64,18 +66,9 @@ export class IotDeviceModuleComponent implements OnInit {
     ws.postDeviceValue(this.deviceId, this.ownedDevice, this.deviceResource.path, this.messageChainID, this.formData, val => {
       try {
         Object.keys(val).forEach(key => {
-          outer.getValues.set(key, val[key]);
-        });
-        outer.getValues.forEach((k, v) => {
-          if (outer.postValues.has(k)) {
-            outer.postValues.set(k, v);
-          }
-        });
-        outer.postValues.forEach((k, v) => {
-          outer.getValues.delete(k);
+          this.formData[key] = val[key];
         });
       } catch (e) {
-
       }
     });
   }
@@ -88,14 +81,6 @@ export class IotDeviceModuleComponent implements OnInit {
           this.formData[getMethod] = val;
         } catch (e) {
         }
-        this.getValues.forEach((k, v) => {
-          if (this.postValues.has(k)) {
-            this.postValues.set(k, v);
-          }
-        });
-        this.postValues.forEach((k, v) => {
-          this.getValues.delete(k);
-        });
       });
     });
 

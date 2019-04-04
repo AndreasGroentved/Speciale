@@ -1,4 +1,4 @@
-<div *ngFor="let keyValue of getValues | keyvalue">
+<div *ngFor="let keyValue of getFilteredGetModules() | keyvalue">
   {{ keyValue.key }} {{keyValue.value}}
 </div>
 <div *ngFor="let keyValue of postValues| keyvalue">
@@ -17,7 +17,7 @@
   </div>
   <div *ngIf="keyValue.value=='String'">
      <input type="text" [(ngModel)]="formData[keyValue.key]"
-                              name="{{keyValue.value}}" value=""/>
+                              name="{{keyValue.value}}"/>
   </div>
 </div>
 <button class="btn btn-success" style="margin-left: 1vw" (click)="postUpdate()">Update</button>
