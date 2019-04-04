@@ -18,7 +18,7 @@ import java.util.*
 abstract class IoTDevice(val id: String = "") : CoapServer() {
     var coapPort: Int = -1
     val deviceSpecification = DeviceSpecification(id, mutableListOf())
-    private val timeMap = mutableMapOf<Long, Long>()//TODO gem i db
+    private val timeMap = mutableMapOf<Long, Long>()
     private var lastCalculateTime = -1L
     protected val gson = Gson()
     private var timeRep: ObjectRepository<TimePair>

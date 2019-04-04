@@ -18,6 +18,10 @@ class PropertiesLoader private constructor() {
         return properties.getProperty(key)
     }
 
+    fun hasProperty(key: String): Boolean {
+        return properties.containsKey(key)
+    }
+
     fun getOptionalProperty(key: String): String? {
         return properties.getProperty(key)
     }

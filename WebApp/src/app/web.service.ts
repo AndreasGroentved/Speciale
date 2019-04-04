@@ -199,14 +199,14 @@ export class WebService {
   getMessages(deviceID: string, callback: ([Message]) => (void)) {
     this.http.get(this.serverUrl + '/tangle/messages/' + deviceID).subscribe(value => {
       console.log(value);
-      callback(value as [DeviceMessage]);
+      callback(value['result'] as [DeviceMessage]);
     });
   }
 
   getMessageChainID(deviceID: string, callback: (string) => (void)) {
     this.http.get(this.serverUrl + '/tangle/messagechainid/' + deviceID).subscribe(value => {
       console.log(value);
-      callback(value as string);
+      callback(value['result'] as string);
     });
   }
 }

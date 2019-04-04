@@ -12,7 +12,7 @@ import org.slf4j.simple.SimpleLoggerFactory
 class NordPoolAPIMock(private val logger: Logger = SimpleLoggerFactory().getLogger("NordPoolAPIMock")) {
 
     private val seed = "TEST99999999999999999999999999999999999999999999999999999999999999999999999999999"
-    private val tangleController = TangleController()
+    private val tangleController = TangleController(seed)
     private val nordPoolAPIMockResponse = loadMockResponse()
     private val gson = Gson()
 
@@ -27,9 +27,9 @@ class NordPoolAPIMock(private val logger: Logger = SimpleLoggerFactory().getLogg
         val signedResponse1 = signMockResponse(gson.toJson(copy))
         val signedResponse2 = signMockResponse(gson.toJson(copy2))
         logger.info("Attaching to tangle: $signedResponse1")
-        tangleController.attachBroadcastToTangle(seed, signedResponse1, "NP")
+        tangleController.attachBroadcastToTangle(signedResponse1, "NP")
         logger.info("Attaching to tangle: $signedResponse2")
-        println(tangleController.attachBroadcastToTangle(seed, signedResponse2, "NP"))
+        println(tangleController.attachBroadcastToTangle(signedResponse2, "NP"))
     }
 
     private fun loadMockResponse(): NordPoolAPIMockResponse {

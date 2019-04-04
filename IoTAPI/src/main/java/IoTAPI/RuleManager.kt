@@ -37,7 +37,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
 
     private var threadPoolExecutor = ScheduledThreadPoolExecutor(10)
     private lateinit var content: Content
-    private val tangleController = TangleController()
+    private val tangleController = TangleController("")
     var parse = ParseDsl()
     val variables = mutableMapOf<String, Expression>()
 
@@ -71,7 +71,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
     }
 
 
-    fun updateDsl(dslString: String): Response { //TODO for nu, er det bare forkast gammel DSL
+    fun updateDsl(dslString: String): Response {
         threadPoolExecutor.shutdownNow() //Boom
         threadPoolExecutor = ScheduledThreadPoolExecutor(10)
         val hParse = HestParser(CommonTokenStream(HestLexer(CharStreams.fromStream(dslString.byteInputStream()))))

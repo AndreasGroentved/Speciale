@@ -20,12 +20,11 @@ class ClientDiscovery : ReceiverAdapter() {
     //TODO: ikke sindsygt related, men cancel procurations, når der kommer en XDSPEC message i Tangle
     override fun viewAccepted(new_view: View) {
         members.forEach {
-            if(!new_view.containsMember(it.key)) {
+            if (!new_view.containsMember(it.key)) {
                 removeCallBack?.invoke(it.value)
             }
         }
     }
-
 
     override fun receive(msg: Message) {
         members[msg.src] = String(msg.buffer)

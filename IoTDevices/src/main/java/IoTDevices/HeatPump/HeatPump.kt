@@ -55,8 +55,6 @@ class HeatPump(id: String = UUID.randomUUID().toString()) : IoTDevice(id) {
             attributes.title = "Heat pump resource"
         }
 
-        //todo: overvej formatet på det her + det skal passe med DSL
-
         override fun handleGET(exchange: CoapExchange?) {
             LogI("get temperature $temperature")
             exchange?.respond(gson.toJson(ClientResponse(temperature)))

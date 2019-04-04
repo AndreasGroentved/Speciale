@@ -16,7 +16,7 @@ class EnerginetAPIAdapter {
 
     private val gson = Gson()
     private val seed = "TESTA9999999999999999999999999999999999999999999999999999999999999999999999999999"
-    private val tangleController = TangleController()
+    private val tangleController = TangleController(seed)
     private val logger = SimpleLoggerFactory().getLogger("EnergiNetAPIAdapter")
 
     fun publishCO2Signal(retries: Int) {
@@ -37,7 +37,7 @@ class EnerginetAPIAdapter {
             val privateECKey = EncryptionHelper.loadPrivateECKeyFromProperties("energinetPrivateKey")
             val signed = toJson + "__" + EncryptionHelper.signBase64(privateECKey, toJson)
             logger.info("Attaching to tangle: $signed")
-           println(tangleController.attachBroadcastToTangle(seed, signed, "EN"))
+           println(tangleController.attachBroadcastToTangle(signed, "EN"))
         } else return publishCO2Signal(retries + 1)
     }
 

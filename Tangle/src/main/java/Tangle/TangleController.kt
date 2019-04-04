@@ -18,7 +18,7 @@ import jota.utils.TrytesConverter
 import repositories.ProcessedTransactions
 import java.math.BigInteger
 
-class TangleController { //TODO: Håndter addresse indexes getTransactions
+class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK ADDRESS INDEX FROM & TO IN GETTRANSACTIONS
 
     private lateinit var nodeAddress: String
     private lateinit var nodePort: String
@@ -27,6 +27,7 @@ class TangleController { //TODO: Håndter addresse indexes getTransactions
     private lateinit var iotaAPI: IotaAPI
     private val gson = Gson()
     private val pt = ProcessedTransactions
+    private lateinit var address: String
 
     init {
         initIotaAPI(loadProperties())
@@ -50,10 +51,13 @@ class TangleController { //TODO: Håndter addresse indexes getTransactions
             LogI("Building Iota API wrapper with default values")
             IotaAPI.Builder().build() //https://nodes.devnet.iota.org:443
         }
+        if (!PropertiesLoader.instance.hasProperty("tangleAddress")) {
+            PropertiesLoader.instance.writeProperty("tangleAddress", generateAddress())
+        }
+        address = PropertiesLoader.instance.getProperty("tangleAddress")
     }
 
-    fun getTransactions(seed: String, tag: Tag?): List<Transaction> {
-        LogI("getTransactions for seed: $seed")
+    fun getTransactions(tag: Tag?): List<Transaction> {
         val transferResponse = try {
             iotaAPI.getTransfers(seed, nodeSecurity, 0, 1, false)
         } catch (e: ArgumentException) {
@@ -71,28 +75,30 @@ class TangleController { //TODO: Håndter addresse indexes getTransactions
         return transactions
     }
 
-    fun getMessagesUnchecked(seed: String, tag: Tag?): List<String> { //does not compare signatures
+    fun getMessagesUnchecked(tag: Tag?): List<String> { //does not compare signatures
         LogI("getting messages unchecked tag: $tag")
-        val transactions = getTransactions(seed, tag)
+        val transactions = getTransactions(tag)
         return transactions.mapNotNull { getASCIIFromTrytes(it.signatureFragments) }
     }
 
-    fun attachBroadcastToTangle(seed: String, message: String, tag: Tag): SendTransferResponse? = attachBroadcastToTangle(seed, message, tag.name)
+    fun generateAddress(): String {
+        return iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first()
+    }
+
+    fun attachBroadcastToTangle(message: String, tag: Tag): SendTransferResponse? = attachBroadcastToTangle(message, tag.name)
 
 
-    fun attachBroadcastToTangle(seed: String, message: String, tag: String): SendTransferResponse? {
+    fun attachBroadcastToTangle(message: String, tag: String): SendTransferResponse? {
         LogI("Attaching transaction to tangle, seed: $seed\nmessage: $message\ntag:$tag")
         val messageTrytes = TrytesConverter.asciiToTrytes(message)
         val tagTrytes = TrytesConverter.asciiToTrytes(tag)
         val transfer =
-            Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false, 0).first(), 0, messageTrytes, tagTrytes)
+            Transfer(address, 0, messageTrytes, tagTrytes)
         return try {
-            val r = iotaAPI.sendTransfer(
-                seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false,0).first(),
+            iotaAPI.sendTransfer(
+                seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, address,
                 false, false, null
             )
-/*            r?.let { it.transactions.forEach { pt.saveHash(it.hash) } }*/
-            r
         } catch (e: Exception) {
             LogE(e.toString())
             when (e) {
@@ -107,7 +113,7 @@ class TangleController { //TODO: Håndter addresse indexes getTransactions
         }
     }
 
-    fun attachTransactionToTangle(seed: String, message: String, tag: Tag, addressTo: String): SendTransferResponse? {
+    fun attachTransactionToTangle(message: String, tag: Tag, addressTo: String): SendTransferResponse? {
         LogI("Attaching transaction to tangle, seed: $seed\nmessage: $message\ntag:$tag")
         val messageTrytes = TrytesConverter.asciiToTrytes(message)
         val tagTrytes = TrytesConverter.asciiToTrytes(tag.name)
@@ -116,7 +122,7 @@ class TangleController { //TODO: Håndter addresse indexes getTransactions
         return try {
             //pt.saveHash(transfer.hash)
             iotaAPI.sendTransfer(
-                seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false, 0).first(),
+                seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, address,
                 false, false, null
             )
         } catch (e: Exception) {
@@ -132,11 +138,11 @@ class TangleController { //TODO: Håndter addresse indexes getTransactions
         }
     }
 
-    fun attachDeviceToTangle(seed: String, tangleDeviceSpecification: String): SendTransferResponse? {
+    fun attachDeviceToTangle(tangleDeviceSpecification: String): SendTransferResponse? {
         LogI("Attaching device to tangle, seed: $seed\ndeviceSpecification: $tangleDeviceSpecification")
         val messageTrytes = TrytesConverter.asciiToTrytes(tangleDeviceSpecification)
         val deviceSpecificationTagTrytes = TrytesConverter.asciiToTrytes(Tag.DSPEC.name)
-        val transfer = Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false, 0).first(), 0, messageTrytes, deviceSpecificationTagTrytes)
+        val transfer = Transfer(address, 0, messageTrytes, deviceSpecificationTagTrytes)
         return try {
             iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null,
@@ -213,9 +219,9 @@ class TangleController { //TODO: Håndter addresse indexes getTransactions
         }
     }
 
-    fun getPendingMethodCalls(seed: String, procurations: List<Procuration>): List<PostMessageHack> {
+    fun getPendingMethodCalls(procurations: List<Procuration>): List<PostMessageHack> {
         LogI("getting Pending Method Calls, seed: $seed procurations: $procurations")
-        val transactions = getTransactions(seed, Tag.MC)
+        val transactions = getTransactions(Tag.MC)
         val postMessages = transactions.mapNotNull { transaction ->
             getASCIIFromTrytes(transaction.signatureFragments)?.let { ascii ->
                 val signature = ascii.substringAfter("__")
