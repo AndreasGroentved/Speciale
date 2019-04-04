@@ -22,11 +22,11 @@ export class TangleDevicesComponent implements OnInit {
 
 
   ngOnInit() {
-    this.webService.getUnpermissionedTangleDevices(devices => {
-      this.unPermissionedDevices = devices;
+    this.webService.getUnpermissionedTangleDevices(unpermissioned => {
       this.webService.getPermissionedTangleDevices(permissioned => {
+        this.unPermissionedDevices = unpermissioned.filter(d => permissioned.find(hest => hest.address === d.address
+          && hest.tangleDeviceSpecification.deviceSpecification.id === d.tangleDeviceSpecification.deviceSpecification.id) === null);
         this.permissionedDevices = permissioned;
-        this.unPermissionedDevices = this.unPermissionedDevices.filter(d => !permissioned.includes(d));
       });
     });
   }
