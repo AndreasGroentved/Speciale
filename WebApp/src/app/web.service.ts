@@ -96,7 +96,6 @@ export class WebService {
   getDevice(deviceID, callback: (device: DeviceSpecification) => (void)) {
     this.http.get(this.serverUrl + '/device/' + deviceID).subscribe(results => {
       let device: DeviceSpecification = results['result'] as DeviceSpecification;
-      device.deviceResources = device.deviceResources.filter(a => a.path != 'time');
       callback(device);
     });
   }

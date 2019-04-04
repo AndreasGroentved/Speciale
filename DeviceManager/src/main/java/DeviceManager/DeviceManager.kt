@@ -37,11 +37,15 @@ class DeviceManager {
 
     fun startDiscovery() {
         Thread {
-            ClientDiscovery().startListening {
+            ClientDiscovery().startListening( {
                 val simpleDevice = gson.fromJson(it, Device::class.java)
                 LogI("Found device $simpleDevice")
                 devicesIdIpToSpecification[simpleDevice.idIp] = simpleDevice
-            }
+            }, {
+                val simpleDevice = gson.fromJson(it, Device::class.java)
+                LogI("Lost device $simpleDevice")
+                devicesIdIpToSpecification.remove(simpleDevice.idIp)
+            })
         }.start()
     }
 
