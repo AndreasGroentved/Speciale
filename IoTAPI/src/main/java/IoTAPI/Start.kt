@@ -47,9 +47,14 @@ class IoTAPI {
 
 
     val tangleDeviceCallback: (postMessage: PostMessage, result: (datatypes.Response) -> (Unit)) -> (Unit) = { pM: PostMessage, result ->
+        val tdsa = deviceSpecifications.getAllPermissionedSpecs(listOf(pM.deviceID)).firstOrNull()
         val chainId = sentProcurations.getProcurationDeviceID(pM.deviceID)
-        chainId?.let { PostMessage(it.messageChainID, pM.deviceID, pM.type, pM.path, pM.params, it.recipientPublicKey.toString()) }
-            ?.apply { sendMethodCall(this, privateKey, this.addressTo); methodResponseTask() }
+
+        chainId?.let { proc -> tdsa?.let { PostMessage(proc.messageChainID, pM.deviceID, pM.type, pM.path, pM.params, it.address) } }
+            ?.apply {
+                println(this)
+                sendMethodCall(this, privateKey, this.addressTo); methodResponseTask()
+            }
             ?.let {
                 val listener = MessageRepo.ListenerStuff(it.deviceID, it.path)
                 val callback = { resp: datatypes.Response ->
@@ -245,7 +250,7 @@ class IoTAPI {
                 val proAck = gson.fromJson(proAckString, ProcurationAck::class.java)
                 val signature = it.first.substringAfter("__")
                 sentProcurations.getProcurationMessageChainID(proAck.messageChainID)?.let { d ->
-                    deviceSpecifications.getUnpermissionedSpec(d.deviceID)?.let {spec ->
+                    deviceSpecifications.getUnpermissionedSpec(d.deviceID)?.let { spec ->
                         if (EncryptionHelper.verifySignatureBase64(EncryptionHelper.loadPublicECKeyFromBigInteger(BigInteger(spec.tangleDeviceSpecification.publicKey)), proAckString, signature)) procurationAcks.saveProAck(proAck)
                     }
                 }
@@ -376,14 +381,14 @@ class IoTAPI {
         }
         val response = gson.toJson(Message(gson.toJson(result), Date(), message.postMessage.deviceID, message.postMessage.messageChainID, message.postMessage.path))
         val signature = EncryptionHelper.signBase64(privateKey, response)
-        tangleController.attachTransactionToTangle( response + "__" + signature, Tag.MR, message.addressFrom)
+        tangleController.attachTransactionToTangle(response + "__" + signature, Tag.MR, message.addressFrom)
     }
 
 
     fun sendMethodCall(postMessage: PostMessage, privateKey: PrivateKey, addressTo: String) {
         val toJson = gson.toJson(postMessage)
         val signBase64 = EncryptionHelper.signBase64(privateKey, toJson)
-        tangleController.attachTransactionToTangle( toJson + "__" + signBase64, Tag.MC, addressTo)
+        tangleController.attachTransactionToTangle(toJson + "__" + signBase64, Tag.MC, addressTo)
         messageRepo.saveMessage(Message(toJson, Date(), postMessage.deviceID))
     }
 
@@ -392,7 +397,7 @@ class IoTAPI {
         val procurationAck = ProcurationAck(procuration.messageChainID, accepted)
         val json = gson.toJson(procurationAck)
         val signBase64 = EncryptionHelper.signBase64(privateKey, json)
-        tangle.attachBroadcastToTangle( json + "__" + signBase64, Tag.PROACK)?.let {
+        tangle.attachBroadcastToTangle(json + "__" + signBase64, Tag.PROACK)?.let {
             procurations.saveProcuration(procuration)
             messageRepo.saveMessage(Message(json, Date(), procuration.deviceID))
         }

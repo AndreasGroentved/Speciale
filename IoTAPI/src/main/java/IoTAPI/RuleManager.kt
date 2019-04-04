@@ -93,6 +93,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         })
 
         return try {
+            println(dslString)
             pWalker.walk(parse, hParse.content())
             if (!error.isBlank()) {
                 return ErrorResponse(error)
@@ -219,7 +220,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
 
     private fun run(outPut: OutPut, callback: ((Expression?) -> (Unit))?) {
         val postMessage = PostMessage(deviceID = outPut.deviceID, params = outPut.params.toMap(), path = outPut.path, type = outPut.method.toLowerCase())
-        val isTangleDevice = deviceManager.getDevice(outPut.deviceID) != null
+        val isTangleDevice = deviceManager.getDevice(outPut.deviceID) == null
 
         if (isTangleDevice) {
             try {

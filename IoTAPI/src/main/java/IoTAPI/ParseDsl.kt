@@ -64,7 +64,8 @@ class ParseDsl : HestParserBaseListener() {
     }
 
     override fun enterDevice(ctx: HestParser.DeviceContext) {
-        currentOutPut.deviceID = ctx.deviceName.text
+        println(ctx.deviceName.text)
+        currentOutPut.deviceID = ctx.deviceName.text.replace("\"", "")
     }
 
     override fun enterPath(ctx: HestParser.PathContext) {

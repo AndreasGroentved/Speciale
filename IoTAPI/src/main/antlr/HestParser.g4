@@ -12,7 +12,7 @@ interval: 'from' fromDate = DATELIT fromTime = TIMELIT 'to' toDate=DATELIT toTim
 run: 'run' '{' condition=expression output* /*varpath* */'}';
 eqOperator: '<' | '==' | '!=' | '<=' | '>' | '=>';
 output:  device path  method=('post' | 'get') parameter*;
-device: 'device' deviceName=ID;
+device: 'device' deviceName=STRINGLIT;
 path: 'path' ID;
 parameter: parName=STRINGLIT parValue=varTypes;
 varpath: ('var' varName=ID '=')? output;

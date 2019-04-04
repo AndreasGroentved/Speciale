@@ -34,7 +34,7 @@ class MessageRepo {
         changeInfo.changedItems.map { changedItem ->
             val d = changedItem.document
             try {
-                val m = Message(d.get("text", String::class.java).substringBefore("__"), d.get("timeStamp", Date::class.java), d.get("deviceID", String::class.java), d.get("messageChainID", String::class.java), d.get("methodName", String::class.java))
+                val m = Message(d.get("text", String::class.java).substringBefore("__"), Date(d.get("timestamp") as Long), d.get("deviceID", String::class.java), d.get("messageChainID", String::class.java), d.get("methodName", String::class.java))
                 callback(m)
             } catch (e: Exception) {
                 LogE(e)
@@ -52,7 +52,7 @@ class MessageRepo {
                 try {
                     val isCorrectPath = d.get("methodName", String::class.java).toLowerCase() == path
                     if (!isCorrectPath) return@forEach
-                    val m = Message(d.get("text", String::class.java).substringBefore("__"), d.get("timeStamp", Date::class.java), d.get("deviceID", String::class.java), d.get("messageChainID", String::class.java), d.get("methodName", String::class.java))
+                    val m = Message(d.get("text", String::class.java).substringBefore("__"), Date(d.get("timestamp") as Long), d.get("deviceID", String::class.java), d.get("messageChainID", String::class.java), d.get("methodName", String::class.java))
                     val postMessage = gson.fromJson(m.text, ClientResponse::class.java)
                     if (!postMessage.result.toString().isEmpty()) {
                         callback?.invoke(ClientResponse(postMessage.result.toString()))

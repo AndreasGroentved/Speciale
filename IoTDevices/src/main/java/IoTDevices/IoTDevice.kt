@@ -34,12 +34,13 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
         loadProperties()
         lastCalculateTime = System.currentTimeMillis()
         add(
-            OnOffResource(), listOf(
+            OnOffResource("onOff"), listOf(
                 ResourceMethod("GET", mapOf("status" to "Boolean"), "Gets the current status"),
                 ResourceMethod("POST", mapOf("status" to "Boolean"), "Turn device on/off")
             )
         )
-        super.add(
+
+        super.add   (
             TimeResource()
         )
     }
@@ -140,9 +141,9 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
     }
 
 
-    inner class OnOffResource : CoapResource("onOff") {
+    inner class OnOffResource(title:String) : CoapResource(title) {
         init {
-            attributes.title = "onOff"
+            attributes.title = title
         }
 
         override fun handleGET(exchange: CoapExchange?) {
