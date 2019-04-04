@@ -32,7 +32,7 @@ fun main() {
 
 }
 
-class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), private val tangleDeviceCallback: ((postMessage: PostMessage) -> (datatypes.Response))? = null, private val gson: Gson = Gson()) {
+class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), private val tangleDeviceCallback: ((postMessage: PostMessage, result: (datatypes.Response) -> (Unit)) -> (Unit))? = null, private val gson: Gson = Gson()) {
 
 
     private var threadPoolExecutor = ScheduledThreadPoolExecutor(10)
@@ -167,6 +167,9 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
             map[rule]?.cancel(true)
             return
         }
+
+
+
         assignDataSets(content.dataSets)
         parse.varMap.forEach { t, u ->
             val toAssign = validateExp(u)
@@ -174,22 +177,30 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         }
         println(variables)
 
+
+        var numberOfAssignments = 0
         rule.assignmentsFromDevice.forEach { p ->
-            val toAssign = run(p.second)
-            if (toAssign != null) variables[p.first] = toAssign
-            else {
-                LogE("No value from device")
-                return
+            run(p.second) { expression ->
+                val toAssign = expression
+                if (toAssign != null) variables[p.first] = toAssign
+                else {
+                    LogE("No value from device")
+                    return@run
+                }
+                numberOfAssignments++
+                if (numberOfAssignments == rule.assignmentsFromDevice.size) {
+                    val validatePreCondition = validateSteps(rule.steps)
+                    if (validatePreCondition) {
+                        LogI("condition valid")
+                        rule.deviceCalls.forEach { run(it, null) }
+                    } else {
+                        LogI("condition not valid")
+                    }
+                }
             }
         }
-        val validatePreCondition = validateSteps(rule.steps)
-        if (validatePreCondition) {
-            LogI("condition valid")
-            rule.deviceCalls.forEach { run(it) }
-        } else {
-            LogI("condition not valid")
-        }
     }
+
 
     private fun isInTimeInterval(rule: Rule): Boolean {
         val timeInterval = rule.time
@@ -206,28 +217,30 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         }
     }
 
-    private fun run(outPut: OutPut): Expression? = runResponseToExpression(
-        //TODO set path parametre?
-        if (outPut.method.toLowerCase() == "post") {
-            LogI("posting")
+    private fun run(outPut: OutPut, callback: ((Expression?) -> (Unit))?) {
+        val postMessage = PostMessage(deviceID = outPut.deviceID, params = outPut.params.toMap(), path = outPut.path, type = outPut.method.toLowerCase())
+        val isTangleDevice = deviceManager.getDevice(outPut.deviceID) != null
+
+        if (isTangleDevice) {
             try {
-                val postMessage = PostMessage(deviceID = outPut.deviceID, params = outPut.params.toMap(), path = outPut.path, type = "post")
-                if (deviceManager.getDevice(outPut.deviceID) != null) {
-                    (deviceManager.post(outPut.deviceID, outPut.path, gson.toJson(postMessage)) as ClientResponse).result.toString()
-                } else {
-                    tangleDeviceCallback?.let { it(postMessage) }?.let { it as? ClientResponse }!!.result.toString()
+                tangleDeviceCallback?.let {
+                    it(postMessage) {
+                        callback?.invoke(runResponseToExpression(it.let { it as? ClientResponse }!!.result.toString()))
+                    }
                 }
             } catch (e: Exception) {
                 LogE(e.message)
-                null
+                callback?.invoke(null)
             }
         } else {
             LogI("getting")
-            val resp = deviceManager.get(PostMessage(deviceID = outPut.deviceID, path = outPut.path))
-            if (resp is ErrorResponse) null
-            else (resp as ClientResponse).result.toString()
+            val resp = if (postMessage.type.toLowerCase() == "get") deviceManager.get(postMessage) else deviceManager.post(postMessage)
+            callback?.invoke(
+                if (resp is ErrorResponse) null
+                else runResponseToExpression((resp as ClientResponse).result.toString())
+            )
         }
-    )
+    }
 
     private fun runResponseToExpression(value: String?): Expression? = value?.let {
         getExpressionFromAnyValue(gson.fromJson(value, ResponseToClient::class.java).result)

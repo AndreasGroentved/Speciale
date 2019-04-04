@@ -9,6 +9,11 @@ import datatypes.ErrorResponse
 import datatypes.iotdevices.*
 import datatypes.tangle.Tag
 import helpers.*
+import org.eclipse.jetty.websocket.api.Session
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage
+import org.eclipse.jetty.websocket.api.annotations.WebSocket
 import repositories.*
 import spark.*
 import spark.Spark.*
@@ -36,16 +41,24 @@ class IoTAPI {
     private val procurationAcks = ProcurationAcks()
     private val sentProcurations = SentProcurations()
     private val deviceSpecifications = TangleDeviceSpecifications()
+    private val ws = ChatWebSocketHandler()
 
     //TODO alle metoder skal altid returnere valid JSON
 
 
-    val tangleDeviceCallback: (postMessage: PostMessage) -> (datatypes.Response) = { pM: PostMessage ->
+    val tangleDeviceCallback: (postMessage: PostMessage, result: (datatypes.Response) -> (Unit)) -> (Unit) = { pM: PostMessage, result ->
         val chainId = sentProcurations.getProcurationDeviceID(pM.deviceID)
         chainId?.let { PostMessage(it.messageChainID, pM.deviceID, pM.type, pM.path, pM.params, it.recipientPublicKey.toString()) }
             ?.apply { sendMethodCall(this, privateKey, this.addressTo); methodResponseTask() }
-            ?.let { ClientResponse("success") }
-            ?: ErrorResponse("Invalid device id")
+            ?.let {
+                val listener = MessageRepo.ListenerStuff(it.deviceID, it.path)
+                val callback = { resp: datatypes.Response ->
+                    messageRepo.registerSubscription(listener)
+                    result(resp)
+                }
+                listener.callback = callback
+                messageRepo.registerSubscription(listener)
+            } ?: result(ErrorResponse("Invalid device id"))
     }
 
     private val ruleManager = RuleManager(deviceManger, tangleDeviceCallback)
@@ -87,6 +100,14 @@ class IoTAPI {
             privateKey = EncryptionHelper.loadPrivateECKeyFromProperties("householdPrivateKey")
             publicKey = EncryptionHelper.loadPublicECKeyFromProperties("householdPublicKey")
         }
+
+        messageRepo.registerUpdates {
+            ws.sendUpdate(it)
+        }
+
+        webSocket("/messageChannel", ws)
+        init()
+
 
         Spark.exception(Exception::class.java) { e, _, _ -> LogE(e) }
         Spark.after("/*") { request, _ ->
@@ -284,6 +305,36 @@ class IoTAPI {
             request.params("deviceID")?.let { ClientResponse(sentProcurations.getProcurationDeviceID(it)!!.messageChainID) }
         })
     }
+
+
+    @WebSocket
+    inner class ChatWebSocketHandler {
+        private var user: Session? = null
+        private val gson = Gson()
+
+
+        fun sendUpdate(obj: Any) {
+            user?.remote?.sendString(gson.toJson(obj))
+        }
+
+        @OnWebSocketConnect
+        @Throws(Exception::class)
+        fun onConnect(user: Session) {
+            println(user)
+        }
+
+        @OnWebSocketClose
+        fun onClose(user: Session, statusCode: Int, reason: String) {
+
+        }
+
+        @OnWebSocketMessage
+        fun onMessage(user: Session, message: String) {
+            println(message)
+
+        }
+    }
+
 
     private fun methodTask() {
         pendingMethodCalls += tangleController.getPendingMethodCalls(procurations.getAcceptedProcurations())

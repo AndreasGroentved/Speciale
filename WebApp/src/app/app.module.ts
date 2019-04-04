@@ -19,8 +19,8 @@ import {ProcurationComponent} from './procuration/procuration.component';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 import {RequestDeviceComponent} from './request-device/request-device.component';
 import {StrangerDeviceComponent} from './stranger-device/stranger-device.component';
-import { NavbarComponent } from './navbar/navbar.component';
-
+import {NavbarComponent} from './navbar/navbar.component';
+import {MatButtonModule, MatSnackBarModule} from '@angular/material'
 
 const appRoutes: Routes = [
   {path: 'device/:id', component: IotDeviceComponent},
@@ -58,6 +58,8 @@ const appRoutes: Routes = [
     BrowserModule,
     HttpClientModule,
     FormsModule,
+    MatButtonModule,
+    MatSnackBarModule,
     RouterModule.forRoot(
       appRoutes,
       {enableTracing: true} // <-- debugging purposes only

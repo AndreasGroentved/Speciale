@@ -39,8 +39,8 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
                 ResourceMethod("POST", mapOf("status" to "Boolean"), "Turn device on/off")
             )
         )
-        add(
-            TimeResource(), listOf(ResourceMethod("GET", mapOf("time" to "List<String, String>"), "Gets time in map of hour to on time"))
+        super.add(
+            TimeResource()
         )
     }
 
@@ -82,6 +82,7 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
             updateHour(lastCalcHour, hourUsage)
             endOfCurrentHour += lengthOfHour
             lastCalcHour += lengthOfHour
+            lastCalculateTime = lastCalcHour
         }
         lastCalculateTime = now
         updateDb()

@@ -65,7 +65,7 @@ class AuthService {
         { _: Request, response: Response -> response.header("Access-Control-Allow-Origin", "*") })
 
 
-        post("/register/user")
+        post("/registerUpdates/user")
         { request, response ->
             val body = getParameterMap(request.body())
             users.add(User(body.getValue("username"), body.getValue("password"), BigInteger(body["publicKey"]), mutableListOf()))
@@ -82,7 +82,7 @@ class AuthService {
             token
 
         }
-        post("/register/device")
+        post("/registerUpdates/device")
         { request, response ->
             val token = getParameterMap(request.body())["token"]
             val deviceSpecificationJson = getParameterMap(request.body())["deviceSpecification"]
