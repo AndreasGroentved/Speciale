@@ -55,7 +55,7 @@ class TangleController { //TODO: Håndter addresse indexes getTransactions
     fun getTransactions(seed: String, tag: Tag?): List<Transaction> {
         LogI("getTransactions for seed: $seed")
         val transferResponse = try {
-            iotaAPI.getTransfers(seed, nodeSecurity, 0, 99, false)
+            iotaAPI.getTransfers(seed, nodeSecurity, 0, 1, false)
         } catch (e: ArgumentException) {
             LogE("Invalid parameters supplied for getTransactions, likely invalid seed \n$e")
             null
@@ -85,10 +85,10 @@ class TangleController { //TODO: Håndter addresse indexes getTransactions
         val messageTrytes = TrytesConverter.asciiToTrytes(message)
         val tagTrytes = TrytesConverter.asciiToTrytes(tag)
         val transfer =
-            Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, tagTrytes)
+            Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false, 0).first(), 0, messageTrytes, tagTrytes)
         return try {
             val r = iotaAPI.sendTransfer(
-                seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(),
+                seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false,0).first(),
                 false, false, null
             )
 /*            r?.let { it.transactions.forEach { pt.saveHash(it.hash) } }*/
@@ -116,7 +116,7 @@ class TangleController { //TODO: Håndter addresse indexes getTransactions
         return try {
             //pt.saveHash(transfer.hash)
             iotaAPI.sendTransfer(
-                seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(),
+                seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false, 0).first(),
                 false, false, null
             )
         } catch (e: Exception) {
@@ -136,7 +136,7 @@ class TangleController { //TODO: Håndter addresse indexes getTransactions
         LogI("Attaching device to tangle, seed: $seed\ndeviceSpecification: $tangleDeviceSpecification")
         val messageTrytes = TrytesConverter.asciiToTrytes(tangleDeviceSpecification)
         val deviceSpecificationTagTrytes = TrytesConverter.asciiToTrytes(Tag.DSPEC.name)
-        val transfer = Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first(), 0, messageTrytes, deviceSpecificationTagTrytes)
+        val transfer = Transfer(iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false, 0).first(), 0, messageTrytes, deviceSpecificationTagTrytes)
         return try {
             iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null,
