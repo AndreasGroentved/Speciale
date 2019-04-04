@@ -32,7 +32,7 @@ fun main() {
 
 }
 
-class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), private val gson: Gson = Gson()) {
+class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), private val tangleDeviceCallback: ((postMessage: PostMessage) -> (datatypes.Response))? = null, private val gson: Gson = Gson()) {
 
 
     private var threadPoolExecutor = ScheduledThreadPoolExecutor(10)
@@ -81,8 +81,6 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         var error = ""
         hParse.addErrorListener(object : ANTLRErrorListener {
             override fun reportAttemptingFullContext(recognizer: Parser, dfa: DFA, startIndex: Int, stopIndex: Int, conflictingAlts: BitSet, configs: ATNConfigSet) {}
-
-
             override fun syntaxError(recognizer: Recognizer<*, *>?, offendingSymbol: Any?, line: Int, charPositionInLine: Int, msg: String?, e: RecognitionException?) {
                 error = msg ?: ""
                 LogE("error occurred")
@@ -213,7 +211,12 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         if (outPut.method.toLowerCase() == "post") {
             LogI("posting")
             try {
-                (deviceManager.post(outPut.deviceID, outPut.path, gson.toJson(PostMessage(params = outPut.params.toMap()))) as ClientResponse).result.toString()
+                val postMessage = PostMessage(deviceID = outPut.deviceID, params = outPut.params.toMap(), path = outPut.path, type = "post")
+                if (deviceManager.getDevice(outPut.deviceID) != null) {
+                    (deviceManager.post(outPut.deviceID, outPut.path, gson.toJson(postMessage)) as ClientResponse).result.toString()
+                } else {
+                    tangleDeviceCallback?.let { it(postMessage) }?.let { it as? ClientResponse }!!.result.toString()
+                }
             } catch (e: Exception) {
                 LogE(e.message)
                 null

@@ -22,7 +22,6 @@ import java.util.concurrent.TimeUnit
 //todo: random location i know, men husk lige at man skulle kunne kalde get på tangle devices
 class IoTAPI {
     private val hs = HouseRules()
-    private val ruleManager = RuleManager()
     private val seed = "TEEEA9999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val seedTEST = "TESTQT999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val deviceManger = DeviceManager()
@@ -41,8 +40,20 @@ class IoTAPI {
 
     //TODO alle metoder skal altid returnere valid JSON
 
+
+    val tangleDeviceCallback: (postMessage: PostMessage) -> (datatypes.Response) = { pM: PostMessage ->
+        val chainId = sentProcurations.getProcurationDeviceID(pM.deviceID)
+        chainId?.let { PostMessage(it.messageChainID, pM.deviceID, pM.type, pM.path, pM.params, it.recipientPublicKey.toString()) }
+            ?.apply { sendMethodCall(this, privateKey, this.addressTo); methodResponseTask() }
+            ?.let { ClientResponse("success") }
+            ?: ErrorResponse("Invalid device id")
+    }
+
+    private val ruleManager = RuleManager(deviceManger, tangleDeviceCallback)
+
+
     private val transformer = JsonTransformer()
-    private val lambda = ResponseTransformer { a: Any -> transformer.render(a) }
+    private val lambda = ResponseTransformer { transformer.render(it) }
 
     fun get(path: String, route: Route) {
         get(path, route, lambda)
@@ -182,11 +193,8 @@ class IoTAPI {
         })
 
         get("/time/:id", Route { request, _ ->
-            LogI(request.queryParams())
-            //TODO ????? skal der laves noget her?
             val from = request.queryParams("from") as String
             val toTime = request.queryParams("to") as String
-            println(from + ", " + toTime)
             val id = request.params(":id") as String
             val postMessage = PostMessage("this", id, "get", "time", mapOf("from" to from, "to" to toTime))
             deviceManger.get(postMessage)
@@ -266,15 +274,14 @@ class IoTAPI {
         })
 
 
-            //todo wrap i result
+        //todo wrap i result
         get("/tangle/messages/:deviceID", Route { request, _ ->
             request.params("deviceID")?.let { messageRepo.getMessages(it).sortedByDescending { m -> m.timestamp } }
         })
 
         get("/tangle/messagechainid/:deviceID", Route { request, _ ->
-            request.params("deviceID")?.let { sentProcurations.getProcurationDeviceID(it)?.messageChainID }
+            request.params("deviceID")?.let { sentProcurations.getProcurationDeviceID(it)!!.messageChainID }
         })
-
     }
 
     private fun methodTask() {
@@ -318,12 +325,6 @@ class IoTAPI {
         val response = gson.toJson(result)
         val signature = EncryptionHelper.signBase64(privateKey, response)
         tangleController.attachTransactionToTangle(seed, response + "__" + signature, Tag.MR, message.addressFrom)
-    }
-
-
-    val tangleDeviceCallback: (postMessage: PostMessage, uuid: String) -> (Unit) = { pM: PostMessage, id: String ->
-
-        /*sendMethodCall(pM, privateKey,)*/
     }
 
 
