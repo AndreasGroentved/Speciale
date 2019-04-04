@@ -18,7 +18,7 @@ import jota.utils.TrytesConverter
 import repositories.ProcessedTransactions
 import java.math.BigInteger
 
-class TangleController {
+class TangleController { //TODO: Håndter addresse indexes getTransactions
 
     private lateinit var nodeAddress: String
     private lateinit var nodePort: String
@@ -72,6 +72,7 @@ class TangleController {
     }
 
     fun getMessagesUnchecked(seed: String, tag: Tag?): List<String> { //does not compare signatures
+        LogI("getting messages unchecked tag: $tag")
         val transactions = getTransactions(seed, tag)
         return transactions.mapNotNull { getASCIIFromTrytes(it.signatureFragments) }
     }

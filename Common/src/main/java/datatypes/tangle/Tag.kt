@@ -1,5 +1,5 @@
 package datatypes.tangle
 
 enum class Tag {
-    PRO, PROACK, MC, DSPEC, XDSPEC, MR
+    PRO, PROACK, MC, DSPEC, XDSPEC, MR, UNDEFINED
 }

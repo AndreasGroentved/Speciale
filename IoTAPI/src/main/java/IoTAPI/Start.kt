@@ -16,6 +16,7 @@ import java.math.BigInteger
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.util.*
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
@@ -30,7 +31,7 @@ class IoTAPI {
     private val pendingProcurations: MutableList<Procuration> = mutableListOf()
     private val tangleController = TangleController()
     private val threadPool = ScheduledThreadPoolExecutor(1)
-    private val pendingMethodCalls = mutableListOf<PostMessageHack>()
+    private val pendingMethodCalls = CopyOnWriteArrayList<PostMessageHack>()
     private lateinit var privateKey: PrivateKey
     private lateinit var publicKey: PublicKey
     private val messageRepo = MessageRepo()
@@ -129,7 +130,7 @@ class IoTAPI {
             ruleManager.updateDsl(rule)
         })
 
-        get("/device", Route { request, response ->
+        get("/device", Route { request, _ ->
             val params = request.queryString()
             deviceManger.getDevices(params)
         })
@@ -235,7 +236,6 @@ class IoTAPI {
         })
 
 
-        //TODO:check at følgende er lavet rigtigt:  lav repository på kendte devices og implementer hash igen, ellers bliver det her sløvt
         get("/tangle/unpermissioned/devices", Route { _, _ ->
             val registered = tangleController.getBroadcastsUnchecked(Tag.DSPEC).mapNotNull {
                 TDSA(gson.fromJson(it.first.substringBefore("__"), TangleDeviceSpecification::class.java), it.second)
@@ -285,7 +285,7 @@ class IoTAPI {
     }
 
     private fun methodTask() {
-        pendingMethodCalls += tangleController.getPendingMethodCalls(seed, procurations.getAllProcurations())
+        pendingMethodCalls += tangleController.getPendingMethodCalls(seed, procurations.getAcceptedProcurations())
         LogI(pendingMethodCalls)
         pendingMethodCalls.forEach { handleMethodType(it) }
         pendingMethodCalls.clear()
@@ -295,11 +295,11 @@ class IoTAPI {
     private fun methodResponseTask() {
         val messagesUnchecked = tangleController.getMessagesUnchecked(seed, Tag.MR)
         messagesUnchecked.forEach {
-            val responseWithDeviceID = gson.fromJson(it.substringBefore("__"), ResponseWithDeviceID::class.java)
-            val procuration = sentProcurations.getProcurationDeviceID(responseWithDeviceID.deviceID) ?: return
+            val message = gson.fromJson(it.substringBefore("__"), Message::class.java)
+            val procuration = sentProcurations.getProcurationDeviceID(message.deviceID) ?: return
             val validSignature = EncryptionHelper.verifySignatureBase64(EncryptionHelper.loadPublicECKeyFromBigInteger(procuration.recipientPublicKey), it.substringBefore("__"), it.substringAfter("__"))
             if (validSignature) {
-                messageRepo.saveMessage(Message(it, Date(), responseWithDeviceID.deviceID))
+                messageRepo.saveMessage(message)
             }
         }
     }
@@ -322,7 +322,7 @@ class IoTAPI {
             "post" -> deviceManger.post(message.postMessage)
             else -> ErrorResponse("ERROR method type not supported: ${message.postMessage.type}")
         }
-        val response = gson.toJson(result)
+        val response = gson.toJson(Message(gson.toJson(result), Date(), message.postMessage.deviceID, message.postMessage.messageChainID, message.postMessage.path))
         val signature = EncryptionHelper.signBase64(privateKey, response)
         tangleController.attachTransactionToTangle(seed, response + "__" + signature, Tag.MR, message.addressFrom)
     }

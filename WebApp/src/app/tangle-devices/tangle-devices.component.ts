@@ -25,7 +25,7 @@ export class TangleDevicesComponent implements OnInit {
     this.webService.getUnpermissionedTangleDevices(unpermissioned => {
       this.webService.getPermissionedTangleDevices(permissioned => {
         this.unPermissionedDevices = unpermissioned.filter(d => permissioned.find(hest => hest.address === d.address
-          && hest.tangleDeviceSpecification.deviceSpecification.id === d.tangleDeviceSpecification.deviceSpecification.id) === null);
+          && hest.tangleDeviceSpecification.deviceSpecification.id === d.tangleDeviceSpecification.deviceSpecification.id) == null);
         this.permissionedDevices = permissioned;
       });
     });
