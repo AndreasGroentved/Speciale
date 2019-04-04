@@ -31,7 +31,7 @@ class IoTAPI {
     private val deviceManger = DeviceManager()
     private val gson = Gson()
     private val procurations = AcceptedProcurations()
-    private val pendingProcurations: MutableList<Procuration> = mutableListOf()
+    private val pendingProcurations: MutableList<Pair<Procuration,String>> = mutableListOf()
     private val tangleController = TangleController(seed)
     private val threadPool = ScheduledThreadPoolExecutor(1)
     private val pendingMethodCalls = CopyOnWriteArrayList<PostMessageHack>()
@@ -179,14 +179,14 @@ class IoTAPI {
 
         put("/device/procuration/received/:id/accept", Route { request, _ ->
             val id = request.params()[":id"]
-            id?.let { pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, true, tangleController, privateKey) } }?.let { pendingProcurations.removeIf { p -> p.messageChainID == id } }
+            id?.let { pendingProcurations.find { it.first.messageChainID == id }?.let { respondToProcuration(it.first, true, it.second) } }?.let { pendingProcurations.removeIf { p -> p.first.messageChainID == id } }
                 ?: ""
         })
 
         put("/device/procuration/received/:id/reject", Route { request, response ->
             response.type("application/json")
             val id = request.params()[":id"]
-            id?.let { pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, false, tangleController, privateKey) } }?.let { pendingProcurations.removeIf { p -> p.messageChainID == id } }
+            id?.let { pendingProcurations.find { it.first.messageChainID == id }?.let { respondToProcuration(it.first, false, it.second) } }?.let { pendingProcurations.removeIf { p -> p.first.messageChainID == id } }
                 ?: ""
         })
 
@@ -245,7 +245,7 @@ class IoTAPI {
 
 
         fun getPermissionedDevices(): ClientResponse {
-            tangleController.getBroadcastsUnchecked(Tag.PROACK).mapNotNull {
+            tangleController.getMessagesUnchecked(Tag.PROACK).mapNotNull {
                 val proAckString = it.first.substringBefore("__")
                 val proAck = gson.fromJson(proAckString, ProcurationAck::class.java)
                 val signature = it.first.substringAfter("__")
@@ -260,7 +260,6 @@ class IoTAPI {
             return ClientResponse(deviceSpecifications.getAllPermissionedSpecs(procs))
         }
 
-        //todo check signature
         get("/tangle/permissioned/devices", Route { _, _ ->
             getPermissionedDevices()
         })
@@ -274,6 +273,7 @@ class IoTAPI {
             val unregistered = tangleController.getBroadcastsUnchecked(Tag.XDSPEC).mapNotNull {
                 Triple(gson.fromJson(it.first.substringBefore("__"), TangleDeviceSpecification::class.java), it.first.substringBefore("__"), it.first.substringAfter("__"))
             }
+            unregistered.forEach { sentProcurations.getProcurationDeviceID(it.first.deviceSpecification.id)?.let {proc -> procurationAcks.removeProAcks(listOf(proc)) }}
             val filtered = deviceSpecifications.getAllSpecs().filter { r ->
                 unregistered.filter { u ->
                     r.tangleDeviceSpecification.deviceSpecification.id == u.first.deviceSpecification.id && r.tangleDeviceSpecification.publicKey == u.first.publicKey
@@ -352,9 +352,9 @@ class IoTAPI {
     private fun methodResponseTask() {
         val messagesUnchecked = tangleController.getMessagesUnchecked(Tag.MR)
         messagesUnchecked.forEach {
-            val message = gson.fromJson(it.substringBefore("__"), Message::class.java)
+            val message = gson.fromJson(it.first.substringBefore("__"), Message::class.java)
             val procuration = sentProcurations.getProcurationDeviceID(message.deviceID) ?: return
-            val validSignature = EncryptionHelper.verifySignatureBase64(EncryptionHelper.loadPublicECKeyFromBigInteger(procuration.recipientPublicKey), it.substringBefore("__"), it.substringAfter("__"))
+            val validSignature = EncryptionHelper.verifySignatureBase64(EncryptionHelper.loadPublicECKeyFromBigInteger(procuration.recipientPublicKey), it.first.substringBefore("__"), it.first.substringAfter("__"))
             if (validSignature) {
                 messageRepo.saveMessage(message)
             }
@@ -392,12 +392,11 @@ class IoTAPI {
         messageRepo.saveMessage(Message(toJson, Date(), postMessage.deviceID))
     }
 
-    //todo: maybe not broadcast
-    private fun respondToProcuration(procuration: Procuration, accepted: Boolean, tangle: TangleController, privateKey: PrivateKey) {
+    private fun respondToProcuration(procuration: Procuration, accepted: Boolean, addressTo: String) {
         val procurationAck = ProcurationAck(procuration.messageChainID, accepted)
         val json = gson.toJson(procurationAck)
         val signBase64 = EncryptionHelper.signBase64(privateKey, json)
-        tangle.attachBroadcastToTangle(json + "__" + signBase64, Tag.PROACK)?.let {
+        tangleController.attachTransactionToTangle( json + "__" + signBase64, Tag.PROACK, addressTo)?.let {
             procurations.saveProcuration(procuration)
             messageRepo.saveMessage(Message(json, Date(), procuration.deviceID))
         }
@@ -419,13 +418,13 @@ class IoTAPI {
         val messages = tangleController.getMessagesUnchecked(Tag.PRO)
         val procurations = messages.mapNotNull { m ->
             try {
-                gson.fromJson(m.substringBefore("__"), Procuration::class.java)
+                Pair(gson.fromJson(m.first.substringBefore("__"), Procuration::class.java), m.second)
             } catch (e: Exception) {
                 null
             }
         }
-        pendingProcurations.addAll(procurations.filter { p -> accepted.firstOrNull { a -> p.messageChainID == a.messageChainID } == null })
-        return pendingProcurations
+        pendingProcurations.addAll(procurations.filter { p -> accepted.firstOrNull { a -> p.first.messageChainID == a.messageChainID } == null })
+        return pendingProcurations.map { it.first }
     }
 }
 

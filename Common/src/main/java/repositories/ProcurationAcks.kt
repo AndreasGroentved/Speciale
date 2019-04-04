@@ -30,7 +30,7 @@ class ProcurationAcks {
 
     fun removeProAcks(procurations: List<Procuration>) {
         procurations.forEach {
-            procRep.remove(ObjectFilters.eq("messageChainId", it.messageChainID))
+            procRep.remove(ObjectFilters.eq("messageChainID", it.messageChainID))
         }
     }
 }
