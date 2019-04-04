@@ -274,7 +274,7 @@ class IoTAPI {
         })
 
 
-            //todo wrap i result
+        //todo wrap i result
         get("/tangle/messages/:deviceID", Route { request, _ ->
             request.params("deviceID")?.let { messageRepo.getMessages(it).sortedByDescending { m -> m.timestamp } }
         })
