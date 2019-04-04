@@ -17,7 +17,6 @@ class ClientDiscovery : ReceiverAdapter() {
         channel.connect("DiscoveryCluster")
     }
 
-    //TODO: ikke sindsygt related, men cancel procurations, når der kommer en XDSPEC message i Tangle
     override fun viewAccepted(new_view: View) {
         members.forEach {
             if (!new_view.containsMember(it.key)) {

@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit
 
 class IoTAPI {
     private val hs = HouseRules()
-    private val seed = "TEEEA9999999999999999999999999999999999999999999999999999999999999999999999999999"
+    private val seed = "TEEES9999999999999999999999999999999999999999999999999999999999999999999999999999"
     private val deviceManger = DeviceManager()
     private val gson = Gson()
     private val procurations = AcceptedProcurations()
@@ -255,7 +255,6 @@ class IoTAPI {
             return ClientResponse(deviceSpecifications.getAllPermissionedSpecs(procs))
         }
 
-        //todo check signature
         get("/tangle/permissioned/devices", Route { _, _ ->
             getPermissionedDevices()
         })
@@ -269,6 +268,7 @@ class IoTAPI {
             val unregistered = tangleController.getBroadcastsUnchecked(Tag.XDSPEC).mapNotNull {
                 Triple(gson.fromJson(it.first.substringBefore("__"), TangleDeviceSpecification::class.java), it.first.substringBefore("__"), it.first.substringAfter("__"))
             }
+            unregistered.forEach { sentProcurations.getProcurationDeviceID(it.first.deviceSpecification.id)?.let {proc -> procurationAcks.removeProAcks(listOf(proc)) }}
             val filtered = deviceSpecifications.getAllSpecs().filter { r ->
                 unregistered.filter { u ->
                     r.tangleDeviceSpecification.deviceSpecification.id == u.first.deviceSpecification.id && r.tangleDeviceSpecification.publicKey == u.first.publicKey
@@ -387,7 +387,6 @@ class IoTAPI {
         messageRepo.saveMessage(Message(toJson, Date(), postMessage.deviceID))
     }
 
-    //todo: maybe not broadcast
     private fun respondToProcuration(procuration: Procuration, accepted: Boolean, addressTo: String) {
         val procurationAck = ProcurationAck(procuration.messageChainID, accepted)
         val json = gson.toJson(procurationAck)
