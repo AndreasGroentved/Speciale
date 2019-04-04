@@ -3,7 +3,6 @@ import {DeviceDataService} from '../device-data.service';
 import {DeviceResource} from '../DeviceResource';
 import {DeviceMessage} from '../DeviceMessage';
 import {WebService} from '../web.service';
-import {id} from '@swimlane/ngx-charts/release/utils';
 
 @Component({
   selector: 'app-stranger-device',
@@ -36,8 +35,5 @@ export class StrangerDeviceComponent implements OnInit {
     this.webservice.getMessageChainID(this.id, (value) => {
       this.messageChainID = value;
     });
-
   }
-
-
 }

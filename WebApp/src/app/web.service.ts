@@ -7,15 +7,18 @@ import {DeviceSpecificationToAddressPair} from './DeviceSpecificationToAddressPa
 import {TangleDeviceSpecification} from './TangleDeviceSpecification';
 import {DeviceDataService} from './device-data.service';
 import {DeviceMessage} from './DeviceMessage';
+import {Observable} from "rxjs";
+import {Message} from "@angular/compiler/src/i18n/i18n_ast";
+import * as socketIo from 'socket.io-client';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WebService {
   serverUrl = 'http://localhost:4567'; //TODO
+  wsUrl = 'ws://localhost:4567';
 
   constructor(private http: HttpClient, private ds: DeviceDataService) {
-
   }
 
   httpOptions = {
@@ -52,9 +55,9 @@ export class WebService {
     });
   }
 
-  getOnTime( id: string, callback: (val) => (void),from: string = '0', to: string = (Date.now() + '')) {
+  getOnTime(id: string, callback: (val) => (void), from: string = '0', to: string = (Date.now() + '')) {
     console.log("get time");
-    this.http.get(this.serverUrl + '/time/'+id + '?from=' + from + '&to=' + to).subscribe(results => {
+    this.http.get(this.serverUrl + '/time/' + id + '?from=' + from + '&to=' + to).subscribe(results => {
       callback(results);
     });
   }
@@ -209,4 +212,7 @@ export class WebService {
       callback(value['result'] as string);
     });
   }
+
+
+
 }

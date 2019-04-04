@@ -12,7 +12,7 @@ class AuthServiceClient {
     private val address = PropertiesLoader.instance.getProperty("authServiceAddress") + PropertiesLoader.instance.getProperty("authPort")
 
     fun registerUser(username: String, password: String, publicKey: String): String {
-        val url = URL("$address/register/user")
+        val url = URL("$address/registerUpdates/user")
         val connection = url.openConnection() as HttpURLConnection
         val params = mapOf(Pair("username", username), Pair("password", password), Pair("publicKey", publicKey))
         connection.requestMethod = "POST"
@@ -34,7 +34,7 @@ class AuthServiceClient {
     }
 
     fun registerDevice(token: String, deviceSpecification: DeviceSpecification): String {
-        val url = URL("$address/register/device")
+        val url = URL("$address/registerUpdates/device")
         val connection = url.openConnection() as HttpURLConnection
         val params = mapOf(Pair("token", token), Pair("deviceSpecification", gson.toJson(deviceSpecification)))
         connection.requestMethod = "POST"
