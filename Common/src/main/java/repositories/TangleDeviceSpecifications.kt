@@ -20,7 +20,7 @@ class TangleDeviceSpecifications {
     }
 
     fun getAllPermissionedSpecs(permissionedIDs: List<String>): List<TDSA> {
-        return tdsaRep.find().toList()
+        return tdsaRep.find().toList().filter { permissionedIDs.contains(it.tangleDeviceSpecification.deviceSpecification.id) }
     }
 
     fun getAllUnpermissionedSpecs(unpermissionedIDs: List<String>): List<TDSA> {

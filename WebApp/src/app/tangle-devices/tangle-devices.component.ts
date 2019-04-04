@@ -1,10 +1,10 @@
 import {Component, OnInit} from '@angular/core';
-import {WebService} from "../web.service";
-import {DeviceSpecification} from "../DeviceSpecification";
-import {TangleDeviceSpecification} from "../TangleDeviceSpecification";
-import {Router} from "@angular/router";
-import {DeviceDataService} from "../device-data.service";
-import {DeviceSpecificationToAddressPair} from "../DeviceSpecificationToAddressPair";
+import {WebService} from '../web.service';
+import {DeviceSpecification} from '../DeviceSpecification';
+import {TangleDeviceSpecification} from '../TangleDeviceSpecification';
+import {Router} from '@angular/router';
+import {DeviceDataService} from '../device-data.service';
+import {DeviceSpecificationToAddressPair} from '../DeviceSpecificationToAddressPair';
 
 @Component({
   selector: 'app-tangle-devices',
@@ -24,15 +24,15 @@ export class TangleDevicesComponent implements OnInit {
   ngOnInit() {
     this.webService.getUnpermissionedTangleDevices(devices => {
       this.unPermissionedDevices = devices;
-    });
-    this.webService.getPermissionedTangleDevices(devices => {
-      console.log(devices);
-      this.permissionedDevices = devices;
+      this.webService.getPermissionedTangleDevices(permissioned => {
+        this.permissionedDevices = permissioned;
+        this.unPermissionedDevices = this.unPermissionedDevices.filter(d => !permissioned.includes(d));
+      });
     });
   }
 
   getCapabilities(device: DeviceSpecification) {
-    return device.deviceResources.map(value => ' ' + value.path.toString()).toString()
+    return device.deviceResources.map(value => ' ' + value.path.toString()).toString();
   }
 
   navigateToStrangerDevice(deviceId, deviceSpecification: TangleDeviceSpecification, addressTo) {

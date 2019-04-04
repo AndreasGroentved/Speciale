@@ -10,6 +10,7 @@ import {ParameterNameToType} from '../ParameterNameToType';
   styleUrls: ['./iot-device-module.component.css']
 })
 export class IotDeviceModuleComponent implements OnInit {
+  //todo array
   @Input() deviceResource: DeviceResource;
   @Input() deviceId: string;
   @Input() ownedDevice: boolean;
@@ -34,12 +35,19 @@ export class IotDeviceModuleComponent implements OnInit {
     this.name = this.deviceResource.path;
     this.getModules = ms.getModuleInputTypes(this.deviceResource, 'GET');
     this.postModules = ms.getModuleInputTypes(this.deviceResource, 'POST');
+    this.getModules = this.getModules.filter(m => {
+      this.checkForName(m.name);
+    });
     this.getModules.forEach(value => this.addGetValue(value.name));
     this.postModules.forEach(value => this.addPostValue(value));
   }
 
+  checkForName(name: string) {
+    return this.postModules.find(p =>
+      p.name === name) !== null;
+  }
+
   postUpdate() {
-    console.log(this.formData);
     this.postModules.forEach(value => {
       if (!this.formData.hasOwnProperty(value.name)) {
         try {
@@ -58,6 +66,14 @@ export class IotDeviceModuleComponent implements OnInit {
         Object.keys(val).forEach(key => {
           outer.getValues.set(key, val[key]);
         });
+        outer.getValues.forEach((k, v) => {
+          if (outer.postValues.has(k)) {
+            outer.postValues.set(k, v);
+          }
+        });
+        outer.postValues.forEach((k, v) => {
+          outer.getValues.delete(k);
+        });
       } catch (e) {
 
       }
@@ -69,10 +85,20 @@ export class IotDeviceModuleComponent implements OnInit {
       this.deviceResource.resourceMethods.filter(value => value.methodType === 'GET').map(value => {
         try {
           this.getValues.set(getMethod, val);
+          this.formData[getMethod] = val;
         } catch (e) {
         }
+        this.getValues.forEach((k, v) => {
+          if (this.postValues.has(k)) {
+            this.postValues.set(k, v);
+          }
+        });
+        this.postValues.forEach((k, v) => {
+          this.getValues.delete(k);
+        });
       });
     });
+
   }
 
   addPostValue(parameterNameToType: ParameterNameToType) {

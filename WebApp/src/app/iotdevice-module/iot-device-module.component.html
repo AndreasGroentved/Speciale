@@ -1,26 +1,22 @@
-<p>
-  {{name}}
-</p>
-
-
 <div *ngFor="let keyValue of getValues | keyvalue">
   {{ keyValue.key }} {{keyValue.value}}
 </div>
 <div *ngFor="let keyValue of postValues| keyvalue">
+  {{keyValue.key}}
   <div *ngIf="keyValue.value=='Boolean'">
-    {{ keyValue.key }}  <input type="checkbox" [(ngModel)]="formData[keyValue.key]"
+      <input type="checkbox" [(ngModel)]="formData[keyValue.key]"
                                name="{{keyValue.value}}"/>
   </div>
   <div *ngIf="keyValue.value=='Integer'">
-    {{ keyValue.key }} <input type="number" [(ngModel)]="formData[keyValue.key]"
-                              name="{{keyValue.key}}"/>
+     <input type="number" [(ngModel)]="formData[keyValue.key]"
+                              name="{{keyValue.value}}"/>
   </div>
   <div *ngIf="keyValue.value=='Float'">
-    {{ keyValue.key }} <input type="number" [(ngModel)]="formData[keyValue.key]"
+    <input type="number" [(ngModel)]="formData[keyValue.key]"
                               name="{{keyValue.value}}"/>
   </div>
   <div *ngIf="keyValue.value=='String'">
-    {{ keyValue.key }} <input type="text" [(ngModel)]="formData[keyValue.key]"
+     <input type="text" [(ngModel)]="formData[keyValue.key]"
                               name="{{keyValue.value}}" value=""/>
   </div>
 </div>

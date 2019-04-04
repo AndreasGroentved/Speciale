@@ -75,7 +75,6 @@ class IoTAPI {
     fun start() {
         deviceManger.startDiscovery()
         threadPool.scheduleAtFixedRate({ methodTask() }, 0, 20, TimeUnit.SECONDS)
-        threadPool.scheduleAtFixedRate({ procurationTask() }, 0, 20, TimeUnit.SECONDS)
         threadPool.scheduleAtFixedRate({ methodResponseTask() }, 0, 20, TimeUnit.SECONDS)
         Spark.port(PropertiesLoader.instance.getProperty("iotApiPort").toInt())
 
@@ -159,7 +158,7 @@ class IoTAPI {
                 ?: ""
         })
 
-        put("/device/received/procuration/:id/reject", Route { request, response ->
+        put("/device/procuration/received/:id/reject", Route { request, response ->
             response.type("application/json")
             val id = request.params()[":id"]
             id?.let { pendingProcurations.find { it.messageChainID == id }?.let { respondToProcuration(it, false, seed, tangleController, privateKey) } }?.let { pendingProcurations.removeIf { p -> p.messageChainID == id } }
@@ -226,7 +225,7 @@ class IoTAPI {
                 procurationAcks.saveProAck(proAck)
             }
             procurationAcks.removeProAcks(procurations.getExpiredProcurationsLessThan7DaysOld())
-            val procs = procurationAcks.getAllProAck().map { sentProcurations.getProcurationMessageChainID(it.messageChainID).deviceID }
+            val procs = procurationAcks.getAllAcceptedProAck().mapNotNull { sentProcurations.getProcurationMessageChainID(it.messageChainID)?.deviceID }
             return ClientResponse(deviceSpecifications.getAllPermissionedSpecs(procs))
         }
 
@@ -275,7 +274,7 @@ class IoTAPI {
         })
 
 
-
+            //todo wrap i result
         get("/tangle/messages/:deviceID", Route { request, _ ->
             request.params("deviceID")?.let { messageRepo.getMessages(it).sortedByDescending { m -> m.timestamp } }
         })
@@ -297,17 +296,12 @@ class IoTAPI {
         val messagesUnchecked = tangleController.getMessagesUnchecked(seed, Tag.MR)
         messagesUnchecked.forEach {
             val responseWithDeviceID = gson.fromJson(it.substringBefore("__"), ResponseWithDeviceID::class.java)
-            val procuration = sentProcurations.getProcurationDeviceID(responseWithDeviceID.deviceID)
-            val validSignature = EncryptionHelper.verifySignatureBase64(EncryptionHelper.loadPublicECKeyFromBigInteger(procuration!!.recipientPublicKey), it.substringBefore("__"), it.substringAfter("__"))
+            val procuration = sentProcurations.getProcurationDeviceID(responseWithDeviceID.deviceID) ?: return
+            val validSignature = EncryptionHelper.verifySignatureBase64(EncryptionHelper.loadPublicECKeyFromBigInteger(procuration.recipientPublicKey), it.substringBefore("__"), it.substringAfter("__"))
             if (validSignature) {
                 messageRepo.saveMessage(Message(it, Date(), responseWithDeviceID.deviceID))
             }
         }
-    }
-
-    private fun procurationTask() {
-        tangleController.getMessagesUnchecked(seed, Tag.PROACK)
-        //todo?
     }
 
     private fun handleMethodType(message: PostMessageHack) {
