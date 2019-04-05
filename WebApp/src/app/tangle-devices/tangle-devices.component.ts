@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {AfterViewInit, Component, OnInit} from '@angular/core';
 import {WebService} from '../web.service';
 import {DeviceSpecification} from '../DeviceSpecification';
 import {TangleDeviceSpecification} from '../TangleDeviceSpecification';
@@ -12,7 +12,7 @@ import {DeviceSpecificationToAddressPair} from '../DeviceSpecificationToAddressP
   styleUrls: ['./tangle-devices.component.css']
 })
 
-export class TangleDevicesComponent implements OnInit {
+export class TangleDevicesComponent implements OnInit,AfterViewInit {
 
   constructor(private webService: WebService, private router: Router, private deviceService: DeviceDataService) {
   }
@@ -24,12 +24,18 @@ export class TangleDevicesComponent implements OnInit {
   ngOnInit() {
     this.webService.getUnpermissionedTangleDevices(unpermissioned => {
       this.webService.getPermissionedTangleDevices(permissioned => {
-        this.unPermissionedDevices = unpermissioned.filter(d => permissioned.find(hest => hest.address === d.address
-          && hest.tangleDeviceSpecification.deviceSpecification.id === d.tangleDeviceSpecification.deviceSpecification.id) == null);
+        unpermissioned.forEach(d => {
+            if (permissioned.find(hest => hest.address === d.address
+              && hest.tangleDeviceSpecification.deviceSpecification.id === d.tangleDeviceSpecification.deviceSpecification.id) == null) {
+              this.unPermissionedDevices.push(d);
+            }
+          }
+        );
         this.permissionedDevices = permissioned;
       });
     });
   }
+
 
   getCapabilities(device: DeviceSpecification) {
     return device.deviceResources.map(value => ' ' + value.path.toString()).toString();
@@ -52,6 +58,9 @@ export class TangleDevicesComponent implements OnInit {
       queryParams: {device: deviceSpecification},
       queryParamsHandling: "merge",state: {device:deviceSpecification}
     });*/
+  }
+
+  ngAfterViewInit(): void {
   }
 
 }

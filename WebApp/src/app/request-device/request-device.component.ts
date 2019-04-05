@@ -15,7 +15,7 @@ import {toDate} from '@angular/common/src/i18n/format_date';
 })
 export class RequestDeviceComponent implements OnInit {
 
-  private id: string;
+  id: string;
   dateFormatter: DateTimeFormat;
   fromDate = '';
   toDate = '';
@@ -28,7 +28,6 @@ export class RequestDeviceComponent implements OnInit {
 
 
   ngOnInit() {
-    console.log(this.toDate);
     this.id = this.route.snapshot.paramMap.get('id');
     this.tangleDevice = this.deviceService.deviceSpecification;
     this.addressTo = this.deviceService.addressTo;
@@ -38,7 +37,6 @@ export class RequestDeviceComponent implements OnInit {
   }
 
   requestDeviceAccess() {
-    console.log(this.fromDate);
     const fromD = new Date(this.fromDate);
     const toD = new Date(this.toDate);
     this.ws.requestDevice(this.addressTo, this.id, fromD, toD, this.tangleDevice, val => {

@@ -8,7 +8,6 @@ import datatypes.ClientResponse
 import datatypes.ErrorResponse
 import datatypes.Response
 import datatypes.iotdevices.PostMessage
-import datatypes.iotdevices.ResponseToClient
 import helpers.LogE
 import helpers.LogI
 import hest.HestLexer
@@ -161,15 +160,12 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         }
     }
 
-
     private fun validateConditionAndRun(rule: Rule) {
         if (!isInTimeInterval(rule)) {
             LogI("no longer in time interval")
             map[rule]?.cancel(true)
             return
         }
-
-
 
         assignDataSets(content.dataSets)
         parse.varMap.forEach { t, u ->
@@ -226,7 +222,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
             try {
                 tangleDeviceCallback?.let {
                     it(postMessage) {
-                        callback?.invoke(runResponseToExpression(it.let { it as? ClientResponse }!!.result.toString()))
+                        callback?.invoke(runResponseToExpression(it.let { response -> response as? ClientResponse }!!.result.toString()))
                     }
                 }
             } catch (e: Exception) {
@@ -244,7 +240,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
     }
 
     private fun runResponseToExpression(value: String?): Expression? = value?.let {
-        getExpressionFromAnyValue(gson.fromJson(value, ResponseToClient::class.java).result)
+        getExpressionFromAnyValue(value)
     }
 
     private fun getRepeatingInterval(unit: String, count: Int) =

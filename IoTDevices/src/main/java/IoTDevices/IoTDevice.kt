@@ -26,7 +26,7 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
 
     init {
         db = Nitrite.builder()
-            .filePath("time.db")
+            .filePath("$id.db")
             .openOrCreate()
         timeRep = db.getRepository(TimePair::class.java)
         timeRep.find().forEach { timeMap[it.hour] = it.amount }
@@ -40,7 +40,7 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
             )
         )
 
-        super.add   (
+        super.add(
             TimeResource()
         )
     }
@@ -123,17 +123,13 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
         }
 
         override fun handleGET(exchange: CoapExchange?) {
-            LogI("yo")
             updateTimeMap()
             exchange?.apply {
                 val from = requestOptions.uriQuery.getOrNull(0)?.let { it.split("=").getOrNull(1)?.toLong() }
                     ?: 0L
                 val to = requestOptions.uriQuery.getOrNull(1)?.let { it.split("=").getOrNull(1)?.toLong() }
                     ?: 0L
-                println("from $from , to $to")
-                println(timeMap)
                 val timeFromTo = getOnTimeFromTo(from, to).map { TimeUsage(it.key, it.value) }
-                println(timeFromTo)
                 val hourOnList = "{\"result\":${gson.toJson(timeFromTo)}}"
                 respond(hourOnList)
             }
@@ -141,7 +137,7 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
     }
 
 
-    inner class OnOffResource(title:String) : CoapResource(title) {
+    inner class OnOffResource(title: String) : CoapResource(title) {
         init {
             attributes.title = title
         }

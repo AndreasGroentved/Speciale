@@ -21,6 +21,7 @@ import {RequestDeviceComponent} from './request-device/request-device.component'
 import {StrangerDeviceComponent} from './stranger-device/stranger-device.component';
 import {NavbarComponent} from './navbar/navbar.component';
 import {MatButtonModule, MatSnackBarModule} from '@angular/material'
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 
 const appRoutes: Routes = [
   {path: 'device/:id', component: IotDeviceComponent},
@@ -60,6 +61,7 @@ const appRoutes: Routes = [
     FormsModule,
     MatButtonModule,
     MatSnackBarModule,
+    BrowserAnimationsModule,
     RouterModule.forRoot(
       appRoutes,
       {enableTracing: true} // <-- debugging purposes only

@@ -31,7 +31,7 @@ class IoTAPI {
     private val deviceManger = DeviceManager()
     private val gson = Gson()
     private val procurations = AcceptedProcurations()
-    private val pendingProcurations: MutableList<Pair<Procuration,String>> = mutableListOf()
+    private val pendingProcurations: MutableList<Pair<Procuration, String>> = mutableListOf()
     private val tangleController = TangleController(seed)
     private val threadPool = ScheduledThreadPoolExecutor(1)
     private val pendingMethodCalls = CopyOnWriteArrayList<PostMessageHack>()
@@ -43,22 +43,19 @@ class IoTAPI {
     private val deviceSpecifications = TangleDeviceSpecifications()
     private val ws = ChatWebSocketHandler()
 
-    //TODO alle metoder skal altid returnere valid JSON
-
 
     val tangleDeviceCallback: (postMessage: PostMessage, result: (datatypes.Response) -> (Unit)) -> (Unit) = { pM: PostMessage, result ->
         val tdsa = deviceSpecifications.getAllPermissionedSpecs(listOf(pM.deviceID)).firstOrNull()
-        val chainId = sentProcurations.getProcurationDeviceID(pM.deviceID)
+        val proc = sentProcurations.getProcurationDeviceID(pM.deviceID)
 
-        chainId?.let { proc -> tdsa?.let { PostMessage(proc.messageChainID, pM.deviceID, pM.type, pM.path, pM.params, it.address) } }
+        proc?.let { (messageChainID) -> tdsa?.let { PostMessage(messageChainID, pM.deviceID, pM.type, pM.path, pM.params, it.address) } }
             ?.apply {
-                println(this)
-                sendMethodCall(this, privateKey, this.addressTo); methodResponseTask()
+                sendMethodCall(this, privateKey, this.addressTo)
             }
-            ?.let {
-                val listener = MessageRepo.ListenerStuff(it.deviceID, it.path)
+            ?.apply {
+                val listener = MessageRepo.ListenerStuff(deviceID, path)
                 val callback = { resp: datatypes.Response ->
-                    messageRepo.registerSubscription(listener)
+                    messageRepo.deRegister(listener)
                     result(resp)
                 }
                 listener.callback = callback
@@ -91,8 +88,8 @@ class IoTAPI {
 
     fun start() {
         deviceManger.startDiscovery()
-        threadPool.scheduleAtFixedRate({ methodTask() }, 0, 20, TimeUnit.SECONDS)
-        threadPool.scheduleAtFixedRate({ methodResponseTask() }, 0, 20, TimeUnit.SECONDS)
+        threadPool.scheduleAtFixedRate({ methodTask() }, 0, 5, TimeUnit.SECONDS)
+        threadPool.scheduleAtFixedRate({ methodResponseTask() }, 0, 5, TimeUnit.SECONDS)
         Spark.port(PropertiesLoader.instance.getProperty("iotApiPort").toInt())
 
         if (PropertiesLoader.instance.getOptionalProperty("householdPrivateKey") == null || PropertiesLoader.instance.getOptionalProperty("householdPublicKey") == null) {
@@ -107,6 +104,7 @@ class IoTAPI {
         }
 
         messageRepo.registerUpdates {
+            LogI("sending update")
             ws.sendUpdate(it)
         }
 
@@ -273,7 +271,7 @@ class IoTAPI {
             val unregistered = tangleController.getBroadcastsUnchecked(Tag.XDSPEC).mapNotNull {
                 Triple(gson.fromJson(it.first.substringBefore("__"), TangleDeviceSpecification::class.java), it.first.substringBefore("__"), it.first.substringAfter("__"))
             }
-            unregistered.forEach { sentProcurations.getProcurationDeviceID(it.first.deviceSpecification.id)?.let {proc -> procurationAcks.removeProAcks(listOf(proc)) }}
+            unregistered.forEach { sentProcurations.getProcurationDeviceID(it.first.deviceSpecification.id)?.let { proc -> procurationAcks.removeProAcks(listOf(proc)) } }
             val filtered = deviceSpecifications.getAllSpecs().filter { r ->
                 unregistered.filter { u ->
                     r.tangleDeviceSpecification.deviceSpecification.id == u.first.deviceSpecification.id && r.tangleDeviceSpecification.publicKey == u.first.publicKey
@@ -325,18 +323,16 @@ class IoTAPI {
         @OnWebSocketConnect
         @Throws(Exception::class)
         fun onConnect(user: Session) {
-            println(user)
+            this.user = user
         }
 
         @OnWebSocketClose
         fun onClose(user: Session, statusCode: Int, reason: String) {
-
+            this.user = null
         }
 
         @OnWebSocketMessage
         fun onMessage(user: Session, message: String) {
-            println(message)
-
         }
     }
 
@@ -353,7 +349,7 @@ class IoTAPI {
         val messagesUnchecked = tangleController.getMessagesUnchecked(Tag.MR)
         messagesUnchecked.forEach {
             val message = gson.fromJson(it.first.substringBefore("__"), Message::class.java)
-            val procuration = sentProcurations.getProcurationDeviceID(message.deviceID) ?: return
+            val procuration = sentProcurations.getProcurationDeviceID(message.deviceID) ?: return@forEach
             val validSignature = EncryptionHelper.verifySignatureBase64(EncryptionHelper.loadPublicECKeyFromBigInteger(procuration.recipientPublicKey), it.first.substringBefore("__"), it.first.substringAfter("__"))
             if (validSignature) {
                 messageRepo.saveMessage(message)
@@ -385,7 +381,7 @@ class IoTAPI {
     }
 
 
-    fun sendMethodCall(postMessage: PostMessage, privateKey: PrivateKey, addressTo: String) {
+    private fun sendMethodCall(postMessage: PostMessage, privateKey: PrivateKey, addressTo: String) {
         val toJson = gson.toJson(postMessage)
         val signBase64 = EncryptionHelper.signBase64(privateKey, toJson)
         tangleController.attachTransactionToTangle(toJson + "__" + signBase64, Tag.MC, addressTo)
@@ -396,7 +392,7 @@ class IoTAPI {
         val procurationAck = ProcurationAck(procuration.messageChainID, accepted)
         val json = gson.toJson(procurationAck)
         val signBase64 = EncryptionHelper.signBase64(privateKey, json)
-        tangleController.attachTransactionToTangle( json + "__" + signBase64, Tag.PROACK, addressTo)?.let {
+        tangleController.attachTransactionToTangle(json + "__" + signBase64, Tag.PROACK, addressTo)?.let {
             procurations.saveProcuration(procuration)
             messageRepo.saveMessage(Message(json, Date(), procuration.deviceID))
         }
@@ -416,9 +412,9 @@ class IoTAPI {
 
     private fun getActivePendingProcurations(accepted: List<Procuration>): List<Procuration> {
         val messages = tangleController.getMessagesUnchecked(Tag.PRO)
-        val procurations = messages.mapNotNull { m ->
+        val procurations = messages.mapNotNull { (first, second) ->
             try {
-                Pair(gson.fromJson(m.first.substringBefore("__"), Procuration::class.java), m.second)
+                Pair(gson.fromJson(first.substringBefore("__"), Procuration::class.java), second)
             } catch (e: Exception) {
                 null
             }

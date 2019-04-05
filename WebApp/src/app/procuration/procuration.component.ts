@@ -15,23 +15,23 @@ export class ProcurationComponent implements OnInit {
   constructor(private route: ActivatedRoute, private router: Router, private webService: WebService) {
   }
 
-  private status: string;
+  status: string;
 
-  private recievedAccepted: Array<Procuration>;
-  private recievedExpired: Array<Procuration>;
-  private recievedPending: Array<Procuration>;
+  recievedAccepted: Array<Procuration>;
+  recievedExpired: Array<Procuration>;
+  recievedPending: Array<Procuration>;
 
-  private recievedAcceptedCollapsed = true;
-  private recievedExpiredCollapsed = true;
-  private recievedPendingCollapsed = true;
+  recievedAcceptedCollapsed = true;
+  recievedExpiredCollapsed = true;
+  recievedPendingCollapsed = true;
 
-  private sentAccepted: Array<Procuration>;
-  private sentExpired: Array<Procuration>;
-  private sentPending: Array<Procuration>;
+  sentAccepted: Array<Procuration>;
+  sentExpired: Array<Procuration>;
+  sentPending: Array<Procuration>;
 
-  private sentAcceptedCollapsed = true;
-  private sentExpiredCollapsed = true;
-  private sentPendingCollapsed = true;
+  sentAcceptedCollapsed = true;
+  sentExpiredCollapsed = true;
+  sentPendingCollapsed = true;
 
 
   ngOnInit() {

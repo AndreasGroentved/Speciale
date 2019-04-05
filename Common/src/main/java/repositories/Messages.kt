@@ -5,6 +5,7 @@ import datatypes.ClientResponse
 import datatypes.Response
 import datatypes.tangle.Tag
 import helpers.LogE
+import helpers.LogI
 import org.dizitart.no2.Nitrite
 import org.dizitart.no2.event.ChangeInfo
 import org.dizitart.no2.event.ChangeListener
@@ -85,6 +86,7 @@ class MessageRepo {
     }
 
     fun saveMessage(message: Message) {
+        LogI("saving message")
         messageRepo.insert(message)
     }
 }

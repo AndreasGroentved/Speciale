@@ -30,14 +30,11 @@ export class IotDeviceModuleComponent implements OnInit {
   ngOnInit() {
     const ws = this.webService;
     const ms = this.moduleService;
-    console.log(this.deviceResource);
     this.name = this.deviceResource.path;
     this.getModules = ms.getModuleInputTypes(this.deviceResource, 'GET');
     this.postModules = ms.getModuleInputTypes(this.deviceResource, 'POST');
     this.getModules.forEach(value => this.addGetValue(value.name));
     this.postModules.forEach(value => this.addPostValue(value));
-    console.log(this.getValues);
-    console.log(this.postValues);
   }
 
   getFilteredGetModules() {
@@ -61,7 +58,6 @@ export class IotDeviceModuleComponent implements OnInit {
       }
     });
     const ws = this.webService;
-    console.log(this.formData);
     const outer = this;
     ws.postDeviceValue(this.deviceId, this.ownedDevice, this.deviceResource.path, this.messageChainID, this.formData, val => {
       try {

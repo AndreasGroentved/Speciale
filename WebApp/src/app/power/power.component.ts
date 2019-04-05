@@ -17,8 +17,6 @@ export class PowerComponent implements OnInit {
 
   ngOnInit() {
     this.ws.getOnTime(this.deviceId, map => {
-      console.log(map);
-      console.log((map as ClientResponse).result);
       this.setChart((map as ClientResponse).result);
     })
   }

@@ -81,9 +81,8 @@ class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK A
         return transactions.mapNotNull { t -> getASCIIFromTrytes(t.signatureFragments)?.let { a -> Pair(a, t.address) } }
     }
 
-    fun generateAddress(): String {
-        return iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first()
-    }
+    fun generateAddress(): String = iotaAPI.getNextAvailableAddress(seed, nodeSecurity, false).first()
+
 
     fun attachBroadcastToTangle(message: String, tag: Tag): SendTransferResponse? = attachBroadcastToTangle(message, tag.name)
 

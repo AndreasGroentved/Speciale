@@ -15,14 +15,14 @@ export class IotDeviceComponent implements OnInit {
   constructor(private route: ActivatedRoute, private router: Router, private webService: WebService) {
   }
 
-  private id: string;
-  private messages: [DeviceMessage];
-  private device: DeviceSpecification;
-  private modules: Array<DeviceResource> = [];
+  id: string;
+  messages: [DeviceMessage];
+  device: DeviceSpecification;
+  modules: Array<DeviceResource> = [];
+  collapsed:boolean = true;
 
   ngOnInit() {
     this.id = this.route.snapshot.paramMap.get('id');
-    console.log(this.id);
     this.webService.getDevice(this.id, device => {
       this.device = device;
       this.modules = device.deviceResources;

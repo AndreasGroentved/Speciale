@@ -14,18 +14,6 @@ export class HouseOverviewComponent implements OnInit {
   constructor(private  ws: WebService, private snackBar: MatSnackBar, private chat: ChatService) {
   }
 
-  openSnackBar(message: string, action: string) {
-    this.snackBar.open(message, action, {
-      duration: 2000,
-    });
+  ngOnInit(): void {
   }
-
-  ngOnInit() {
-    this.chat.connect("ws://localhost:4567/messageChannel");
-    /*  this.ws.onMessage().subscribe(value => {
-        console.log(value);
-        this.openSnackBar(value.text, 'act');
-      });*/
-  }
-
 }

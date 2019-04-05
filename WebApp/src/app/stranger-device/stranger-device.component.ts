@@ -23,7 +23,6 @@ export class StrangerDeviceComponent implements OnInit {
 
   ngOnInit() {
     this.id = this.ds.id;
-    console.log(this.ds.deviceSpecification);
     const a = this.ds.deviceSpecification.deviceSpecification.deviceResources;
     a.forEach(value =>
       value.resourceMethods = value.resourceMethods.filter(value1 => value1.methodType !== 'GET')
