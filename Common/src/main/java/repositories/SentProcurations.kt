@@ -19,7 +19,6 @@ class SentProcurations {
 
     fun getProcurationDeviceID(deviceID: String): Procuration? {
         val find = procRep.find(eq("deviceID", deviceID))
-        println(find.map { it.messageChainID })
         return find.firstOrNull()
     }
 

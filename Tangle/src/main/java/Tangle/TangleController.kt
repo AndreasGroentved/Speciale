@@ -119,7 +119,6 @@ class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK A
         val transfer =
             Transfer(addressTo, 0, messageTrytes, tagTrytes)
         return try {
-            //pt.saveHash(transfer.hash)
             iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, address,
                 false, false, null

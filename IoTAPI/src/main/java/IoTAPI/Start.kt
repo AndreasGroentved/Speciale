@@ -432,5 +432,4 @@ class JsonTransformer : ResponseTransformer {
 
 fun main() {
     IoTAPI().start()
-    //RuleManager().updateDsl(RuleManager.sampleDsl)
 }
