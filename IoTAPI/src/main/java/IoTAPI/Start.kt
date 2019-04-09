@@ -90,7 +90,7 @@ class IoTAPI {
         deviceManger.startDiscovery()
         threadPool.scheduleAtFixedRate({ methodTask() }, 0, 5, TimeUnit.SECONDS)
         threadPool.scheduleAtFixedRate({ methodResponseTask() }, 0, 5, TimeUnit.SECONDS)
-        threadPool.scheduleAtFixedRate({ StatisticsCollector.printStats() }, 0, 2, TimeUnit.MINUTES)
+        threadPool.scheduleAtFixedRate({ StatisticsCollector.printStats(null) }, 0, 2, TimeUnit.MINUTES)
         Spark.port(PropertiesLoader.instance.getProperty("iotApiPort").toInt())
 
         if (PropertiesLoader.instance.getOptionalProperty("householdPrivateKey") == null || PropertiesLoader.instance.getOptionalProperty("householdPublicKey") == null) {

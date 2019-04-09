@@ -8,9 +8,12 @@ class StatisticsCollector {
             if (map[name] != null) map[name]!!.add(duration) else map[name] = mutableListOf(duration)
         }
 
-        fun printStats() {
+        fun printStats(transactions: Int?) {
             val sb = StringBuilder()
-            sb.append("------STATS------\n\n\n")
+            sb.append("---------STATS-----------\n\n\n")
+            transactions?.let {
+                sb.append("----AT $it TRANSACTIONS-----\n\n")
+            }
             map.forEach {
                 var dur: Long = 0
                 it.value.forEach { duration -> dur += duration }
