@@ -10,11 +10,12 @@ class StatisticsCollector {
 
         fun printStats() {
             val sb = StringBuilder()
+            sb.append("------STATS------\n\n\n")
             map.forEach {
                 var dur: Long = 0
                 it.value.forEach { duration -> dur += duration }
                 dur /= it.value.size
-                sb.append("Name: ${it.key} Duration: $dur")
+                sb.append("Name: ${it.key} Duration: $dur\n")
             }
             LogI(sb.toString())
         }
