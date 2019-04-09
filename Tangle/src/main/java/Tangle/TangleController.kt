@@ -5,16 +5,14 @@ import datatypes.iotdevices.PostMessage
 import datatypes.iotdevices.PostMessageHack
 import datatypes.iotdevices.Procuration
 import datatypes.tangle.Tag
-import helpers.EncryptionHelper
-import helpers.LogE
-import helpers.LogI
-import helpers.PropertiesLoader
+import helpers.*
 import jota.IotaAPI
 import jota.dto.response.SendTransferResponse
 import jota.error.ArgumentException
 import jota.model.Transaction
 import jota.model.Transfer
 import jota.utils.TrytesConverter
+import org.apache.commons.lang3.time.StopWatch
 import repositories.ProcessedTransactions
 import java.math.BigInteger
 
@@ -64,7 +62,8 @@ class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK A
             LogE("Invalid parameters supplied for getTransactions, likely invalid seed \n$e")
             null
         }
-        var transactions = transferResponse?.transfers?.flatMap { it.transactions } ?: listOf()
+        StatisticsCollector.submitDuration("getTransactions", transferResponse!!.duration)
+        var transactions = transferResponse.transfers?.flatMap { it.transactions } ?: listOf()
         tag?.let {
             transactions = transactions.filter {
                 getASCIIFromTrytes(it.tag) == tag.name
@@ -94,10 +93,12 @@ class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK A
         val transfer =
             Transfer(address, 0, messageTrytes, tagTrytes)
         return try {
-            iotaAPI.sendTransfer(
+            val t = iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, address,
                 false, false, null
             )
+            StatisticsCollector.submitDuration("attachBroadcastToTangle", t.duration)
+            t
         } catch (e: Exception) {
             LogE(e.toString())
             when (e) {
@@ -119,10 +120,12 @@ class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK A
         val transfer =
             Transfer(addressTo, 0, messageTrytes, tagTrytes)
         return try {
-            iotaAPI.sendTransfer(
+            val t = iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, address,
                 false, false, null
             )
+            StatisticsCollector.submitDuration("attachTransactionToTangle", t.duration)
+            t
         } catch (e: Exception) {
             when (e) {
                 is ArgumentException -> {
@@ -142,10 +145,12 @@ class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK A
         val deviceSpecificationTagTrytes = TrytesConverter.asciiToTrytes(Tag.DSPEC.name)
         val transfer = Transfer(address, 0, messageTrytes, deviceSpecificationTagTrytes)
         return try {
-            iotaAPI.sendTransfer(
+            val t = iotaAPI.sendTransfer(
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null,
                 null, false, false, null
             )
+            StatisticsCollector.submitDuration("attachDeviceToTangle", t.duration)
+            t
         } catch (e: Exception) {
             LogE(e.toString())
             when (e) {
@@ -161,10 +166,14 @@ class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK A
     }
 
     fun getNewestBroadcast(entityName: String, publicKey: String): String? {
+        val stopWatch = StopWatch()
+        stopWatch.start()
         LogI("getNewestBroadcast entityName: $entityName publicKey: $publicKey")
         return try {
             val transactions =
                 iotaAPI.findTransactionObjectsByTag(arrayOf(TrytesConverter.asciiToTrytes(entityName)))
+            stopWatch.stop()
+            StatisticsCollector.submitDuration("getNewestBroadcast", stopWatch.time)
             val sorted = transactions.sortedByDescending { it.timestamp }.toList()
             val firstOrNull = sorted.firstOrNull { transaction -> parseAndVerifyMessage(getASCIIFromTrytes(transaction.signatureFragments)!!, publicKey) }
             getASCIIFromTrytes(firstOrNull?.signatureFragments!!.substringBefore("__"))
@@ -176,9 +185,13 @@ class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK A
     }
 
     fun getBroadcastsUnchecked(tag: Tag): List<Pair<String, String>> {
+        val stopWatch = StopWatch()
+        stopWatch.start()
         LogI("getNewestBroadcast tag: $tag")
         val transactions =
             iotaAPI.findTransactionObjectsByTag(arrayOf(TrytesConverter.asciiToTrytes(tag.name)))
+        stopWatch.stop()
+        StatisticsCollector.submitDuration("getBroadcastsUnchecked", stopWatch.time)
         val filter = transactions.filter { !pt.hashStoredInDB(it.hash) }
         filter.forEach { pt.saveHash(it.hash) }
         return filter.mapNotNull { t -> getASCIIFromTrytes(t.signatureFragments)?.let { Pair(it, t.address) } }
