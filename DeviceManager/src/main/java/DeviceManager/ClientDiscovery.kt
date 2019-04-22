@@ -4,7 +4,6 @@ import org.jgroups.*
 
 class ClientDiscovery : ReceiverAdapter() {
 
-
     private var channel = JChannel().setReceiver(this)!!
     private var idCallBack: ((String) -> (Unit))? = null
     private var removeCallBack: ((String) -> (Unit))? = null
@@ -18,11 +17,14 @@ class ClientDiscovery : ReceiverAdapter() {
     }
 
     override fun viewAccepted(new_view: View) {
-        members.forEach {
+        println("yooo")
+        members.map { it }.forEach {
             if (!new_view.containsMember(it.key)) {
+                members.remove(it.key)
                 removeCallBack?.invoke(it.value)
             }
         }
+        println(members)
     }
 
     override fun receive(msg: Message) {

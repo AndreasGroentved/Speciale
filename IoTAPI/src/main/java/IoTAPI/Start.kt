@@ -41,7 +41,7 @@ class IoTAPI {
     private val procurationAcks = ProcurationAcks()
     private val sentProcurations = SentProcurations()
     private val deviceSpecifications = TangleDeviceSpecifications()
-    private val ws = ChatWebSocketHandler()
+    private val ws = WebSocketHandler()
 
 
     val tangleDeviceCallback: (postMessage: PostMessage, result: (datatypes.Response) -> (Unit)) -> (Unit) = { pM: PostMessage, result ->
@@ -63,7 +63,7 @@ class IoTAPI {
             } ?: result(ErrorResponse("Invalid device id"))
     }
 
-    private val ruleManager = RuleManager(deviceManger, tangleDeviceCallback)
+    private val ruleManager = RuleManager(deviceManger, tangleDeviceCallback, tangleController = tangleController)
 
 
     private val transformer = JsonTransformer()
@@ -312,7 +312,7 @@ class IoTAPI {
 
 
     @WebSocket
-    inner class ChatWebSocketHandler {
+    inner class WebSocketHandler {
         private var user: Session? = null
         private val gson = Gson()
 

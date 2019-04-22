@@ -19,7 +19,7 @@ export class IotDeviceComponent implements OnInit {
   messages: [DeviceMessage];
   device: DeviceSpecification;
   modules: Array<DeviceResource> = [];
-  collapsed:boolean = true;
+  collapsed: boolean = true;
 
   ngOnInit() {
     this.id = this.route.snapshot.paramMap.get('id');

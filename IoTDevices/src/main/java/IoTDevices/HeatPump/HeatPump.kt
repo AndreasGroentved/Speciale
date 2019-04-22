@@ -20,12 +20,15 @@ import java.util.*
 val COAP_PORT = NetworkConfig.getStandard().getInt(NetworkConfig.Keys.COAP_PORT)
 
 fun main() {
-    val pump = HeatPump("Swole2")
+    val pump = HeatPump("Swole12", 5683)
+    val pump2 = HeatPump("sssaass", 2684)
     pump.start()
+    pump2.start()
     Discovery(pump).startDiscovery()
+    Discovery(pump2).startDiscovery()
 }
 
-class HeatPump(id: String = UUID.randomUUID().toString()) : IoTDevice(id) {
+class HeatPump(id: String = UUID.randomUUID().toString(), val port: Int = 5683) : IoTDevice(id, port) {
     init {
         addEndpoints()
         add(
@@ -39,7 +42,7 @@ class HeatPump(id: String = UUID.randomUUID().toString()) : IoTDevice(id) {
     private fun addEndpoints() {
         EndpointManager.getEndpointManager().networkInterfaces.filter { it is Inet4Address || it.isLoopbackAddress }
             .forEach {
-                val bindToAddress = InetSocketAddress(it, COAP_PORT)
+                val bindToAddress = InetSocketAddress(it, port)
                 addEndpoint(CoapEndpoint(bindToAddress))
             }
     }

@@ -26,20 +26,16 @@ import java.util.concurrent.TimeUnit
 fun main() {
     val deviceManager = DeviceManager()
     deviceManager.startDiscovery()
-    val ruleManager = RuleManager(deviceManager)
+    val ruleManager = RuleManager(deviceManager, tangleController = TangleController(""))
     ruleManager.updateDsl(RuleManager.sampleDsl)
-
 }
 
-class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), private val tangleDeviceCallback: ((postMessage: PostMessage, result: (datatypes.Response) -> (Unit)) -> (Unit))? = null, private val gson: Gson = Gson()) {
-
+class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), private val tangleDeviceCallback: ((postMessage: PostMessage, result: (datatypes.Response) -> (Unit)) -> (Unit))? = null, private val gson: Gson = Gson(), private val tangleController: TangleController) {
 
     private var threadPoolExecutor = ScheduledThreadPoolExecutor(10)
     private lateinit var content: Content
-    private val tangleController = TangleController("")
     var parse = ParseDsl()
     val variables = mutableMapOf<String, Expression>()
-
 
     companion object {
         val energiNetPath = "\$.result.records[0].CO2Emission"
@@ -52,7 +48,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
                 "    format = JSON\n" +
                 "    var co2 = \"\$.result.records[0].CO2Emission\"\n" +
                 "}\n" +
-                "rule{\n" +
+                "rule   {\n" +
                 "    config every 4 seconds from 2019:03:29 13:03 to 2019:03:29 18:30 \n" +
                 "    var a = 27.0\n" +
                 "    var c = device hest path temperature get\n" +
@@ -130,7 +126,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         else -> StringType(value)
     }
 
-    private val map = mutableMapOf<Rule, ScheduledFuture<Any>>()
+    private val map = mutableMapOf<Rule, ScheduledFuture<*>>()
 
 
     private fun scheduleTask(rule: Rule) {
@@ -141,8 +137,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         when (rule.time.pattern) {
             "once" -> threadPoolExecutor.schedule(lambda, initialDelay, TimeUnit.MILLISECONDS)
             "every" -> {
-                val future = threadPoolExecutor.scheduleAtFixedRate(lambda, initialDelay, getRepeatingInterval(rule.time.unit, rule.time.count), TimeUnit.MILLISECONDS)
-                map[rule] = future as ScheduledFuture<Any>
+                map[rule] = threadPoolExecutor.scheduleAtFixedRate(lambda, initialDelay, getRepeatingInterval(rule.time.unit, rule.time.count), TimeUnit.MILLISECONDS)
             }
             else -> throw NotImplementedError("Pattern not supported")
         }
@@ -164,6 +159,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         if (!isInTimeInterval(rule)) {
             LogI("no longer in time interval")
             map[rule]?.cancel(true)
+            map.remove(rule)
             return
         }
 
@@ -176,10 +172,10 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
 
 
         var numberOfAssignments = 0
-        rule.assignmentsFromDevice.forEach { p ->
-            run(p.second) { expression ->
+        rule.assignmentsFromDevice.forEach { (first, second) ->
+            run(second) { expression ->
                 val toAssign = expression
-                if (toAssign != null) variables[p.first] = toAssign
+                if (toAssign != null) variables[first] = toAssign
                 else {
                     LogE("No value from device")
                     return@run
@@ -324,6 +320,5 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
 
         }
     }
-
 }
 

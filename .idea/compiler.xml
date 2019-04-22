@@ -13,6 +13,7 @@
       <module name="sdu.Integrations.test" target="1.8" />
       <module name="sdu.IoTAPI.generated" target="1.8" />
       <module name="sdu.IoTAPI.main" target="1.8" />
+      <module name="sdu.IoTAPI.t" target="1.8" />
       <module name="sdu.IoTAPI.test" target="1.8" />
       <module name="sdu.IoTDevices.main" target="1.8" />
       <module name="sdu.IoTDevices.test" target="1.8" />

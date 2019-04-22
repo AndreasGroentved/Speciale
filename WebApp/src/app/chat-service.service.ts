@@ -9,6 +9,7 @@ export class ChatService {
   }
 
   private subject: Subject<MessageEvent>;
+  private ws: WebSocket;
 
   public connect(url): Subject<MessageEvent> {
     if (!this.subject) {
@@ -18,19 +19,23 @@ export class ChatService {
     return this.subject;
   }
 
+  send(a) {
+    this.ws.send(a);
+  }
+
   private create(url): Subject<MessageEvent> {
-    let ws = new WebSocket(url);
+    this.ws = new WebSocket(url);
 
     let observable = Observable.create((obs: Observer<MessageEvent>) => {
-      ws.onmessage = obs.next.bind(obs);
-      ws.onerror = obs.error.bind(obs);
-      ws.onclose = obs.complete.bind(obs);
-      return ws.close.bind(ws);
+      this.ws.onmessage = obs.next.bind(obs);
+      this.ws.onerror = obs.error.bind(obs);
+      this.ws.onclose = obs.complete.bind(obs);
+      return this.ws.close.bind(this.ws);
     });
     let observer = {
       next: (data: Object) => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify(data));
+        if (this.ws.readyState === WebSocket.OPEN) {
+          this.ws.send(JSON.stringify(data));
         }
       }
     };

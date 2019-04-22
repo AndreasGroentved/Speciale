@@ -1,5 +1,7 @@
 parser grammar HestParser;
 
+//TODO rename
+
 options { tokenVocab=HestLexer; }
 
 content: dataset* rulee+ ;
@@ -8,7 +10,7 @@ rulee: 'rule' '{' config variable* device* /*output*/ varpath* run '}';
 config: 'config' time;
 time: ('every' timeDefinition | 'once' timeDefinition) interval?;
 timeDefinition: INTLIT unit='day' | INTLIT unit='hour' | INTLIT unit='min' | INTLIT unit='seconds' ;
-interval: 'from' fromDate = DATELIT fromTime = TIMELIT 'to' toDate=DATELIT toTime=TIMELIT; //TODO fra 'every' er tilføjet men ikke håndteret
+interval: 'from' fromDate = DATELIT fromTime = TIMELIT 'to' toDate=DATELIT toTime=TIMELIT;
 run: 'run' '{' condition=expression output* /*varpath* */'}';
 eqOperator: '<' | '==' | '!=' | '<=' | '>' | '=>';
 output:  device path  method=('post' | 'get') parameter*;

@@ -5,6 +5,7 @@ import {TangleDeviceSpecificationPairToMessageId} from "./TangleDeviceSpecificat
 @Injectable({
   providedIn: 'root'
 })
+//For sharing data between modules
 export class DeviceDataService {
 
   constructor() {

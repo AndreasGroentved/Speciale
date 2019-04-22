@@ -153,6 +153,7 @@ class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK A
             t
         } catch (e: Exception) {
             LogE(e.toString())
+            e.printStackTrace()
             when (e) {
                 is ArgumentException -> {
                     LogE("Invalid parameters supplied for sendTransfer");null

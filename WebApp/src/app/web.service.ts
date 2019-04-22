@@ -13,7 +13,6 @@ import {DeviceMessage} from './DeviceMessage';
 })
 export class WebService {
   serverUrl = 'http://localhost:4567'; //TODO
-  wsUrl = 'ws://localhost:4567';
 
   constructor(private http: HttpClient, private ds: DeviceDataService) {
   }
@@ -67,12 +66,8 @@ export class WebService {
       });
     } else {
       let post = {
-        deviceID: deviceId,
-        type: 'POST',
-        path: path,
-        addressTo: this.ds.addressTo,
-        params: postValue,
-        messageChainID: messageChainID
+        deviceID: deviceId, type: 'POST', path: path, addressTo: this.ds.addressTo,
+        params: postValue, messageChainID: messageChainID
       };
       this.http.post(this.serverUrl + '/tangle/permissioned/devices', JSON.stringify(post)).subscribe(results => {
         callback(results['result']);

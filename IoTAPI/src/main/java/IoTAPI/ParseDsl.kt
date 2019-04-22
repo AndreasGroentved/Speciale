@@ -44,8 +44,8 @@ class ParseDsl : HestParserBaseListener() {
     }
 
 
-    override fun enterTimeDefinition(ctx: HestParser.TimeDefinitionContext) {
-        currentTime.count = ctx.INTLIT().text.toInt()
+    override fun enterTimeDefinition(ctx: HestParser.TimeDefinitionContext?) {
+        currentTime.count = ctx!!.INTLIT().text.toInt()
         currentTime.unit = ctx.unit.text
     }
 
@@ -129,20 +129,16 @@ class ParseDsl : HestParserBaseListener() {
 
 
     private fun buildExpressionTree(expression: HestParser.ExpressionContext): Expression = when (expression) {
-        is HestParser.ComparatorExpressionContext -> {
-            AndOrExp(buildExpressionTree(expression.left), expression.op.text, buildExpressionTree(expression.right))
-        }
+        is HestParser.ComparatorExpressionContext -> expression.run { AndOrExp(buildExpressionTree(left), op.text, buildExpressionTree(right)) }
         is HestParser.BinaryExpressionContext -> expression.run { CompareExp(buildExpressionTree(left), op?.text, right?.let { buildExpressionTree(it) }) }
         is HestParser.BoolExpressionContext -> BooleanType(expression.BOOL().text!!.toBoolean())
         is HestParser.IdentifierExpressionContext -> ReferenceType(expression.ID().text!!.toString())
         is HestParser.DecimalExpressionContext -> NumberType(expression.DECLIT().text!!.toDouble())
         is HestParser.StringExpressionContext -> StringType(expression.text!!)
         else -> throw RuntimeException("impossible")
-
     }
 
     override fun visitErrorNode(node: ErrorNode) {
-        println("swole")
         println("error $node")
     }
 

@@ -11,7 +11,7 @@ fun Logger.w(arg: Any) {
     this.warn(arg.toString())
 }
 
-fun LogI(arg: Any?) = arg?.let { SimpleLoggerFactory().getLogger(Thread.currentThread().stackTrace[2].className).i(it) }
+fun LogI(arg: Any?) = Unit// arg?.let { SimpleLoggerFactory().getLogger(Thread.currentThread().stackTrace[2].className).i(it) }
 fun LogW(arg: Any?) = arg?.let { SimpleLoggerFactory().getLogger(Thread.currentThread().stackTrace[2].className).w(it) }
 fun LogE(arg: Any?) = arg?.let { SimpleLoggerFactory().getLogger(Thread.currentThread().stackTrace[2].className).e(it) }
 fun LogE(exception: Throwable, message: String = "error occurred") = exception.let {
