@@ -5,7 +5,6 @@ sourceCompatibility = 1.8
 
 dependencies {
     compile group: 'org.jgroups', name: 'jgroups', version: '4.0.18.Final'
-    compile "io.jsondb:jsondb-core:1.0.85"
     implementation "org.eclipse.californium:californium-core:1.0.7"
     compile project(path: ':IoTDevices')
     compile project(":Tangle")

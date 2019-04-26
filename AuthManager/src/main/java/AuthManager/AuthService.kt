@@ -25,7 +25,7 @@ class AuthService {
     private val logger = SimpleLoggerFactory().getLogger("AuthService")
 
     fun startService() {
-        Spark.exception(
+        exception(
             Exception::class.java
         ) { e, _, _ ->
             val sw = StringWriter()
@@ -33,8 +33,8 @@ class AuthService {
             e.printStackTrace(pw)
             logger.error(sw.buffer.toString())
         }
-        Spark.port(PropertiesLoader.instance.getProperty("authPort").toInt())
-        Spark.after("/*") { request, _ -> logger.info(request.pathInfo());logger.info(request.body()); logger.debug(tokensToUsers.toString()); logger.debug(users.toString()) }
+        port(PropertiesLoader.instance.getProperty("authPort").toInt())
+        after("/*") { request, _ -> logger.info(request.pathInfo());logger.info(request.body()); logger.debug(tokensToUsers.toString()); logger.debug(users.toString()) }
 
         options(
             "/*"

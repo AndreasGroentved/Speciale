@@ -3,6 +3,7 @@ package IoTDevices
 import com.google.gson.Gson
 import datatypes.TimePair
 import datatypes.iotdevices.*
+import helpers.LogI
 import helpers.PropertiesLoader
 import org.dizitart.no2.Nitrite
 import org.dizitart.no2.objects.ObjectRepository
@@ -14,7 +15,7 @@ import org.eclipse.californium.core.server.resources.Resource
 import java.util.*
 
 
-abstract class IoTDevice(val id: String = "", port: Int = 5683) : CoapServer(port) {
+abstract class IoTDevice(val id: String = "") : CoapServer() {
     var coapPort: Int = -1
     val deviceSpecification = DeviceSpecification(id, mutableListOf())
     private val timeMap = mutableMapOf<Long, Long>()

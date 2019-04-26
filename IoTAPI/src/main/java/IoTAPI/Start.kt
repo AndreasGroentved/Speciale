@@ -113,8 +113,8 @@ class IoTAPI {
         init()
 
 
-        Spark.exception(Exception::class.java) { e, _, _ -> LogE(e) }
-        Spark.after("/*") { request, _ ->
+        exception(Exception::class.java) { e, _, _ -> LogE(e) }
+        after("/*") { request, _ ->
             LogI(request.requestMethod() + " " + request.uri() + " " + request.body() + " " + request.params().toString())
         }
 

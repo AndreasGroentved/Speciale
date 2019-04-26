@@ -48,7 +48,7 @@ class DeviceManager {
             val deviceSpecification = TangleDeviceSpecification(publicKey, e.value.specification)
             val toJson = gson.toJson(deviceSpecification)
             val signedJson = toJson + "__" + EncryptionHelper.signBase64(privateKey, toJson)
-            tangle.attachDeviceToTangle( signedJson)?.let {
+            tangle.attachDeviceToTangle(signedJson)?.let {
                 registeredDevices.add(e.key)
             }
         }
@@ -60,7 +60,7 @@ class DeviceManager {
             val deviceSpecification = TangleDeviceSpecification(publicKey, e.value.specification)
             val toJson = gson.toJson(deviceSpecification)
             val signedJson = toJson + "__" + EncryptionHelper.signBase64(privateKey, toJson)
-            tangle.attachBroadcastToTangle( signedJson, Tag.XDSPEC)?.let {
+            tangle.attachBroadcastToTangle(signedJson, Tag.XDSPEC)?.let {
                 registeredDevices.remove(e.key)
             }
         }
@@ -85,6 +85,8 @@ class DeviceManager {
     fun get(postMessage: PostMessage): Response {
         logger.info("attempting to call get with message: $postMessage")
         val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return ErrorResponse("Invalid device id")
+        LogI(getDeviceKeyFromId(postMessage.deviceID))
+
         val client = CoapClient("${mapKey.ip}:$port/${postMessage.path}?${postMessage.params.entries.map { it.key + "=" + it.value }.joinToString("&")}")
 
         return client.get()?.let { gson.fromJson(it.responseText, ClientResponse::class.java) }
@@ -92,7 +94,7 @@ class DeviceManager {
     }
 
     fun post(postMessage: PostMessage): Response {
-        logger.info("attempting to call post with message: $postMessage")
+        LogI("attempting to call post with message: $postMessage")
         val mapKey = getDeviceKeyFromId(postMessage.deviceID) ?: return ErrorResponse("Invalid device id")
         val client = CoapClient("${mapKey.ip}:$port/${postMessage.path}")
         val a = client.post(gson.toJson(postMessage), MediaTypeRegistry.APPLICATION_JSON)

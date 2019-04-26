@@ -17,14 +17,12 @@ class ClientDiscovery : ReceiverAdapter() {
     }
 
     override fun viewAccepted(new_view: View) {
-        println("yooo")
         members.map { it }.forEach {
             if (!new_view.containsMember(it.key)) {
                 members.remove(it.key)
                 removeCallBack?.invoke(it.value)
             }
         }
-        println(members)
     }
 
     override fun receive(msg: Message) {
