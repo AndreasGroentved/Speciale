@@ -67,7 +67,7 @@ export class WebService {
     } else {
       let post = {
         deviceID: deviceId, type: 'POST', path: path, addressTo: this.ds.addressTo,
-        params: postValue, messageChainID: messageChainID
+        params: postValue, messageChainID: messageChainID, time: new Date().getTime()
       };
       this.http.post(this.serverUrl + '/tangle/permissioned/devices', JSON.stringify(post)).subscribe(results => {
         callback(results['result']);

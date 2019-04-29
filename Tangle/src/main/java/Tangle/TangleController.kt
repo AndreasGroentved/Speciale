@@ -124,6 +124,7 @@ class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK A
                 seed, nodeSecurity, 9, nodeMinWeightMagnitude, listOf(transfer), null, address,
                 false, false, null
             )
+            LogI(t.transactions.first().toTrytes())
             StatisticsCollector.submitDuration("attachTransactionToTangle", t.duration)
             t
         } catch (e: Exception) {

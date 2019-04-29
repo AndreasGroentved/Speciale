@@ -360,17 +360,6 @@ class IoTAPI {
 
     private fun handleMethodType(message: PostMessageHack) {
         LogI("handling messsage: $message")
-        val procuration = procurations.getProcuration(message.postMessage.messageChainID)
-        val verifiedSignature = procuration?.let {
-            EncryptionHelper.verifySignatureBase64(
-                EncryptionHelper.loadPublicECKeyFromBigInteger(it.recipientPublicKey),
-                message.json.substringBefore("__"), message.json.substringAfter("__")
-            )
-        }
-        if (verifiedSignature == null || !verifiedSignature) {
-            LogW("cannot verify message")
-            return
-        }
         val result = when (message.postMessage.type.toLowerCase()) {
             "get" -> deviceManger.get(message.postMessage)
             "post" -> deviceManger.post(message.postMessage)
