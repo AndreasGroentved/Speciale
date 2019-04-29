@@ -115,7 +115,7 @@ class IoTAPI {
 
         exception(Exception::class.java) { e, _, _ -> LogE(e) }
         after("/*") { request, _ ->
-            LogI(request.requestMethod() + " " + request.uri() + " " + request.body() + " " + request.params().toString())
+            LogI(Date().toString() + " " + request.requestMethod() + " " + request.uri() + " " + request.body() + " " + request.params().toString() + " " + request.ip())
         }
 
         options("/*") { request, response ->
