@@ -24,20 +24,22 @@ class RPCTest {
     @Test
     fun testRPC() {
         sendTransfer()
+        sendTransfer()
         getTransfer()
     }
 
     fun sendTransfer() {
         val tipsToApprove = getTipsToApprove(gson.toJson(mapOf(Pair("command", "getTransactionsToApprove"), Pair("depth", 9))))
         val attachToTangle = attachToTangle(tipsToApprove)
-        broadcastTransactions(attachToTangle)
+        broadcastTransactions(gson.toJson(mapOf(Pair("command","broadcastTransactions"),attachToTangle)))
+        storeTransactions(gson.toJson(mapOf(Pair("command","storeTransactions"),attachToTangle)))
     }
 
     fun getTransfer() {
         val add = getTransactions(gson.toJson(mapOf(Pair("command", "findTransactions"), Pair("addresses", address))), "findTransactionsAddress")
         getTrytes(add)
         val tag = getTransactions(gson.toJson(mapOf(Pair("command", "findTransactions"), Pair("tags", tags))), "findTransactionsTag")
-        getTrytes(add)
+        getTrytes(tag)
     }
 
     fun getTipsToApprove(params: String): String {
@@ -61,7 +63,7 @@ class RPCTest {
         )
     }
 
-    fun attachToTangle(params: String): String {
+    fun attachToTangle(params: String): Pair<String, List<String>> {
         val httpRequest = HttpRequest.newBuilder().uri(URI("http://52.236.182.23:14265"))
             .POST(HttpRequest.BodyPublishers.ofString(params)).header("X-IOTA-API-Version", "1").build()
         val httpResponse = HttpClient.newHttpClient().send(
@@ -72,7 +74,7 @@ class RPCTest {
         val d = parse.read<Int>("$.duration")
         StatisticsCollector.submitDuration("attachToTangle", d.toLong())
 
-        return gson.toJson(mapOf(Pair("command", "broadcastTransactions"), Pair("trytes", trytes)))
+        return Pair("trytes", trytes)
     }
 
     fun broadcastTransactions(params: String) {
@@ -87,6 +89,18 @@ class RPCTest {
         StatisticsCollector.submitDuration("broadcastTransactions", d.toLong())
     }
 
+    fun storeTransactions(params: String) {
+        val httpRequest = HttpRequest.newBuilder().uri(URI("http://52.236.182.23:14265"))
+            .POST(HttpRequest.BodyPublishers.ofString(params)).header("X-IOTA-API-Version", "1").build()
+        val httpResponse = HttpClient.newHttpClient().send(
+            httpRequest, HttpResponse.BodyHandlers.ofString()
+        )
+
+        val parse = JsonPath.parse(httpResponse.body())
+        val d = parse.read<Int>("$.duration")
+        StatisticsCollector.submitDuration("storeTransactions", d.toLong())
+    }
+
     fun getTransactions(params: String, type: String): String {
         val httpRequest = HttpRequest.newBuilder().uri(URI("http://52.236.182.23:14265"))
             .POST(
@@ -97,7 +111,6 @@ class RPCTest {
         val httpResponse = HttpClient.newHttpClient().send(
             httpRequest, HttpResponse.BodyHandlers.ofString()
         )
-
         val parse = JsonPath.parse(httpResponse.body())
         val d = parse.read<Int>("$.duration")
         StatisticsCollector.submitDuration("type", d.toLong())
@@ -119,7 +132,6 @@ class RPCTest {
         val parse = JsonPath.parse(httpResponse.body())
         val d = parse.read<Int>("$.duration")
         StatisticsCollector.submitDuration("getTrytes", d.toLong())
-        println(httpResponse.body())
     }
 
     private fun getParameterMap(body: String): Map<String, String> {
