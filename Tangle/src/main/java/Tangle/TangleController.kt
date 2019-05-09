@@ -16,7 +16,7 @@ import org.apache.commons.lang3.time.StopWatch
 import repositories.ProcessedTransactions
 import java.math.BigInteger
 
-class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK ADDRESS INDEX FROM & TO IN GETTRANSACTIONS
+class TangleController(private val seed: String, private val ip: String = "") { //IF IT DOES NOT WORK CHECK ADDRESS INDEX FROM & TO IN GETTRANSACTIONS
 
     private lateinit var nodeAddress: String
     private lateinit var nodePort: String
@@ -34,7 +34,7 @@ class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK A
     private fun loadProperties(): Boolean {
         LogI("Loading properties")
         val properties = PropertiesLoader.instance
-        nodeAddress = properties.getProperty("nodeAddress")
+        nodeAddress = if (ip.isNotEmpty()) ip else properties.getProperty("nodeAddress")
         nodePort = properties.getProperty("nodePort")
         nodeSecurity = properties.getProperty("nodeSecurity").toInt()
         nodeMinWeightMagnitude = properties.getProperty("nodeMinWeightMagnitude").toInt()
@@ -195,7 +195,7 @@ class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK A
         stopWatch.stop()
         StatisticsCollector.submitDuration("getBroadcastsUnchecked", stopWatch.time)
         val filter = transactions.filter { !pt.hashStoredInDB(it.hash) }
-        filter.forEach { pt.saveHash(it.hash) }
+        //filter.forEach { pt.saveHash(it.hash) }
         return filter.mapNotNull { t -> getASCIIFromTrytes(t.signatureFragments)?.let { Pair(it, t.address) } }
     }
 
@@ -242,9 +242,9 @@ class TangleController(private val seed: String) { //IF IT DOES NOT WORK CHECK A
                 Pair(PostMessageHack(gson.fromJson(message, PostMessage::class.java), ascii, transaction.address), signature)
             }
         }
-        val verifiedMessages = postMessages.filter { m ->
-            procurations.find { p -> p.messageChainID == m.first.postMessage.messageChainID }?.recipientPublicKey.toString().let {
-                parseAndVerifyMessageStringKey(m.first.json, it)
+        val verifiedMessages = postMessages.filter { (first) ->
+            procurations.find { (messageChainID) -> messageChainID == first.postMessage.messageChainID }?.recipientPublicKey.toString().let {
+                parseAndVerifyMessageStringKey(first.json, it)
             }
         }
         return verifiedMessages.map { it.first }

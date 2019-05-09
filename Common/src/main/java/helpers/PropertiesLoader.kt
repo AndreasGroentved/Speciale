@@ -18,6 +18,11 @@ class PropertiesLoader private constructor() {
         return properties.getProperty(key)
     }
 
+    fun removeProperty(key: String) {
+        properties.remove(key)
+        properties.store(FileWriter("config.properties"), null)
+    }
+
     fun hasProperty(key: String): Boolean {
         return properties.containsKey(key)
     }

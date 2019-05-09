@@ -2,8 +2,11 @@ package IoTAPI
 
 import Tangle.TangleController
 import datatypes.tangle.Tag
+import helpers.PropertiesLoader
 import helpers.StatisticsCollector
 import org.junit.Test
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
@@ -13,11 +16,25 @@ import java.util.concurrent.atomic.AtomicInteger
 class IoTAPITest {
     @Test
     fun testOneMillionBroadcastsOnTangle() {
-        val t = TangleController("TEAEA99999999E9999999999999999999999999999999999999999999999999999999999999999999")
+        try {
+            Files.deleteIfExists(
+                Paths.get("pt.db")
+            )
+        } catch (e: NoSuchFileException) {
+            System.out.println("No such file/directory exists");
+        }
+        PropertiesLoader.instance.removeProperty("tangleAddress")
+
+        val ipArr = listOf("52.236.182.23", "51.144.101.110", "40.114.225.244", "40.114.230.148")
+        val aZArray = ('A' until 'Z')
+        val seed = (0 until 5).map { aZArray.random() }.fold("", { a, b -> a + b }) + "99999999E9999999999999999999999999999999999999999999999999999999999999999999"
+
+        val t = TangleController(seed, ipArr[3])
+
         val tasks = LinkedBlockingQueue<Runnable>()
         val tp = ThreadPoolExecutor(10, 10, 20, TimeUnit.SECONDS, tasks)
         val a = AtomicInteger(0)
-        addTasks(100, tp, t, a, 10000)
+        addTasks(100, tp, t, a, 2000)
         while (tp.taskCount > 0) {
             Thread.sleep(1000L)
         }

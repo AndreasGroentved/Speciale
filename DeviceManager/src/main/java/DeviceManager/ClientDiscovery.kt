@@ -17,7 +17,7 @@ class ClientDiscovery : ReceiverAdapter() {
     }
 
     override fun viewAccepted(new_view: View) {
-        members.map { it }.forEach {
+        members.forEach {
             if (!new_view.containsMember(it.key)) {
                 members.remove(it.key)
                 removeCallBack?.invoke(it.value)
