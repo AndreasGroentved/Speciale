@@ -48,7 +48,7 @@ class IoTAPI {
         val tdsa = deviceSpecifications.getAllPermissionedSpecs(listOf(pM.deviceID)).firstOrNull()
         val proc = sentProcurations.getProcurationDeviceID(pM.deviceID)
 
-        proc?.let { (messageChainID) -> tdsa?.let { PostMessage(messageChainID, pM.deviceID, pM.type, pM.path, pM.params, it.address) } }
+        proc?.let { (messageChainID) -> tdsa?.let { PostMessage(messageChainID, pM.deviceID, pM.type, pM.path, pM.params, it.address) } } //TODO timeout
             ?.apply {
                 sendMethodCall(this, privateKey, this.addressTo)
             }
@@ -91,7 +91,7 @@ class IoTAPI {
         threadPool.scheduleAtFixedRate({ methodTask() }, 0, 5, TimeUnit.SECONDS)
         threadPool.scheduleAtFixedRate({ methodResponseTask() }, 0, 5, TimeUnit.SECONDS)
         threadPool.scheduleAtFixedRate({ StatisticsCollector.printStats(null) }, 0, 2, TimeUnit.MINUTES)
-        Spark.port(PropertiesLoader.instance.getProperty("iotApiPort").toInt())
+        port(PropertiesLoader.instance.getProperty("iotApiPort").toInt())
 
         if (PropertiesLoader.instance.getOptionalProperty("householdPrivateKey") == null || PropertiesLoader.instance.getOptionalProperty("householdPublicKey") == null) {
             val keyPair = EncryptionHelper.generateKeys()
