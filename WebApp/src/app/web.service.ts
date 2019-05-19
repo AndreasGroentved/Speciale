@@ -7,24 +7,79 @@ import {DeviceSpecificationToAddressPair} from './DeviceSpecificationToAddressPa
 import {TangleDeviceSpecification} from './TangleDeviceSpecification';
 import {DeviceDataService} from './device-data.service';
 import {DeviceMessage} from './DeviceMessage';
+import {Login} from "./Login";
+import {LoginServiceService} from "./login-service.service";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn:'root'
 })
 export class WebService {
   serverUrl = 'http://localhost:4567'; //TODO
 
-  constructor(private http: HttpClient, private ds: DeviceDataService) {
-  }
-
   httpOptions = {
-    headers: new HttpHeaders({
-      'Content-Type': 'application/json',
+    headers:new HttpHeaders({
+      'Content-Type':'application/json', 'Authorization':`yolo`
     })
   };
 
+  constructor(private http: HttpClient, private ds: DeviceDataService, private ls: LoginServiceService) {
+    if (ls.token != "") {
+      console.log("token yo");
+      this.validateToken(ls.token);
+      this.httpOptions = {
+        headers:new HttpHeaders({
+          'Content-Type':'application/json', 'Authorization':this.ls.token
+        })
+      }
+    }
+  }
+
+  isLoggedIn() {
+    return this.ls.token != "";
+  }
+
+  validateToken(token: string) {
+    this.http.post(this.serverUrl + '/validate', JSON.stringify({"token":token}), this.httpOptions).subscribe(results => {
+      let token = results["result"] as string;
+      if (token == "false") {
+        this.ls.setLogin("");
+        return
+      }
+    });
+  }
+
+
+  login(userName: string, password: string, callback: (a: string) => (void)) {
+    let login = new Login(userName, password);
+    this.http.post(this.serverUrl + '/login', JSON.stringify(login), this.httpOptions).subscribe(results => {
+      let token = results["result"] as string;
+      if (token.length == 0) callback(""); else {
+        this.httpOptions = {
+          headers:new HttpHeaders({
+            'Content-Type':'application/json', 'Authorization':token
+          })
+        };
+        this.ls.setLogin(token);
+        callback(token);
+      }
+    });
+  }
+
+
+  register(userName: string, password: string, callback: (a: string) => (void)) {
+    let login = new Login(userName, password);
+    this.http.post(this.serverUrl + '/register', JSON.stringify(login), this.httpOptions).subscribe(results => {
+      if (!results.hasOwnProperty('error')) {
+        return "user created"
+      } else {
+        return "failed creating user"
+      }
+    });
+  }
+
   getDevices(registered: boolean, callback: (device: [Device]) => (void)) {
-    this.http.get(this.serverUrl + '/device?registered=' + registered).subscribe(results => {
+    this.httpOptions.headers.append("moon", "yolo");
+    this.http.get(this.serverUrl + '/device?registered=' + registered, this.httpOptions).subscribe(results => {
       let devices: [Device] = results['result'] as [Device];
       callback(devices);
     });
@@ -32,25 +87,25 @@ export class WebService {
 
   addRemoveDevice(deviceId: string, add: boolean, callback: (val) => (void)) {
     if (add) {
-      this.http.put(this.serverUrl + '/device/' + deviceId, '').subscribe(results => {
+      this.http.put(this.serverUrl + '/device/' + deviceId, '', this.httpOptions).subscribe(results => {
         callback(results['result']);
       });
     } else {
-      this.http.delete(this.serverUrl + '/device/' + deviceId).subscribe(results => {
+      this.http.delete(this.serverUrl + '/device/' + deviceId, this.httpOptions).subscribe(results => {
         callback(results['result']);
       });
     }
   }
 
   getAllDevices(callback: (device: [Device]) => (void)) {
-    this.http.get(this.serverUrl + '/device').subscribe(results => {
+    this.http.get(this.serverUrl + '/device', this.httpOptions).subscribe(results => {
       let devices: [Device] = results['result'] as [Device];
       callback(devices);
     });
   }
 
   getOnTime(id: string, callback: (val) => (void), from: string = '0', to: string = (Date.now() + '')) {
-    this.http.get(this.serverUrl + '/time/' + id + '?from=' + from + '&to=' + to).subscribe(results => {
+    this.http.get(this.serverUrl + '/time/' + id + '?from=' + from + '&to=' + to, this.httpOptions).subscribe(results => {
       callback(results);
     });
   }
@@ -61,15 +116,20 @@ export class WebService {
     }
 
     if (isOwned) {
-      this.http.post(this.serverUrl + '/device/' + deviceId + '/' + path, JSON.stringify(postValue)).subscribe(results => {
+      this.http.post(this.serverUrl + '/device/' + deviceId + '/' + path, JSON.stringify(postValue), this.httpOptions).subscribe(results => {
         callback(results['result']);
       });
     } else {
       let post = {
-        deviceID: deviceId, type: 'POST', path: path, addressTo: this.ds.addressTo,
-        params: postValue, messageChainID: messageChainID, time: new Date().getTime()
+        deviceID:deviceId,
+        type:'POST',
+        path:path,
+        addressTo:this.ds.addressTo,
+        params:postValue,
+        messageChainID:messageChainID,
+        time:new Date().getTime()
       };
-      this.http.post(this.serverUrl + '/tangle/permissioned/devices', JSON.stringify(post)).subscribe(results => {
+      this.http.post(this.serverUrl + '/tangle/permissioned/devices', JSON.stringify(post), this.httpOptions).subscribe(results => {
         callback(results['result']);
       });
     }
@@ -77,111 +137,111 @@ export class WebService {
 
   getDeviceValueFromPath(deviceId: string, path: string, callback: (val) => (void)) {
     console.log(this.serverUrl + '/device/' + deviceId + '/' + path);
-    this.http.get(this.serverUrl + '/device/' + deviceId + '/' + path).subscribe(results => {
+    this.http.get(this.serverUrl + '/device/' + deviceId + '/' + path, this.httpOptions).subscribe(results => {
       callback(results['result']);
     });
   }
 
   getDevice(deviceID, callback: (device: DeviceSpecification) => (void)) {
-    this.http.get(this.serverUrl + '/device/' + deviceID).subscribe(results => {
+    this.http.get(this.serverUrl + '/device/' + deviceID, this.httpOptions).subscribe(results => {
       let device: DeviceSpecification = results['result'] as DeviceSpecification;
       callback(device);
     });
   }
 
   updateRules(rules: string, callback: (string) => (void)) {
-    this.http.post(this.serverUrl + '/rule', JSON.stringify({rules: rules})).subscribe(results => {
+    this.http.post(this.serverUrl + '/rule', JSON.stringify({rules:rules}), this.httpOptions).subscribe(results => {
       callback(results);
     });
   }
 
   requestDevice(addressTo: string, deviceId: string, fromDate: Date, toDate: Date, deviceSpec: TangleDeviceSpecification, callback: (val) => (void)) {
     this.http.post(this.serverUrl + '/tangle/unpermissioned/devices/procuration', JSON.stringify({
-      addressTo: addressTo,
-      specification: JSON.stringify(deviceSpec),
-      deviceId: deviceId,
-      dateFrom: fromDate.getTime().toString(),
-      dateTo: toDate.getTime().toString()
-    })).subscribe(value => {
+      addressTo:addressTo,
+      specification:JSON.stringify(deviceSpec),
+      deviceId:deviceId,
+      dateFrom:fromDate.getTime().toString(),
+      dateTo:toDate.getTime().toString()
+    }), this.httpOptions).subscribe(value => {
       callback(value['result'] as [DeviceSpecification]);
     });
   }
 
   getUnpermissionedTangleDevices(callback: (devices: [DeviceSpecificationToAddressPair]) => (void)) {
-    this.http.get(this.serverUrl + '/tangle/unpermissioned/devices').subscribe(value => {
+    this.http.get(this.serverUrl + '/tangle/unpermissioned/devices', this.httpOptions).subscribe(value => {
       if (value == null) return;
       callback(value['result'] as [DeviceSpecificationToAddressPair]);
     });
   }
 
   getPermissionedTangleDevices(callback: (devices: [DeviceSpecificationToAddressPair]) => (void)) {
-    this.http.get(this.serverUrl + '/tangle/permissioned/devices').subscribe(value => {
+    this.http.get(this.serverUrl + '/tangle/permissioned/devices', this.httpOptions).subscribe(value => {
       callback(value['result'] as [DeviceSpecificationToAddressPair]);
     });
   }
 
 
   getRules(callback: (string) => (void)) {
-    this.http.get(this.serverUrl + '/rule').subscribe(value => {
+    this.http.get(this.serverUrl + '/rule', this.httpOptions).subscribe(value => {
       callback(value['result']);
     });
   }
 
   getReceivedPendingProcurations(callback: (string) => (void)) {
-    this.http.get(this.serverUrl + '/device/procurations/received/pending').subscribe(value => {
+    this.http.get(this.serverUrl + '/device/procurations/received/pending', this.httpOptions).subscribe(value => {
       callback(value['result'] as [Procuration]);
     });
   }
 
   getReceivedAcceptedProcurations(callback: (string) => (void)) {
-    this.http.get(this.serverUrl + '/device/procurations/received/accepted').subscribe(value => {
+    this.http.get(this.serverUrl + '/device/procurations/received/accepted', this.httpOptions).subscribe(value => {
       callback(value['result'] as Procuration[]);
     });
   }
 
   getReceivedExpiredProcurations(callback: (string) => (void)) {
-    this.http.get(this.serverUrl + '/device/procurations/received/expired').subscribe(value => {
+    this.http.get(this.serverUrl + '/device/procurations/received/expired', this.httpOptions).subscribe(value => {
       callback(value['result'] as [Procuration]);
     });
   }
 
   getSentPendingProcurations(callback: (string) => (void)) {
-    this.http.get(this.serverUrl + '/device/procurations/sent/pending').subscribe(value => {
+    this.http.get(this.serverUrl + '/device/procurations/sent/pending', this.httpOptions).subscribe(value => {
       callback(value['result'] as [Procuration]);
     });
   }
 
   getSentAcceptedProcurations(callback: (string) => (void)) {
-    this.http.get(this.serverUrl + '/device/procurations/sent/accepted').subscribe(value => {
+    this.http.get(this.serverUrl + '/device/procurations/sent/accepted', this.httpOptions).subscribe(value => {
       callback(value['result'] as [Procuration]);
     });
   }
 
   getSentExpiredProcurations(callback: (string) => (void)) {
-    this.http.get(this.serverUrl + '/device/procurations/sent/expired').subscribe(value => {
+    this.http.get(this.serverUrl + '/device/procurations/sent/expired', this.httpOptions).subscribe(value => {
       callback(value['result'] as [Procuration]);
     });
   }
 
   acceptProcuration(messageChainID: string) {
-    this.http.put(this.serverUrl + '/device/procuration/received/' + messageChainID + '/accept', '').subscribe(value => {
+    this.http.put(this.serverUrl + '/device/procuration/received/' + messageChainID + '/accept', '', this.httpOptions).subscribe(value => {
       console.log(value);
     });
   }
 
   rejectProcuration(messageChainID: string) {
-    this.http.put(this.serverUrl + '/device/procuration/received/' + messageChainID + '/reject', '').subscribe(value => {
+    this.http.put(this.serverUrl + '/device/procuration/received/' + messageChainID + '/reject', '', this.httpOptions).subscribe(value => {
     });
   }
 
   getMessages(deviceID: string, callback: ([Message]) => (void)) {
-    this.http.get(this.serverUrl + '/tangle/messages/' + deviceID).subscribe(value => {
+    this.http.get(this.serverUrl + '/tangle/messages/' + deviceID, this.httpOptions).subscribe(value => {
       callback(value['result'] as [DeviceMessage]);
     });
   }
 
   getMessageChainID(deviceID: string, callback: (string) => (void)) {
-    this.http.get(this.serverUrl + '/tangle/messagechainid/' + deviceID).subscribe(value => {
+    this.http.get(this.serverUrl + '/tangle/messagechainid/' + deviceID, this.httpOptions).subscribe(value => {
       callback(value['result'] as string);
     });
   }

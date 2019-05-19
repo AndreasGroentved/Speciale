@@ -195,7 +195,7 @@ class TangleController(private val seed: String, private val ip: String = "") { 
         stopWatch.stop()
         StatisticsCollector.submitDuration("getBroadcastsUnchecked", stopWatch.time)
         val filter = transactions.filter { !pt.hashStoredInDB(it.hash) }
-        //filter.forEach { pt.saveHash(it.hash) }
+        filter.forEach { pt.saveHash(it.hash) }
         return filter.mapNotNull { t -> getASCIIFromTrytes(t.signatureFragments)?.let { Pair(it, t.address) } }
     }
 

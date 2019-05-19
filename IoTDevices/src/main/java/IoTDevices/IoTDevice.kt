@@ -21,22 +21,28 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
     private val timeMap = mutableMapOf<Long, Long>()
     private var lastCalculateTime = -1L
     protected val gson = Gson()
-    private var timeRep: ObjectRepository<TimePair>
+  /*  private var timeRep: ObjectRepository<TimePair>
     private val db: Nitrite
-
+*/
     init {
-        db = Nitrite.builder()
+        /*db = Nitrite.builder()
             .filePath("$id.db")
             .openOrCreate()
         timeRep = db.getRepository(TimePair::class.java)
         timeRep.find().forEach { timeMap[it.hour] = it.amount }
-
+*/
         loadProperties()
         lastCalculateTime = System.currentTimeMillis()
-        add(
+      /*  add(
             OnOffResource("onOff"), listOf(
                 ResourceMethod("GET", mapOf("status" to "Boolean"), "Gets the current status"),
                 ResourceMethod("POST", mapOf("status" to "Boolean"), "Turn device on/off")
+            )
+        )*/
+        add(
+            StringRes("StringYo"), listOf(
+                ResourceMethod("GET", mapOf("stringVal" to "String"), "YoloGet"),
+                ResourceMethod("POST", mapOf("stringVal" to "String"), "YoloPost")
             )
         )
 
@@ -90,11 +96,11 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
     }
 
     private fun updateDb() {
-        timeRep.drop()
+     /*   timeRep.drop()
         timeRep = db.getRepository(TimePair::class.java)
         timeMap.forEach {
             timeRep.insert(TimePair(it.key, it.value))
-        }
+        }*/
     }
 
     private fun updateHour(hour: Long, elapsedTime: Long) {
@@ -136,6 +142,30 @@ abstract class IoTDevice(val id: String = "") : CoapServer() {
         }
     }
 
+    inner class StringRes(title: String) : CoapResource(title) {
+        init {
+            attributes.title = title
+        }
+
+        var stringVal = ""
+        override fun handleGET(exchange: CoapExchange?) {
+            exchange?.respond("{\"result\":\"$stringVal\"}")
+        }
+
+        override fun handlePOST(exchange: CoapExchange?) {
+            exchange?.apply {
+                if (!isValidJson(requestText)) {
+                    respond("{\"error\":\"invalid json\"}"); return@handlePOST
+                }
+
+                val postMessage = gson.fromJson(requestText, PostMessage::class.java).params
+                val turnOn = postMessage["stringVal"] ?: return@apply
+                LogI(turnOn)
+                stringVal = turnOn
+                respond("{\"result\":{\"stringVal\":\"$stringVal\"}}")
+            }
+        }
+    }
 
     inner class OnOffResource(title: String) : CoapResource(title) {
         init {

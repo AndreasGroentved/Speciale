@@ -1,0 +1,13 @@
+<div class="container-fluid">
+
+  <div class="input-group">
+    <span class="input-group-addon">Username:</span>
+    <input [(ngModel)]="username" class="form-control" placeholder="Name"/>
+  </div>
+  <div class="input-group">
+    <span class="input-group-addon">Password:</span>
+    <input type="password" [(ngModel)]="password" #txtPassword class="form-control" placeholder="Password"/>
+  </div>
+  <input type="button" value="Create Account" (click)="register()" class="btn btn-default"/>
+
+</div>

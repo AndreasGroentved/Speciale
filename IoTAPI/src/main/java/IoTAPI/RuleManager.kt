@@ -131,8 +131,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
 
     private fun scheduleTask(rule: Rule) {
         val initialDelay =
-            ((getMillisOfTime(rule.time.timeDefinition.fromDate, rule.time.timeDefinition.fromTime) ?: 0)
-                    - System.currentTimeMillis()).run { if (this < 0) 0 else this }
+            getInitialDelay(rule)
         val lambda = ThreadContext(rule)
         when (rule.time.pattern) {
             "once" -> threadPoolExecutor.schedule(lambda, initialDelay, TimeUnit.MILLISECONDS)
@@ -142,6 +141,11 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
             else -> throw NotImplementedError("Pattern not supported")
         }
     }
+
+    private fun getInitialDelay(rule: Rule) =
+        ((getMillisOfTime(rule.time.timeDefinition.fromDate, rule.time.timeDefinition.fromTime) ?: 0)
+                - System.currentTimeMillis()).run { if (this < 0) 0 else this }
+
 
     private inner class ThreadContext(private val rule: Rule) : Runnable {
         override fun run() {
@@ -164,7 +168,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         }
 
         assignDataSets(content.dataSets)
-        parse.varMap.forEach { t, u ->
+        parse.varMap.forEach { (t, u) ->
             val toAssign = validateExp(u)
             variables[t] = toAssign
         }
@@ -174,8 +178,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
         var numberOfAssignments = 0
         rule.assignmentsFromDevice.forEach { (first, second) ->
             run(second) { expression ->
-                val toAssign = expression
-                if (toAssign != null) variables[first] = toAssign
+                if (expression != null) variables[first] = expression
                 else {
                     LogE("No value from device")
                     return@run
@@ -274,7 +277,7 @@ class RuleManager(private val deviceManager: DeviceManager = DeviceManager(), pr
                 ">=" -> BooleanType(left >= right)
                 "==" -> BooleanType(left == right)
                 "!=" -> BooleanType(left != right)
-                else -> BooleanType(true) //yo, yo, yo
+                else -> BooleanType(true)
             }
         } else {
             left

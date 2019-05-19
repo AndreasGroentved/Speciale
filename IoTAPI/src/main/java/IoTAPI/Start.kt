@@ -26,8 +26,12 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
 class IoTAPI {
+    private val debugMode = true
+    private val loggedOutPaths = listOf("/login", "/", "/messageChannel", "/validate")
+    private val loginHandler = LoginHandler()
+
     private val hs = HouseRules()
-    private val seed = "TEEEA9999999999999999999999999999999999999999999999999999999999999999999999999999"
+    private val seed = "ANDREAQ99999999999999999999999999999999999999999999999999999999999999999999999999"
     private val deviceManger = DeviceManager()
     private val gson = Gson()
     private val procurations = AcceptedProcurations()
@@ -91,6 +95,13 @@ class IoTAPI {
         threadPool.scheduleAtFixedRate({ methodTask() }, 0, 5, TimeUnit.SECONDS)
         threadPool.scheduleAtFixedRate({ methodResponseTask() }, 0, 5, TimeUnit.SECONDS)
         threadPool.scheduleAtFixedRate({ StatisticsCollector.printStats(null) }, 0, 2, TimeUnit.MINUTES)
+
+
+        externalStaticFileLocation("public")
+        staticFiles.location("/public");
+        staticFiles.expireTime(600L);
+
+
         port(PropertiesLoader.instance.getProperty("iotApiPort").toInt())
 
         if (PropertiesLoader.instance.getOptionalProperty("householdPrivateKey") == null || PropertiesLoader.instance.getOptionalProperty("householdPublicKey") == null) {
@@ -137,9 +148,17 @@ class IoTAPI {
             "OK"
         }
 
-        before(Filter { _: Request, response: Response ->
+        before(Filter { request: Request, response: Response ->
             response.header("Access-Control-Allow-Origin", "*")
+            if (debugMode) return@Filter
+            if (request.pathInfo() in loggedOutPaths) Unit
+            else {
+                val token = request.headers("Authorization")
+                if (loginHandler.validateToken(token) && token != null) Unit
+                else halt(gson.toJson(ClientResponse("")))
+            }
         })
+
 
         get("rule", Route { _: Request, _: Response ->
             ClientResponse(hs.getRules().rule)
@@ -307,6 +326,30 @@ class IoTAPI {
 
         get("/tangle/messagechainid/:deviceID", Route { request, _ ->
             request.params("deviceID")?.let { ClientResponse(sentProcurations.getProcurationDeviceID(it)!!.messageChainID) }
+        })
+
+        post("/register", Route { request, _ ->
+            val params = getParameterMap(request.body())
+            val userName = params["userName"]
+            val password = params["password"]
+            if (userName == null || password == null) ErrorResponse("invalid login")
+            else ClientResponse(loginHandler.createUser(Login(userName, password)))
+        })
+
+        post("/validate", Route { request, _ ->
+            val params = getParameterMap(request.body())
+            val token = params["token"]
+            if (token == null) ErrorResponse("false")
+            else ClientResponse(loginHandler.validateToken(token).toString().toLowerCase())
+        })
+
+        post("/login", Route { request, _ ->
+            val params = getParameterMap(request.body())
+            val userName = params["userName"]
+            val password = params["password"]
+
+            if (userName == null || password == null) ErrorResponse("invalid login")
+            else ClientResponse(loginHandler.createToken(Login(userName, password)) ?: "")
         })
     }
 

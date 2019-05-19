@@ -20,7 +20,7 @@ import java.util.*
 val COAP_PORT = NetworkConfig.getStandard().getInt(NetworkConfig.Keys.COAP_PORT)
 
 fun main() {
-    val pump = HeatPump("Heat1")
+    val pump = HeatPump("CoolPump12")
     pump.start()
     Discovery(pump).startDiscovery()
 }

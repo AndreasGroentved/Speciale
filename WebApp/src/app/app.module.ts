@@ -22,60 +22,30 @@ import {StrangerDeviceComponent} from './stranger-device/stranger-device.compone
 import {NavbarComponent} from './navbar/navbar.component';
 import {MatButtonModule, MatSnackBarModule} from '@angular/material'
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {LoginComponent} from './login/login.component';
+import {RegisterComponent} from './register/register.component';
+import {AuthGuardService} from "./auth-guard.service";
 
-const appRoutes: Routes = [
-  {path: 'device/:id', component: IotDeviceComponent},
-  {path: 'tangle', component: TangleDevicesComponent},
-  {path: 'stranger', component: StrangerDeviceComponent},
-  {path: 'house_overview', component: HouseOverviewComponent},
-  {
-    path: '',
-    redirectTo: '/house_overview',
-    pathMatch: 'full'
-  },
-  {path: 'tangle/:id', component: RequestDeviceComponent},
-  {path: '**', component: PageNotFoundComponent}
-];
+const appRoutes: Routes = [{
+  path:'device/:id', component:IotDeviceComponent, canActivate:[AuthGuardService]
+}, {path:'tangle', component:TangleDevicesComponent, canActivate:[AuthGuardService]}, {
+  path:'stranger', component:StrangerDeviceComponent, canActivate:[AuthGuardService]
+}, {path:'house_overview', component:HouseOverviewComponent, canActivate:[AuthGuardService]}, {
+  path:'', redirectTo:'/house_overview', pathMatch:'full'
+}, {path:'login', component:LoginComponent}, {
+  path:'tangle/:id', component:RequestDeviceComponent, canActivate:[AuthGuardService]
+}, {
+  path:'register', component:RegisterComponent, canActivate:[AuthGuardService]
+}, {path:'**', component:PageNotFoundComponent}];
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    IotdevicesComponent,
-    SavingsComponent,
-    PowerComponent,
-    IotDeviceModuleComponent,
-    IotDeviceComponent,
-    HouseOverviewComponent,
-    PageNotFoundComponent,
-    ProcurationComponent,
-    RuleComponent,
-    TangleDevicesComponent,
-    RequestDeviceComponent,
-    StrangerDeviceComponent,
-    NavbarComponent
-  ],
-  imports: [
-    NgbModule,
-    BrowserModule,
-    HttpClientModule,
-    FormsModule,
-    MatButtonModule,
-    MatSnackBarModule,
-    BrowserAnimationsModule,
-    RouterModule.forRoot(
-      appRoutes,
-      {enableTracing: false} // <-- debugging purposes only
-    )
-  ],
-  exports: [
-    NgbModule,
-    BrowserModule,
-    HttpClientModule,
-    FormsModule
-  ],
+  declarations:[AppComponent, IotdevicesComponent, SavingsComponent, PowerComponent, IotDeviceModuleComponent, IotDeviceComponent, HouseOverviewComponent, PageNotFoundComponent, ProcurationComponent, RuleComponent, TangleDevicesComponent, RequestDeviceComponent, StrangerDeviceComponent, NavbarComponent, LoginComponent, RegisterComponent],
+  imports:[NgbModule, BrowserModule, HttpClientModule, FormsModule, MatButtonModule, MatSnackBarModule, BrowserAnimationsModule, RouterModule.forRoot(appRoutes, {enableTracing:false} // <-- debugging purposes only
+  )],
+  exports:[NgbModule, BrowserModule, HttpClientModule, FormsModule],
 
-  providers: [AppRoutingModule],
-  bootstrap: [AppComponent]
+  providers:[AppRoutingModule],
+  bootstrap:[AppComponent]
 })
 export class AppModule {
 }
