@@ -17,7 +17,10 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket
 import repositories.*
 import spark.*
 import spark.Spark.*
+import java.io.File
+import java.io.IOException
 import java.math.BigInteger
+import java.net.URISyntaxException
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.util.*
@@ -25,8 +28,9 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
+
 class IoTAPI {
-    private val debugMode = true
+    private val debugMode = false
     private val loggedOutPaths = listOf("/login", "/", "/messageChannel", "/validate")
     private val loginHandler = LoginHandler()
 
@@ -125,9 +129,13 @@ class IoTAPI {
 
 
         exception(Exception::class.java) { e, _, _ -> LogE(e) }
-        after("/*") { request, _ ->
+        after("/*") { request, response ->
+            println(response.type())
+            if (response.type() == "text/html") return@after
             LogI(Date().toString() + " " + request.requestMethod() + " " + request.uri() + " " + request.body() + " " + request.params().toString() + " " + request.ip())
         }
+
+
 
         options("/*") { request, response ->
             val accessControlRequestHeaders = request.headers("Access-Control-Request-Headers")
@@ -150,12 +158,16 @@ class IoTAPI {
 
         before(Filter { request: Request, response: Response ->
             response.header("Access-Control-Allow-Origin", "*")
+            request.pathInfo()
             if (debugMode) return@Filter
             if (request.pathInfo() in loggedOutPaths) Unit
             else {
                 val token = request.headers("Authorization")
                 if (loginHandler.validateToken(token) && token != null) Unit
-                else halt(gson.toJson(ClientResponse("")))
+                else {
+                    response.redirect("/");Unit
+                }
+                //halt(gson.toJson(ClientResponse("")))
             }
         })
 
@@ -333,7 +345,7 @@ class IoTAPI {
             val userName = params["userName"]
             val password = params["password"]
             if (userName == null || password == null) ErrorResponse("invalid login")
-            else ClientResponse(loginHandler.createUser(Login(userName, password)))
+            else ClientResponse(loginHandler.createUser(userName, password))
         })
 
         post("/validate", Route { request, _ ->
@@ -349,7 +361,21 @@ class IoTAPI {
             val password = params["password"]
 
             if (userName == null || password == null) ErrorResponse("invalid login")
-            else ClientResponse(loginHandler.createToken(Login(userName, password)) ?: "")
+            else ClientResponse(loginHandler.createToken(userName, password) ?: "")
+        })
+
+        get("/*", Route { _: Request, res: Response ->
+            res.type("text/html")
+            try {
+                res.redirect("/")
+            } catch (e: Exception) {
+                LogE("oops")
+            }
+
+            /*res.type("text/html")
+            println(renderContent("public/index.html"))
+            renderContent("public/index.html")
+        */
         })
     }
 
@@ -452,14 +478,20 @@ class IoTAPI {
                 null
             }
         }
-        pendingProcurations.addAll(procurations.filter { p -> accepted.firstOrNull { a -> p.first.messageChainID == a.messageChainID } == null })
+        pendingProcurations.addAll(procurations.filter { p -> accepted.firstOrNull { (messageChainID) -> p.first.messageChainID == messageChainID } == null })
         return pendingProcurations.map { it.first }
     }
-}
 
-class JsonTransformer : ResponseTransformer {
-    private val gson = Gson()
-    override fun render(model: Any) = gson.toJson(model)
+    private fun renderContent(htmlFile: String): String = try {
+        String(File(htmlFile).readBytes())
+    } catch (e: IOException) {
+        e.printStackTrace()
+        "<html>404</html>"
+    } catch (e: URISyntaxException) {
+        e.printStackTrace()
+        "<html>404</html>"
+    }
+
 }
 
 

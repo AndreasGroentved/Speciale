@@ -18,19 +18,14 @@ export class WebService {
 
   httpOptions = {
     headers:new HttpHeaders({
-      'Content-Type':'application/json', 'Authorization':`yolo`
+      'Content-Type':'application/json', 'Authorization':`unset`
     })
   };
 
   constructor(private http: HttpClient, private ds: DeviceDataService, private ls: LoginServiceService) {
     if (ls.token != "") {
-      console.log("token yo");
       this.validateToken(ls.token);
-      this.httpOptions = {
-        headers:new HttpHeaders({
-          'Content-Type':'application/json', 'Authorization':this.ls.token
-        })
-      }
+      this.setHeader(ls.token);
     }
   }
 
@@ -48,17 +43,21 @@ export class WebService {
     });
   }
 
+  setHeader(token: string) {
+    this.httpOptions = {
+      headers:new HttpHeaders({
+        'Content-Type':'application/json', 'Authorization':token
+      })
+    };
+  }
+
 
   login(userName: string, password: string, callback: (a: string) => (void)) {
     let login = new Login(userName, password);
     this.http.post(this.serverUrl + '/login', JSON.stringify(login), this.httpOptions).subscribe(results => {
       let token = results["result"] as string;
       if (token.length == 0) callback(""); else {
-        this.httpOptions = {
-          headers:new HttpHeaders({
-            'Content-Type':'application/json', 'Authorization':token
-          })
-        };
+        this.setHeader(token);
         this.ls.setLogin(token);
         callback(token);
       }
@@ -156,14 +155,18 @@ export class WebService {
   }
 
   requestDevice(addressTo: string, deviceId: string, fromDate: Date, toDate: Date, deviceSpec: TangleDeviceSpecification, callback: (val) => (void)) {
-    this.http.post(this.serverUrl + '/tangle/unpermissioned/devices/procuration', JSON.stringify({
+    this.http.post(this.serverUrl + '/tangle/unpermissioned/devices/procuration', this.getProcObj(addressTo, deviceSpec, deviceId, fromDate, toDate), this.httpOptions).subscribe(value => {
+      callback(value['result'] as [DeviceSpecification]);
+    });
+  }
+
+  private getProcObj(addressTo: string, deviceSpec: TangleDeviceSpecification, deviceId: string, fromDate: Date, toDate: Date) {
+    return JSON.stringify({
       addressTo:addressTo,
       specification:JSON.stringify(deviceSpec),
       deviceId:deviceId,
       dateFrom:fromDate.getTime().toString(),
       dateTo:toDate.getTime().toString()
-    }), this.httpOptions).subscribe(value => {
-      callback(value['result'] as [DeviceSpecification]);
     });
   }
 

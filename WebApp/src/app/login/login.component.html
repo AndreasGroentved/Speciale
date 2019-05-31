@@ -1,6 +1,6 @@
 <div class="input-group">
   <span class="input-group-addon">Username:</span>
-  <input id="txtUsername" [(ngModel)]="username" class="form-control" placeholder="Email"/>
+  <input id="txtUsername" [(ngModel)]="username" class="form-control" placeholder="username"/>
 </div>
 <div class="input-group">
   <span class="input-group-addon">Password:</span>
@@ -11,5 +11,7 @@
   {{errorMessage}}
 </div>
 
-<input type="button" class="btn btn-default" (click)="login()" value="Login"/>
+<div style="background: #00ff00; align-content: center; margin: 0 auto">
+  <input type="button" style="margin: 0 auto; text-align: center; width: 100%" class="btn btn-default" (click)="login()" value="Login"/>
+</div>
 

@@ -7,7 +7,7 @@ import {WebService} from "./web.service";
 })
 export class AuthGuardService implements CanActivate {
 
-  debugMode = true;
+  debugMode = false;
 
   constructor(private router: Router, private ws: WebService) {
   }

@@ -2,11 +2,9 @@ import {Injectable} from "@angular/core";
 import {Observable, Observer, Subject} from "rxjs";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn:'root'
 })
-export class ChatService {
-  constructor() {
-  }
+export class WebSocketService {
 
   private subject: Subject<MessageEvent>;
   private ws: WebSocket;
@@ -33,7 +31,7 @@ export class ChatService {
       return this.ws.close.bind(this.ws);
     });
     let observer = {
-      next: (data: Object) => {
+      next:(data: Object) => {
         if (this.ws.readyState === WebSocket.OPEN) {
           this.ws.send(JSON.stringify(data));
         }
