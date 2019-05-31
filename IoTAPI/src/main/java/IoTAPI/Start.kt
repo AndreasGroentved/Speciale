@@ -364,8 +364,9 @@ class IoTAPI {
             else ClientResponse(loginHandler.createToken(userName, password) ?: "")
         })
 
-        get("/*", Route { _: Request, res: Response ->
+        get("/*", Route { req: Request, res: Response ->
             res.type("text/html")
+            // if(req.pathInfo())
             try {
                 res.redirect("/")
             } catch (e: Exception) {
